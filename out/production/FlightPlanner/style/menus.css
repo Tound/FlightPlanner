@@ -1,0 +1,43 @@
+#title{
+    -fx-font: italic bold 32px "Arial";
+    -fx-fill: white;
+}
+
+/*.text{
+    -fx-font: italic 16px "Arial";
+    -fx-fill: white;
+}*/
+
+.button{
+    -fx-font: 16px "Arial";
+    -fx-text-fill: white;
+    -fx-padding: 5;
+    -fx-text-alignment: center;
+    -fx-background-color: black;
+    -fx-background-radius: 5px;
+}
+
+.label{
+    -fx-font: bold 12px "Arial";
+    -fx-text-fill: white;
+    -fx-padding: 5;
+}
+
+.grid{
+    -fx-background-color: #242424;
+    -fx-text-fill: white;
+}
+
+.text-field{
+    -fx-background-insets: 0, 0 0 1 0 ;
+    -fx-background-radius: 0 ;
+    -fx-font: italic 16px "Arial";
+    //-fx-background-color: transparent;
+    //-fx-text-box-border:
+
+}
+.text-field:focused{
+    //-fx-pref-height: 1;
+    //-fx-background-color:black;
+    //-fx-scale: 250%;
+}

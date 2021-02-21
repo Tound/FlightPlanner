@@ -1,0 +1,77 @@
+#title{
+    -fx-font: italic bold 32px "vermin vibes slant";
+    -fx-fill: white;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 10, 0.0 , 0 , 5 );
+}
+
+#subtitle{
+    -fx-font: 24px "Arial";
+    -fx-fill: white;
+    -fx-underline: true;
+}
+
+#subsubtitle{
+    -fx-font: italic 18px "Arial";
+    -fx-fill: white;
+    -fx-padding: 10;
+}
+
+#borderpane{
+    -fx-background-color: #242424;
+    //-fx-background-color: radial-gradient(focus-distance 0% , center 50% 50% , radius 55% ,#2b2b2b, #1c1c1c);
+}
+
+//only does button text
+/*.text{
+    -fx-font: italic 16px "Arial";
+    -fx-fill: white;
+}*/
+
+.label{
+    -fx-font: bold 12px "Arial";
+    -fx-text-fill: white;
+    -fx-padding: 5;
+}
+
+.button{
+    -fx-background-color: black;
+    -fx-text-fill: white;
+    -fx-font: 16"Arial";
+    -fx-font-style: italic;
+    -fx-padding: 5;
+    -fx-text-alignment: center;
+    -fx-background-radius: 5px;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+
+.button:hover{
+    -fx-background-color: white;
+    -fx-text-color: black;
+
+}
+
+.combobox{
+    -fx-font: 16px "Arial";
+    -fx-text-fill: white;
+    -fx-background-color: black;
+    -fx-padding: 5;
+}
+
+.grid{
+    -fx-background-color: black;
+}
+
+#run-button{
+    -fx-background-color: black;
+    -fx-padding: 10;
+    -fx-text-fill: white;
+    -fx-font: 32 "Arial";
+    //-fx-text-alignment: center;
+    -fx-background-radius: 10px;
+    -fx-font-style: italic;
+    //-fx-pref-width:50;
+}
+#run-button:hover{
+    -fx-background-color: white;
+    -fx-text-fill: black;
+}
