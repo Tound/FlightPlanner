@@ -1,0 +1,10 @@
+{
+    "camera":{
+        "name":"GoPro Hero 4",
+        "sensor_x":"20",
+        "sensor_y":"20",
+        "max_incline":"30",
+        "battery":"LiPo",
+        "battery_capacity":"2200"
+    }
+}

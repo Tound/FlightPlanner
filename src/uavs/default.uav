@@ -1,0 +1,10 @@
+{
+    "uav":{
+        "name":"Fixed Wing UAV",
+        "weight":"20",
+        "turn_rad":"20",
+        "max_incline":"30",
+        "battery":"LiPo",
+        "battery_capacity":"2200"
+    }
+}

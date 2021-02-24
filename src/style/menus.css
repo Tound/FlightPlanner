@@ -1,6 +1,7 @@
 #title{
     -fx-font: italic bold 32px "Arial";
     -fx-fill: white;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 10, 0.0 , 0 , 5 );
 }
 
 /*.text{
@@ -9,12 +10,19 @@
 }*/
 
 .button{
+    -fx-background-color: black;
     -fx-font: 16px "Arial";
+    -fx-font-style: italic;
     -fx-text-fill: white;
     -fx-padding: 5;
     -fx-text-alignment: center;
-    -fx-background-color: black;
     -fx-background-radius: 5px;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+
+.button:hover{
+    -fx-background-color: white;
+    -fx-text-fill: black;
 }
 
 .label{

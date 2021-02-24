@@ -1,0 +1,10 @@
+{
+    "project":{
+        "uav":"default.uav",
+        "camera":"default.cam",
+        "settings":"default.fsettings",
+        "points":{
+            "point":"50 50"
+        }
+    }
+}

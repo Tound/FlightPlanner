@@ -1,12 +1,14 @@
 package main;
 
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -22,19 +24,11 @@ public class FlightPlanner extends Application {
     Button saveFlight = new Button("Save\nFlight");
     Button loadFlight = new Button("Load\nFlight");
 
-
-    Button saveCam = new Button("Save Camera");
-    Button saveUAV = new Button("Save UAV");
-
-    Button newUAV = new Button("Create UAV");
-    Button newCamera = new Button("Create Camera");
-
-
     public void start(Stage primaryStage) throws Exception{
         //Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("FlightPlanner V1.0");
 
-
+        FlightSettings fs = new FlightSettings();
         BorderPane bp = new BorderPane();
         bp.setId("borderpane");
         GridPane topGp = new GridPane();
@@ -58,6 +52,26 @@ public class FlightPlanner extends Application {
 
         Scene main = new Scene(bp,1280,720);
         main.setUserAgentStylesheet("style/main.css");
+
+        exportFlight.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+            }
+        });
+        saveFlight.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+            }
+        });
+        loadFlight.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+            }
+        });
+
 
 
         primaryStage.setScene(main);
