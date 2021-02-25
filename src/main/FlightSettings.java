@@ -4,10 +4,14 @@ import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 public class FlightSettings {
     private static ScrollPane sp;
@@ -32,10 +36,18 @@ public class FlightSettings {
     private static TextField camAspectRatio = new TextField();
 
     private static TextField uavSpeed = new TextField();
+    private static TextField windSpeed = new TextField();
+    private static TextField windDirection = new TextField();
     private static TextField altitude = new TextField();
     private static TextField forwardOverlap = new TextField();
     private static TextField sideOverlap = new TextField();
     private static TextField coverageResolution = new TextField();
+
+    private static String defaultUavSpeed = "20";
+    private static String defaultForwardOverlap = "40";
+    private static String defaultSideOverlay = "60";
+    private static String defaultCoverageResolution = "0.02";
+    private static String defaultAltitude = "120";
 
     public FlightSettings(){
         uavName.setPromptText("Name of UAV");
@@ -52,7 +64,9 @@ public class FlightSettings {
         camResolution.setPromptText("Resolution (MP)");
         camAspectRatio.setPromptText("Aspect Ratio (X:Y)");
 
-        uavSpeed.setPromptText("Uav Speed");
+        uavSpeed.setPromptText("UAV Speed (Constant m/s)");
+        windSpeed.setPromptText("Wind Speed (Constant, Uniform)");
+        windDirection.setPromptText("Wind Direction (Bearing)");
         altitude.setPromptText("Uav altitude (Calculated)");
         forwardOverlap.setPromptText("Forward Overlap %");
         sideOverlap.setPromptText("Side Overlap %");
@@ -86,6 +100,28 @@ public class FlightSettings {
         GridPane.setHalignment(run,HPos.CENTER);
         run.setId("run-button");
 
+        GridPane.setColumnSpan(uavName,2);
+        GridPane.setColumnSpan(uavWeight,2);
+        GridPane.setColumnSpan(uavMinRadius,2);
+        GridPane.setColumnSpan(uavMaxIncline,2);
+        GridPane.setColumnSpan(uavBattery,2);
+        GridPane.setColumnSpan(uavBatteryCapacity,2);
+
+        GridPane.setColumnSpan(camName,2);
+        GridPane.setColumnSpan(camSensorX,2);
+        GridPane.setColumnSpan(camSensorY,2);
+        GridPane.setColumnSpan(camFocalLength,2);
+        GridPane.setColumnSpan(camResolution,2);
+        GridPane.setColumnSpan(camAspectRatio,2);
+
+        GridPane.setColumnSpan(uavSpeed,2);
+        GridPane.setColumnSpan(windSpeed,2);
+        GridPane.setColumnSpan(windDirection,2);
+        GridPane.setColumnSpan(altitude,2);
+        GridPane.setColumnSpan(forwardOverlap,2);
+        GridPane.setColumnSpan(sideOverlap,2);
+        GridPane.setColumnSpan(coverageResolution,2);
+
         // BUTTONS
         Button save = new Button("Save Settings");
         Button load = new Button("Load settings");
@@ -118,7 +154,9 @@ public class FlightSettings {
         Label camAspectRatioLabel = new Label("Aspect Ratio (X:Y):");
 
         //Flight Settings
-        Label uavSpeedLabel = new Label("UAV Speed (Constant):");
+        Label uavSpeedLabel = new Label("UAV Speed:");
+        Label windSpeedLabel = new Label("Wind Speed:");
+        Label windDirectionLabel = new Label("Wind Direction:");
         Label uavAltitudeLabel = new Label("Altitude:");
 
         Label forwardOverlapLabel = new Label("Forward Overlap (%)");
@@ -129,7 +167,7 @@ public class FlightSettings {
         //ComboBox camera = new ComboBox();
 
         gp.setVgap(10);
-        gp.setHgap(0);
+        gp.setHgap(2);
 
         //Title
         gp.add(flightSettingsTitle, 0,0);
@@ -158,6 +196,7 @@ public class FlightSettings {
 
         gp.add(newUAV,0,8);
         gp.add(editUAV,1,8);
+        gp.add(loadUAV,2,8);
 
         //Camera settings
         gp.add(cameraSettings,0,9);
@@ -182,6 +221,7 @@ public class FlightSettings {
 
         gp.add(newCam,0,16);
         gp.add(editCam,1,16);
+        gp.add(loadCam,2,16);
 
         //Flight settings
         gp.add(flightSettings,0,17);
@@ -189,23 +229,29 @@ public class FlightSettings {
         gp.add(uavSpeedLabel, 0,18);
         gp.add(uavSpeed, 1,18);
 
-        gp.add(forwardOverlapLabel, 0,19);
-        gp.add(forwardOverlap, 1,19);
+        gp.add(windSpeedLabel, 0,19);
+        gp.add(windSpeed, 1,19);
 
-        gp.add(sideOverlapLabel,0,20);
-        gp.add(sideOverlap,1,20);
+        gp.add(windDirectionLabel, 0,20);
+        gp.add(windDirection, 1,20);
 
-        gp.add(coverageResolutionLabel,0,21);
-        gp.add(coverageResolution,1,21);
+        gp.add(forwardOverlapLabel, 0,21);
+        gp.add(forwardOverlap, 1,21);
 
-        gp.add(uavAltitudeLabel,0,22);
-        gp.add(altitude,1,22);
+        gp.add(sideOverlapLabel,0,22);
+        gp.add(sideOverlap,1,22);
+
+        gp.add(coverageResolutionLabel,0,23);
+        gp.add(coverageResolution,1,23);
+
+        gp.add(uavAltitudeLabel,0,24);
+        gp.add(altitude,1,24);
 
         //Buttons
-        gp.add(save,0,23);
-        gp.add(defaultSettings,1,23);
-        gp.add(load,2,23);
-        gp.add(run,0,24);
+        gp.add(save,0,25);
+        gp.add(defaultSettings,2,25);
+        gp.add(load,1,25);
+        gp.add(run,0,26);
 
         /*for(int i=0 ;i<gp.getChildren().size();i++){
             GridPane.setHalignment(gp.getChildren().get(i), HPos.CENTER);
@@ -227,14 +273,48 @@ public class FlightSettings {
         loadUAV.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                createUAV.loadUAV();
+                String uavString = createUAV.loadUAV();
+                uavName.setText(uavString);
+                uavWeight.setText(uavString);
+                uavMinRadius.setText(uavString);
+                uavMaxIncline.setText(uavString);
+                uavBattery.setText(uavString);
+                uavBatteryCapacity.setText(uavString);
             }
         });
 
         loadCam.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                createCamera.loadCamera();
+                String camString = createCamera.loadCamera();
+                camName.setText(camString);
+                camSensorX.setText(camString);
+                camSensorY.setText(camString);
+                camFocalLength.setText(camString);
+                camResolution.setText(camString);
+                camAspectRatio.setText(camString);
+            }
+        });
+        save.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+            }
+        });
+        defaultSettings.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                uavSpeed.setText(defaultUavSpeed);
+                forwardOverlap.setText(defaultForwardOverlap);
+                sideOverlap.setText(defaultSideOverlay);
+                coverageResolution.setText(defaultCoverageResolution);
+                altitude.setText(defaultAltitude);
+            }
+        });
+        load.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
             }
         });
 
@@ -242,12 +322,42 @@ public class FlightSettings {
             @Override
             public void handle(MouseEvent event) {
                 // GET ALL THINGS AND SEND TO SCRIPTS
+                createRoute();
             }
         });
-        gp.setPadding(new Insets(5,5,5,10));
+        gp.setPadding(new Insets(5,5,5,5));
+        //gp.setGridLinesVisible(true);
         sp = new ScrollPane(gp);
+        sp.setFitToWidth(true);
         sp.setMaxWidth(Double.MAX_VALUE);
         return sp;
+    }
+
+    public static void createRoute(){
+        System.out.println(altitude.getText());
+        //Run Checks
+        if(altitude.getText().isEmpty() && coverageResolution.getText().isEmpty()){
+            System.out.println("Altitude is empty");
+        }
+        else if(altitude.getText().isEmpty()){
+
+        }
+        else if (coverageResolution.getText().isEmpty()){
+
+
+        }
+        else{
+
+        }
+        //Run scripts
+
+
+    }
+    public void dialog(String message){
+        Stage dialogStage = new Stage();
+        BorderPane bp = new BorderPane();
+        Scene dialogScene = new Scene(bp);
+
     }
 
 }

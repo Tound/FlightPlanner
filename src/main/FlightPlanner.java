@@ -45,9 +45,9 @@ public class FlightPlanner extends Application {
         topGp.setPadding(new Insets(10,50,0,10));
 
         bp.setTop(topGp);
-        //bp.setLeft(FlightSettings.setupFlight());
-        bp.setCenter(FlightSettings.setupFlight());
-        bp.setRight(PathDrawer.createPathDrawer());
+        bp.setLeft(FlightSettings.setupFlight());
+        bp.setCenter(PathDrawer.createPathDrawer());
+        //bp.setRight(PathDrawer.createPathDrawer());
         bp.setBottom(new Text("Created by Thomas Pound"));
 
         Scene main = new Scene(bp,1280,720);

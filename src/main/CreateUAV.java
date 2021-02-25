@@ -129,8 +129,9 @@ public class CreateUAV {
         createStage.show();
     }
 
-    public void loadUAV(){
+    public String loadUAV(){
         //Parser
+    return "UAV";
     }
 
     public void showPopup(String name){

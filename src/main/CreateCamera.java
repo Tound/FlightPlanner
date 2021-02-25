@@ -93,10 +93,7 @@ public class CreateCamera {
         createStage.show();
     }
 
-    public void loadCamera(){
-
-
-
-
+    public String loadCamera(){
+        return "Camera";
     }
 }
