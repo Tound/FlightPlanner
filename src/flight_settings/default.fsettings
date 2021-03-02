@@ -1,9 +1,11 @@
 {
     "settings":{
-        "uav_speed":"10"
-        "altitude":"Fixed Wing UAV",
+        "uav_speed":"10",
+        "wind_speed": "5",
+        "wind_direction":"045",
+        "altitude":"120",
         "forward_overlap":"20",
         "side_overlap":"80",
-        "coverage_resolution":"0.02",
+        "coverage_resolution":"0.02"
     }
 }

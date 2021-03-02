@@ -2,20 +2,14 @@ package main;
 
 import javafx.application.Application;
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
-import java.awt.*;
 
 public class FlightPlanner extends Application {
 
@@ -23,12 +17,16 @@ public class FlightPlanner extends Application {
     Button exportFlight = new Button("Export\nFlight");
     Button saveFlight = new Button("Save\nFlight");
     Button loadFlight = new Button("Load\nFlight");
+    static Stage stage;
 
     public void start(Stage primaryStage) throws Exception{
         //Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        stage = primaryStage;
         primaryStage.setTitle("FlightPlanner V1.0");
 
         FlightSettings fs = new FlightSettings();
+        PathDrawer pathDrawer = new PathDrawer();
+
         BorderPane bp = new BorderPane();
         bp.setId("borderpane");
         GridPane topGp = new GridPane();
@@ -42,29 +40,32 @@ public class FlightPlanner extends Application {
         topGp.add(saveFlight,2,0);
         topGp.add(loadFlight,3,0);
         topGp.setHgap(50);
-        topGp.setPadding(new Insets(10,50,0,10));
+        topGp.setPadding(new Insets(10,50,5,10));
 
         bp.setTop(topGp);
-        bp.setLeft(FlightSettings.setupFlight());
-        bp.setCenter(PathDrawer.createPathDrawer());
+        bp.setLeft(fs.setupFlight());
+        bp.setCenter(pathDrawer.createPathDrawer(bp));
         //bp.setRight(PathDrawer.createPathDrawer());
         bp.setBottom(new Text("Created by Thomas Pound"));
 
         Scene main = new Scene(bp,1280,720);
         main.setUserAgentStylesheet("style/main.css");
 
+        //Export waypoint file
         exportFlight.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-
+                exportAFlight();
             }
         });
+        //Save project
         saveFlight.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
 
             }
         });
+        //Load project
         loadFlight.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -72,10 +73,20 @@ public class FlightPlanner extends Application {
             }
         });
 
-
-
         primaryStage.setScene(main);
         primaryStage.show();
+    }
+
+    public void exportAFlight(){
+        //Export flight menu?
+        //File export = new File();
+        //export.write();
+
+
+    }
+
+    public static Stage getStage() {
+        return stage;
     }
 
     public static void main(String[] args) {

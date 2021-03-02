@@ -11,15 +11,19 @@ import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
+import java.util.ArrayList;
 
 public class FlightSettings {
     private static ScrollPane sp;
 
-    private final String uav_path = "src/UAVs";
-    private final String cam_path = "src/cameras";
-    private final String settings_path = "src/flight_settings";
-    private final String project_path = "src/projects";
+    public final static String uav_path = "src/UAVs";
+    public final static String cam_path = "src/cameras";
+    public final static String settings_path = "src/flight_settings";
+    public final static String project_path = "src/projects";
 
     private static TextField uavName = new TextField();
     private static TextField uavWeight = new TextField();
@@ -49,6 +53,8 @@ public class FlightSettings {
     private static String defaultCoverageResolution = "0.02";
     private static String defaultAltitude = "120";
 
+    public static FileChooser fileChooser = new FileChooser();
+
     public FlightSettings(){
         uavName.setPromptText("Name of UAV");
         uavWeight.setPromptText("Weight of UAV (Kg)");
@@ -74,7 +80,7 @@ public class FlightSettings {
 
     }
 
-    public static ScrollPane setupFlight(){
+    public ScrollPane setupFlight(){
 
         CreateUAV createUAV = new CreateUAV();
         CreateCamera createCamera = new CreateCamera();
@@ -273,19 +279,26 @@ public class FlightSettings {
         loadUAV.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                String uavString = createUAV.loadUAV();
-                uavName.setText(uavString);
-                uavWeight.setText(uavString);
-                uavMinRadius.setText(uavString);
-                uavMaxIncline.setText(uavString);
-                uavBattery.setText(uavString);
-                uavBatteryCapacity.setText(uavString);
+                fileChooser.setInitialDirectory(new File(uav_path));
+                fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UAV Files (*.uav)","*.uav"));
+                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
+                ArrayList<String> output = Parser.load(file);
+                uavName.setText(output.get(0));
+                uavWeight.setText(output.get(1));
+                uavMinRadius.setText(output.get(2));
+                uavMaxIncline.setText(output.get(3));
+                uavBattery.setText(output.get(4));
+                uavBatteryCapacity.setText(output.get(5));
             }
         });
 
         loadCam.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                fileChooser.setInitialDirectory(new File(cam_path));
+                fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Camera Files (*.cam)","*.cam"));
+                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
+                ArrayList<String> output = Parser.load(file);
                 String camString = createCamera.loadCamera();
                 camName.setText(camString);
                 camSensorX.setText(camString);
