@@ -15,6 +15,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class FlightSettings {
@@ -360,6 +362,52 @@ public class FlightSettings {
 
         }
         else{
+
+        }
+        //Write intermediate file
+        try {
+            FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
+            writer.write("====SETTINGS====");
+            //writer.write("UAV_NAME\t" + uavName.getText());
+            writer.write("UAV_WEIGHT\t" + uavWeight.getText());
+            writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText());
+            writer.write("UAV_MAX_INCLINE\t" + uavMaxIncline.getText();
+            //writer.write(uavBattery.getText();
+            writer.write("BATTERY_CAPACITY\t" + uavBatteryCapacity.getText());
+
+            //writer.write("CAMERA_NAME" + camName.getText());
+            writer.write("CAM_SENSOR_X\t" + camSensorX.getText());
+            writer.write("CAM_SENSOR_Y\t" + camSensorY.getText());
+            writer.write("CAM_FOCAL_LENGTH\t" + camFocalLength.getText());
+            writer.write("CAM_RESOLUTION\t" + camResolution.getText());
+            writer.write("CAM_ASPECT_RATIO\t" + camAspectRatio.getText());
+
+            writer.write("UAV_SPEED\t" + uavSpeed.getText());
+            writer.write("WIND_SPEED\t" + windSpeed.getText());
+            writer.write("WIND_DIRECTION\t" + windDirection.getText());
+            writer.write("ALTITUDE\t" + altitude.getText());
+            writer.write("FORWARD_OVERLAP\t" + forwardOverlap.getText());
+            writer.write("SIDE_OVERLAP\t" + sideOverlap.getText());
+            writer.write("COVERAGE_RESOLUTION\t" + coverageResolution.getText())
+            writer.write("====START====\n");
+            Coordinate startLoc = FlightPlanner.getPathDrawer().getStartPoint();
+            writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y);
+
+            ArrayList<Coordinate> points = FlightPlanner.getPathDrawer().getPoints();
+            ArrayList<Coordinate> nfzPoints = FlightPlanner.getPathDrawer().getNfzPoints();
+
+            for(int i = 0;i<points.size();i++){
+                writer.write(points.get(i).x + "," + points.get(i).y);
+            }
+            writer.write("====NFZ====");
+            /*for(int i = 0;i<NFZs.size();i++) {
+                for (int j = 0; j < nfzPoints.size(); j++) {
+                    writer.write(nfzPoints.get(j).x + "," + nfzPoints.get(j).y);
+                }
+            }*/
+            writer.write("====END====");
+            writer.close();
+        }catch (IOException ioe){
 
         }
         //Run scripts

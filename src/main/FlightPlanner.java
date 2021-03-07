@@ -13,11 +13,12 @@ import javafx.stage.Stage;
 
 public class FlightPlanner extends Application {
 
-    Text title = new Text("Flight Planner V1.0");
-    Button exportFlight = new Button("Export\nFlight");
-    Button saveFlight = new Button("Save\nFlight");
-    Button loadFlight = new Button("Load\nFlight");
-    static Stage stage;
+    private Text title = new Text("Flight Planner V1.0");
+    private Button exportFlight = new Button("Export\nFlight");
+    private Button saveFlight = new Button("Save\nFlight");
+    private Button loadFlight = new Button("Load\nFlight");
+    private static Stage stage;
+    private PathDrawer pathDrawer;
 
     public void start(Stage primaryStage) throws Exception{
         //Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
@@ -25,7 +26,7 @@ public class FlightPlanner extends Application {
         primaryStage.setTitle("FlightPlanner V1.0");
 
         FlightSettings fs = new FlightSettings();
-        PathDrawer pathDrawer = new PathDrawer();
+        pathDrawer = new PathDrawer();
 
         BorderPane bp = new BorderPane();
         bp.setId("borderpane");
@@ -88,6 +89,7 @@ public class FlightPlanner extends Application {
     public static Stage getStage() {
         return stage;
     }
+    public static PathDrawer getPathDrawer(){return pathDrawer;}
 
     public static void main(String[] args) {
         launch(args);

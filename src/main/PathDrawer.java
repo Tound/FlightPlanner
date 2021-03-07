@@ -28,6 +28,7 @@ public class PathDrawer{
     private ArrayList<Coordinate> points = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> nfzPoints = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> allNFZPoints = new ArrayList<Coordinate>();
+    private Coordinate startPoint;
     private Coordinate takeoff;
 
     private boolean drawingROI = false;
@@ -44,8 +45,9 @@ public class PathDrawer{
     private Button drawROI = new Button("Draw ROI");
     private Button drawNFZ = new Button("Draw NFZ");
     private Button clear = new Button("Clear");
+    private Button setStart = new Button("Mark Takeoff and Landing");
     //private Button done = new Button("Done");
-    public HBox hBox = new HBox(drawROI,drawNFZ,clear);
+    public HBox hBox = new HBox(drawROI,drawNFZ,clear,setStart);
 
     public PathDrawer(){
         this.canvas = new Canvas();
@@ -166,6 +168,12 @@ public class PathDrawer{
                 gc.clearRect(0,0,stack.getWidth(),stack.getHeight());
             }
         });
+        setStart.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+            }
+        });
         return stack;
     }
 
@@ -203,6 +211,7 @@ public class PathDrawer{
     public ArrayList<Coordinate> getPoints(){
         return points;
     }
+    public Coordinate getStartPoint(){ return startPoint;}
     public ArrayList<Coordinate> getNfzPoints(){
         return nfzPoints;
     }
