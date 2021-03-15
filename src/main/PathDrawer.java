@@ -27,18 +27,21 @@ public class PathDrawer{
     private GraphicsContext gc;
     private ArrayList<Coordinate> points = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> nfzPoints = new ArrayList<Coordinate>();
-    private ArrayList<Coordinate> allNFZPoints = new ArrayList<Coordinate>();
-    private Coordinate startPoint;
+    private ArrayList<ArrayList<Coordinate>> allNFZPoints = new ArrayList<ArrayList<Coordinate>>();
+    private Coordinate startPoint = null;
     private Coordinate takeoff;
 
     private boolean drawingROI = false;
     private boolean drawingNFZ = false;
+    private boolean drawingStart = false;
 
     private boolean complete = false;
     private double markerRadius = 20;
     private double nfzMarkerRadius = 10;
+    private double startMarkerRadius = 24;
     private Paint markerPaint = Color.BLACK;
     private Paint nfzMarkerPaint = Color.RED;
+    private Paint startMarkerPaint = Color.BLUE;
     private Paint textPaint = Color.WHITE;
     private Font markerFont = Font.font("Arial",FontPosture.ITALIC,15);//new Font("Arial", 16);
 
@@ -80,27 +83,7 @@ public class PathDrawer{
                 }
             }
         });
-        /*canvas.setOnMouseMoved(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if(points.size() > 0 && drawingROI == true){
-                    gc.clearRect(0,0,stack.getWidth(),stack.getHeight());
-                    for(int i=0;i<points.size();i++){
-                        System.out.println(i);
-                        gc.strokeOval(points.get(i).getX() - markerRadius / 2, points.get(i).getY() - markerRadius / 2, markerRadius, markerRadius);
-                        gc.fillText(Integer.toString(i+1), points.get(i).getX(), points.get(i).getY());
-                        if(i>0){
-                            gc.strokeLine(points.get(i).getX(),points.get(i).getY(), points.get(i-1).getX(), points.get(i-1).getY());
-                        }
-                    }
-                    System.out.println("DONE");
-                    gc.strokeLine(points.get(0).getX(),points.get(0).getY(), event.getX(), event.getY());
-                    gc.strokeLine(points.get(points.size()-1).getX(),points.get(points.size()-1).getY(), event.getX(), event.getY());
-                }else{
 
-                }
-            }
-        });*/
         drawROI.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -127,8 +110,6 @@ public class PathDrawer{
                         gc.strokeLine(points.get(points.size() - 1).getX(), points.get(points.size() - 1).getY(), points.get(0).getX(), points.get(0).getY());
                         points.add(points.get(0));
                     }
-
-                    //joinPath();
                 }else{
                     System.out.println("You must finish drawing the NFZ first");
                 }
@@ -137,18 +118,22 @@ public class PathDrawer{
         drawNFZ.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(!drawingNFZ && !drawingROI){
+                if(!drawingNFZ && !drawingROI){ //If not drawing the NFZ and not drawing the ROI
                     drawNFZ.setText("Done");
                     drawingNFZ = true;
-                    /*if(nfzPoints.size()>0){
-                        nfzPoints.clear();
-                    }*/
-                }else if(!drawingROI){
+
+                }else if(!drawingROI){ //If not drawing the ROI
                     drawNFZ.setText("Draw NFZ");
                     drawingNFZ = false;
+                    //if(allNFZPoints.get(allNFZPoints.size()-1).add())
                     if(nfzPoints.size()>0) {
                         gc.strokeLine(nfzPoints.get(nfzPoints.size() - 1).getX(), nfzPoints.get(nfzPoints.size() - 1).getY(), nfzPoints.get(0).getX(), nfzPoints.get(0).getY());
-                        nfzPoints.add(nfzPoints.get(0));
+                        //nfzPoints.add(nfzPoints.get(0));
+                    }
+                    if(nfzPoints.size()>2){ // If enough points have been added to the NFZ
+                        ArrayList<Coordinate> points = new ArrayList<>(nfzPoints);
+                        allNFZPoints.add(points);
+                        nfzPoints.clear();
                     }
                 }else{
                     System.out.println("You must finish drawing the ROI first");
@@ -160,6 +145,8 @@ public class PathDrawer{
             public void handle(MouseEvent event) {
                 points.clear();
                 nfzPoints.clear();
+                allNFZPoints.clear();
+                startPoint = null;
                 complete = false;
                 drawingNFZ = false;
                 drawingROI = false;
@@ -171,7 +158,15 @@ public class PathDrawer{
         setStart.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-
+                if(drawingStart){
+                    setStart.setText("Mark Takeoff and Landing");
+                    drawingStart = !drawingStart;
+                }else {
+                    drawingStart = true;
+                    drawingROI = false;
+                    drawingNFZ = false;
+                    setStart.setText("Click start location");
+                }
             }
         });
         return stack;
@@ -198,11 +193,19 @@ public class PathDrawer{
             gc.setFill(nfzMarkerPaint);
             gc.setLineWidth(2);
             gc.fillOval(x - nfzMarkerRadius/2, y - nfzMarkerRadius/2, nfzMarkerRadius, nfzMarkerRadius);
-            nfzPoints.add(new Coordinate((int)x, (int)y));
+            nfzPoints.add(new Coordinate((int) x, (int) y));
             //gc.fillText(Integer.toString(nfzPoints.size()), x, y);
             if(nfzPoints.size()>1){
                 gc.strokeLine(nfzPoints.get(nfzPoints.size()-1).getX(),nfzPoints.get(nfzPoints.size()-1).getY(), nfzPoints.get(nfzPoints.size()-2).getX(), nfzPoints.get(nfzPoints.size()-2).getY());
             }
+        }else if(drawingStart){
+            startPoint = new Coordinate(x,y);
+            gc.setFill(startMarkerPaint);
+            gc.fillOval(x-startMarkerRadius/2,y-startMarkerRadius/2,startMarkerRadius,startMarkerRadius);
+            gc.setFill(textPaint);
+            gc.fillText("S/L",x-10,y+4);
+            setStart.setText("Mark Takeoff and Landing");
+            drawingStart = false;
         }
         else{
             System.out.println("Press the reset button as the path has been finalised!");
@@ -212,7 +215,5 @@ public class PathDrawer{
         return points;
     }
     public Coordinate getStartPoint(){ return startPoint;}
-    public ArrayList<Coordinate> getNfzPoints(){
-        return nfzPoints;
-    }
+    public ArrayList<ArrayList<Coordinate>> getAllNFZs(){ return allNFZPoints; }
 }

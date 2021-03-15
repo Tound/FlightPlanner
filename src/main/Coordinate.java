@@ -1,18 +1,18 @@
 package main;
 
 public class Coordinate {
-    public int x;
-    public int y;
+    public double x;
+    public double y;
     public double long_;
     public  double lat;
-    public Coordinate(int x,int y){//,double long_,double lat){
+    public Coordinate(double x,double y){//,double long_,double lat){
         this.x = x;
         this.y = y;
         //this.long_ = long_;
         //this.lat = lat;
     }
 
-    public int getX() {
+    public double getX() {
         return x;
     }
 
@@ -20,7 +20,7 @@ public class Coordinate {
         this.x = x;
     }
 
-    public int getY() {
+    public double getY() {
         return y;
     }
 

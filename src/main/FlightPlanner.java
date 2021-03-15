@@ -18,14 +18,15 @@ public class FlightPlanner extends Application {
     private Button saveFlight = new Button("Save\nFlight");
     private Button loadFlight = new Button("Load\nFlight");
     private static Stage stage;
-    private PathDrawer pathDrawer;
+    private static PathDrawer pathDrawer;
+    private static FlightSettings flightSettings;
 
     public void start(Stage primaryStage) throws Exception{
         //Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         stage = primaryStage;
         primaryStage.setTitle("FlightPlanner V1.0");
 
-        FlightSettings fs = new FlightSettings();
+        FlightSettings flightSettings = new FlightSettings();
         pathDrawer = new PathDrawer();
 
         BorderPane bp = new BorderPane();
@@ -44,7 +45,7 @@ public class FlightPlanner extends Application {
         topGp.setPadding(new Insets(10,50,5,10));
 
         bp.setTop(topGp);
-        bp.setLeft(fs.setupFlight());
+        bp.setLeft(flightSettings.setupFlight());
         bp.setCenter(pathDrawer.createPathDrawer(bp));
         //bp.setRight(PathDrawer.createPathDrawer());
         bp.setBottom(new Text("Created by Thomas Pound"));
@@ -90,6 +91,7 @@ public class FlightPlanner extends Application {
         return stage;
     }
     public static PathDrawer getPathDrawer(){return pathDrawer;}
+    public static FlightSettings getFlightSettings(){ return flightSettings; }
 
     public static void main(String[] args) {
         launch(args);

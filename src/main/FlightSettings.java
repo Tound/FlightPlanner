@@ -349,71 +349,76 @@ public class FlightSettings {
     }
 
     public static void createRoute(){
-        System.out.println(altitude.getText());
+        //System.out.println(altitude.getText());
         //Run Checks
         if(altitude.getText().isEmpty() && coverageResolution.getText().isEmpty()){
-            System.out.println("Altitude is empty");
+            System.out.println("Altitude is empty and Coverage resolution is empty");
         }
         else if(altitude.getText().isEmpty()){
-
+            System.out.println("Altitude is empty");
         }
         else if (coverageResolution.getText().isEmpty()){
-
-
+            System.out.println("Coverage resolution is empty");
         }
-        else{
-
+        else if(FlightPlanner.getPathDrawer().getStartPoint() == null){
+            System.out.println("No start location specified");
         }
-        //Write intermediate file
-        try {
-            FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
-            writer.write("====SETTINGS====");
-            //writer.write("UAV_NAME\t" + uavName.getText());
-            writer.write("UAV_WEIGHT\t" + uavWeight.getText());
-            writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText());
-            writer.write("UAV_MAX_INCLINE\t" + uavMaxIncline.getText();
-            //writer.write(uavBattery.getText();
-            writer.write("BATTERY_CAPACITY\t" + uavBatteryCapacity.getText());
+        else {
+            //Write intermediate file
+            System.out.println("Writing to file");
+            try {
+                FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
+                writer.write("====SETTINGS====\n");
+                //writer.write("UAV_NAME\t" + uavName.getText());
+                writer.write("UAV_WEIGHT\t" + uavWeight.getText() + "\n");
+                writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText() + "\n");
+                writer.write("UAV_MAX_INCLINE\t" + uavMaxIncline.getText() + "\n");
+                //writer.write(uavBattery.getText();
+                writer.write("BATTERY_CAPACITY\t" + uavBatteryCapacity.getText() + "\n");
 
-            //writer.write("CAMERA_NAME" + camName.getText());
-            writer.write("CAM_SENSOR_X\t" + camSensorX.getText());
-            writer.write("CAM_SENSOR_Y\t" + camSensorY.getText());
-            writer.write("CAM_FOCAL_LENGTH\t" + camFocalLength.getText());
-            writer.write("CAM_RESOLUTION\t" + camResolution.getText());
-            writer.write("CAM_ASPECT_RATIO\t" + camAspectRatio.getText());
+                //writer.write("CAMERA_NAME" + camName.getText());
+                writer.write("CAM_SENSOR_X\t" + camSensorX.getText() + "\n");
+                writer.write("CAM_SENSOR_Y\t" + camSensorY.getText() + "\n");
+                writer.write("CAM_FOCAL_LENGTH\t" + camFocalLength.getText() + "\n");
+                writer.write("CAM_RESOLUTION\t" + camResolution.getText() + "\n");
+                writer.write("CAM_ASPECT_RATIO\t" + camAspectRatio.getText() + "\n");
 
-            writer.write("UAV_SPEED\t" + uavSpeed.getText());
-            writer.write("WIND_SPEED\t" + windSpeed.getText());
-            writer.write("WIND_DIRECTION\t" + windDirection.getText());
-            writer.write("ALTITUDE\t" + altitude.getText());
-            writer.write("FORWARD_OVERLAP\t" + forwardOverlap.getText());
-            writer.write("SIDE_OVERLAP\t" + sideOverlap.getText());
-            writer.write("COVERAGE_RESOLUTION\t" + coverageResolution.getText())
-            writer.write("====START====\n");
-            Coordinate startLoc = FlightPlanner.getPathDrawer().getStartPoint();
-            writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y);
+                writer.write("UAV_SPEED\t" + uavSpeed.getText() + "\n");
+                writer.write("WIND_SPEED\t" + windSpeed.getText() + "\n");
+                writer.write("WIND_DIRECTION\t" + windDirection.getText() + "\n");
+                writer.write("ALTITUDE\t" + altitude.getText() + "\n");
+                writer.write("FORWARD_OVERLAP\t" + forwardOverlap.getText() + "\n");
+                writer.write("SIDE_OVERLAP\t" + sideOverlap.getText() + "\n");
+                writer.write("COVERAGE_RESOLUTION\t" + coverageResolution.getText() + "\n");
+                writer.write("====START====\n");
+                Coordinate startLoc = FlightPlanner.getPathDrawer().getStartPoint();
+                writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y  + "\n");
 
-            ArrayList<Coordinate> points = FlightPlanner.getPathDrawer().getPoints();
-            ArrayList<Coordinate> nfzPoints = FlightPlanner.getPathDrawer().getNfzPoints();
+                ArrayList<Coordinate> points = FlightPlanner.getPathDrawer().getPoints();
+                ArrayList<ArrayList<Coordinate>> allNFZPoints = FlightPlanner.getPathDrawer().getAllNFZs();
 
-            for(int i = 0;i<points.size();i++){
-                writer.write(points.get(i).x + "," + points.get(i).y);
-            }
-            writer.write("====NFZ====");
-            /*for(int i = 0;i<NFZs.size();i++) {
-                for (int j = 0; j < nfzPoints.size(); j++) {
-                    writer.write(nfzPoints.get(j).x + "," + nfzPoints.get(j).y);
+                for (int i = 0; i < points.size(); i++) {
+                    writer.write(points.get(i).x + "," + points.get(i).y + "\n");
                 }
-            }*/
-            writer.write("====END====");
-            writer.close();
-        }catch (IOException ioe){
-
+                if (allNFZPoints.size() > 0) {
+                    writer.write("====NFZ====\n");
+                    for (int i = 0; i < allNFZPoints.size(); i++) {
+                        writer.write("NFZ START\n");
+                        ArrayList<Coordinate> nfzPoint = allNFZPoints.get(i);
+                        for (int j = 0; j < nfzPoint.size(); j++) {
+                            writer.write(nfzPoint.get(j).x + "," + nfzPoint.get(j).y  + "\n");
+                        }
+                    }
+                }
+                writer.write("====END====");
+                writer.close();
+            } catch (IOException ioe) {
+                System.out.println("Cannot write to file");
+            }
+            //Run scripts
         }
-        //Run scripts
-
-
     }
+
     public void dialog(String message){
         Stage dialogStage = new Stage();
         BorderPane bp = new BorderPane();
