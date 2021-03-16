@@ -12,6 +12,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -350,20 +351,56 @@ public class FlightSettings {
 
     public static void createRoute(){
         //System.out.println(altitude.getText());
-        //Run Checks
+        //Run
+        String errorString = "";
         if(altitude.getText().isEmpty() && coverageResolution.getText().isEmpty()){
             System.out.println("Altitude is empty and Coverage resolution is empty");
+            errorString = errorString + "Altitude or Coverage Resolution,";
         }
-        else if(altitude.getText().isEmpty()){
-            System.out.println("Altitude is empty");
+        /*else if(altitude.getText().isEmpty()){
+            System.out.println("Altitude is empty and will be calculated from coverage resolution");
         }
         else if (coverageResolution.getText().isEmpty()){
             System.out.println("Coverage resolution is empty");
-        }
-        else if(FlightPlanner.getPathDrawer().getStartPoint() == null){
+        }*/
+        if(windSpeed.getText().isEmpty()){
+            windSpeed.setText("0");
+            windDirection.setText("0");
+        }if(uavSpeed.getText().isEmpty()){
+            errorString = errorString + "UAV speed,";
+        }if(uavWeight.getText().isEmpty()){
+            errorString = errorString + "UAV Weight,";
+        }if(uavMinRadius.getText().isEmpty()){
+            errorString = errorString + "Minimum Turn Radius,";
+        }if(uavMaxIncline.getText().isEmpty()){
+            errorString = errorString + "Max Incline Angle,";
+        }if(uavBatteryCapacity.getText().isEmpty()){
+            errorString = errorString + "Battery Capacity,";
+        }if(camSensorX.getText().isEmpty()){
+            errorString = errorString + "Camera sensor width,";
+        }if(camSensorY.getText().isEmpty()){
+            errorString = errorString + "Camera sensor height,";
+        }if(camFocalLength.getText().isEmpty()){
+            errorString = errorString + "Camera focal length,";
+        }if(camResolution.getText().isEmpty()){
+            errorString = errorString + "Camera Resolution,";
+        }if(camAspectRatio.getText().isEmpty()){
+            errorString = errorString + "Camera Aspect Ratio,";
+        }if(forwardOverlap.getText().isEmpty()){
+            errorString = errorString + "Forward Overlap,";
+        }if(sideOverlap.getText().isEmpty()){
+            errorString = errorString + "Side Overlap,";
+        }if(FlightPlanner.getPathDrawer().getStartPoint() == null){
             System.out.println("No start location specified");
+            errorString = errorString + "Takeoff and Landing location,";
+        }if(FlightPlanner.getPathDrawer().getPoints().isEmpty()){
+            errorString = errorString + "Area of Interest,";
         }
-        else {
+
+        if(errorString != ""){
+            dialog(errorString);
+        }else {
+            System.out.println("All inputs are correct");
             //Write intermediate file
             System.out.println("Writing to file");
             try {
@@ -392,7 +429,7 @@ public class FlightSettings {
                 writer.write("COVERAGE_RESOLUTION\t" + coverageResolution.getText() + "\n");
                 writer.write("====START====\n");
                 Coordinate startLoc = FlightPlanner.getPathDrawer().getStartPoint();
-                writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y  + "\n");
+                writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y + "\n");
 
                 ArrayList<Coordinate> points = FlightPlanner.getPathDrawer().getPoints();
                 ArrayList<ArrayList<Coordinate>> allNFZPoints = FlightPlanner.getPathDrawer().getAllNFZs();
@@ -406,7 +443,7 @@ public class FlightSettings {
                         writer.write("NFZ START\n");
                         ArrayList<Coordinate> nfzPoint = allNFZPoints.get(i);
                         for (int j = 0; j < nfzPoint.size(); j++) {
-                            writer.write(nfzPoint.get(j).x + "," + nfzPoint.get(j).y  + "\n");
+                            writer.write(nfzPoint.get(j).x + "," + nfzPoint.get(j).y + "\n");
                         }
                     }
                 }
@@ -419,11 +456,30 @@ public class FlightSettings {
         }
     }
 
-    public void dialog(String message){
+    public static void dialog(String message){
         Stage dialogStage = new Stage();
+        dialogStage.setTitle("Missing Inputs");
         BorderPane bp = new BorderPane();
-        Scene dialogScene = new Scene(bp);
+        Button ok = new Button("OK");
 
+        message = message.substring(0,message.length()-1) + "\n\nAre missing from the flight settings. Make sure all of the settings above are configured.";
+        ok.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                dialogStage.close();
+            }
+        });
+        Label dialogText = new Label(message);
+        dialogText.setWrapText(true); //setWrappingWidth(400);
+        bp.setCenter(dialogText);
+        bp.setBottom(ok);
+        bp.setId("border");
+        BorderPane.setAlignment(dialogText,Pos.CENTER);
+        BorderPane.setAlignment(ok,Pos.CENTER);
+        Scene dialogScene = new Scene(bp,400,200);
+        dialogScene.setUserAgentStylesheet("style/menus.css");
+        dialogStage.initModality(Modality.APPLICATION_MODAL);
+        dialogStage.setScene(dialogScene);
+        dialogStage.show();
     }
-
 }

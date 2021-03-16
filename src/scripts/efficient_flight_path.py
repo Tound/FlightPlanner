@@ -41,6 +41,49 @@ class Configuration:
         self.coverage_resolution = coverage_resolution
         self.wind = wind
 
+
+polygon = []
+start_loc = []
+# Read intermediate file
+f = open("intermediate/intermediate.txt","r")
+while True:
+    line = f.readline()
+    line.split()
+    if line == "====START====":
+        line = f.readline()
+        if line.startswith("START_LOC"):
+            contents = line.split("\t")
+            contents = contents[1].split(",")
+            start_loc = [float(contents[0]),float(contents[1])]
+        line = f.readline()
+        while line not "====END====":
+            contents = line.split(",")
+            point = [contents[0],contents[1]]
+            polygon.append(point)
+            line = f.readline()
+
+    elif line.startswith("UAV_WEIGHT"):
+    elif line == "UAV_MIN_RADIUS":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "BATTERY_CAPACITY":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "UAV_MAX_INCLINE":
+    elif line == "UAV_MAX_INCLINE":
+    elif line is None:
+        break
+    else:
+        print("Unknown line")
+        print("Error")
+        exit(1)
+
+f.close()
+
+
 ########################
 # CREATE TERRAIN
 ########################
@@ -66,14 +109,14 @@ for y in range(height):
 ######################
 # UAV settings
 min_turn = 20 #m
-max_incline_grad = 30 #degs
+max_incline_grad = 31 #degs
 glide_slope = 20
 uav_mass = 18 # Kg
 uav_speed = 50
 
 # Camera settings
-side_overlap = 0.6          # Percentage
-forward_overlap = 0.4       # Percentage
+side_overlap = 0.2          # Percentage
+forward_overlap = 0.1       # Percentage
 sensor_x = 5.62    *10**-3  # mm
 sensor_y = 7.4     *10**-3  # mm
 focal_length = 3.6 *10**-3  # mm
@@ -84,7 +127,7 @@ image_y = 3000              # px
 fov = 20                    # degs
 
 # Flight settings
-wind = (10,math.radians(10)) #Polar coords (Mag, degrees)
+wind = (10,math.radians(0)) #Polar coords (Mag, degrees)
 coverage_resolution = 0.02  # m/px
 
 uav = UAV(uav_mass,uav_speed,min_turn,max_incline_grad)
@@ -98,7 +141,6 @@ NFZ2 = [[200,450],[300,450],[300,350],[200,350]]
 NFZs = []#[NFZ,NFZ2]
 start_loc = [400,730,terrain[730][400]]
 
-#altitude = getAltitude(focal_length,coverage_x,sensor_x)
 # Create canvas/ choose area
 # Get startpoint, 2D points from canvas and elevation data via intermediate text file + flight settings
 # Read file and create points
@@ -128,44 +170,48 @@ fig.tight_layout()
 
 polygon = np.array([[100,100],[100,650],[650,650],[650,100]])
 NFZ = np.array([[300,450],[450,450],[450,200],[300,200]])
-plt.plot(polygon[:,0],polygon[:,1],'-bo')
+plt.plot(polygon[:,0],polygon[:,1],100,'-bo',zorder=15)
 plt.plot(NFZ[:,0],NFZ[:,1],'-ro')
 
 
-# for image_pass in image_passes:
-#     loc_x = np.array([])
-#     loc_y = np.array([])
-#     loc_z = np.array([])
-#     for image_loc in image_pass.image_locs:
-#         loc_x = np.append(loc_x,image_loc.x)
-#         loc_y = np.append(loc_y,image_loc.y)
-#         loc_z = np.append(loc_z,image_loc.altitude)
+for image_pass in image_passes:
+    loc_x = np.array([])
+    loc_y = np.array([])
+    loc_z = np.array([])
+    for image_loc in image_pass.image_locs:
+        loc_x = np.append(loc_x,image_loc.x)
+        loc_y = np.append(loc_y,image_loc.y)
+        loc_z = np.append(loc_z,image_loc.altitude)
         
-#     plt.plot(loc_x,loc_y,loc_z,'-ro',zorder=10)
+    plt.plot(loc_x,loc_y,loc_z,'-ro',zorder=10)
+
+# Need GPS and altitude before TSP
+# Update passes with altitudes from API
 
 # Use TSP to find shortest route
-shortest_path = TSP(image_passes,wind[1],min_turn,uav_mass,NFZs,max_incline_grad,start_loc,population_size=30,generations=2000,mutationRate=0.3)
-
+shortest_path = TSP(image_passes,wind[1],min_turn,uav_mass,NFZs,max_incline_grad,start_loc,populationSize=50,generations=2000,mutationRate=0.3)
 end_time = time.clock() - start_time
 print(f"Total time: {round(end_time/60,2)}mins")
+print(f"Total length: {round(shortest_path.getLength(),2)}m")
 
 dpaths = shortest_path.getDPaths()
 
 stepSize = 0.5
 
-dubinsX = np.array([])
-dubinsY = np.array([])
-dubinsZ = np.array([])
+
 for dpath in dpaths:
+    dubinsX = np.array([])
+    dubinsY = np.array([])
+    dubinsZ = np.array([])  
     points = dubins_path_sample_many(dpath,stepSize)
     for point in points:
         dubinsX = np.append(dubinsX,point[0])
         dubinsY = np.append(dubinsY,point[1])
         dubinsZ = np.append(dubinsZ,point[2])
-
-plt.plot(dubinsX,dubinsY,dubinsZ,'-yo',zorder=15,markersize = 1)
+    plt.plot(dubinsX,dubinsY,dubinsZ,'-yo',zorder=15,markersize = 1)
 
 plt.show()
 
 # Convert into GPS coords
+# Requires API for elevation
 # Create waypoints file

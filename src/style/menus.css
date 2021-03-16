@@ -36,6 +36,11 @@
     -fx-text-fill: white;
 }
 
+#border{
+    -fx-background-color: #242424;
+    -fx-text-fill: white;
+}
+
 .text-field{
     -fx-background-insets: 0, 0 0 1 0 ;
     -fx-background-radius: 0 ;
