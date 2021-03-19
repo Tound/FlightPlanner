@@ -41,48 +41,122 @@ class Configuration:
         self.coverage_resolution = coverage_resolution
         self.wind = wind
 
-
 polygon = []
-start_loc = []
+start_loc = [None,None,None]
+NFZs = []
+
+# UAV settings
+min_turn = None
+max_incline_grad = None
+glide_slope = None
+uav_mass = None
+uav_speed = None
+altitude = None
+
+# Camera settings
+side_overlap = None
+forward_overlap = None
+sensor_x = None
+sensor_y = None
+focal_length = None
+aspect_ratio = None
+cam_resolution = None
+image_x = None
+image_y = None
+fov = None
+
+# Flight settings
+wind = [None,None] #Polar coords (Mag, degrees)
+ground_sample_distance = None  # m/px
+
 # Read intermediate file
 f = open("intermediate/intermediate.txt","r")
 while True:
     line = f.readline()
-    line.split()
-    if line == "====START====":
+    if line.startswith("====START===="):
         line = f.readline()
         if line.startswith("START_LOC"):
+            line = line.strip("\n")
             contents = line.split("\t")
             contents = contents[1].split(",")
-            start_loc = [float(contents[0]),float(contents[1])]
+            start_loc = [int(float(contents[0])),int(float(contents[1])),None]
         line = f.readline()
-        while line not "====END====":
+        while not line.startswith("====NFZ===="):
+            line = line.strip("\n")
             contents = line.split(",")
-            point = [contents[0],contents[1]]
+            point = [int(float(contents[0])),int(float(contents[1]))]
             polygon.append(point)
             line = f.readline()
+        line = f.readline()
+        NFZ = []
+        while line != "====END====":
+            if line.startswith("NFZ START"):
+                if len(NFZ) > 0:
+                    NFZs.append(NFZ)
+                    NFZ = []
+            else:
+                line = line.strip("\n")
+                contents = line.split(",")
+                NFZ.append([int(float(contents[0])),int(float(contents[1]))])
+            line = f.readline()
+        if len(NFZ) > 0:
+            NFZs.append(NFZ)
+            NFZ = []
 
-    elif line.startswith("UAV_WEIGHT"):
-    elif line == "UAV_MIN_RADIUS":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "BATTERY_CAPACITY":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "UAV_MAX_INCLINE":
-    elif line == "UAV_MAX_INCLINE":
-    elif line is None:
-        break
     else:
-        print("Unknown line")
-        print("Error")
-        exit(1)
-
+        contents = line.split("\t")
+        if line.startswith("UAV_WEIGHT"):
+            uav_mass = contents[1]
+        elif line.startswith("UAV_MIN_RADIUS"):
+            min_turn = contents[1]
+        elif line.startswith("UAV_MAX_INCLINE"):
+            max_incline_angle = contents[1]
+        elif line.startswith("BATTERY_CAPACITY"):
+            battery_capacity = contents[1]
+        elif line.startswith("CAM_SENSOR_X"):
+            sensor_x = float(contents[1])*10**-3
+        elif line.startswith("CAM_SENSOR_Y"):
+            sensor_y = float(contents[1])*10**-3
+        elif line.startswith("CAM_FOCAL_LENGTH"):
+            focal_length = float(contents[1])*10**-3
+        elif line.startswith("CAM_RESOLUTION"):
+            cam_resolution = int(contents[1])
+        elif line.startswith("CAM_ASPECT_RATIO"):
+            contents = contents[1].strip("\n")
+            contents = contents.split(":")
+            aspect_ratio = (int(contents[0]),int(contents[1]))
+        elif line.startswith("UAV_SPEED"):
+            uav_speed = contents[1]
+        elif line.startswith("WIND_SPEED"):
+            wind[0] = contents[1]
+        elif line.startswith("WIND_DIRECTION"):
+            wind[1] = math.radians(float(contents[1])-90)
+        elif line.startswith("ALTITUDE"):
+            altitude = contents[1]
+        elif line.startswith("FORWARD_OVERLAP"):
+            forward_overlap = float(contents[1])/100
+        elif line.startswith("SIDE_OVERLAP"):
+            side_overlap = float(contents[1])/100
+        elif line.startswith("GSD"):
+            ground_sample_distance = float(contents[1])
+        elif line == "":
+            break
+        else:
+            print("Unknown line")
+            print("Error")
+            exit(1)
 f.close()
 
+image_x, image_y = imageDimensions(cam_resolution,aspect_ratio)
+coverage_width, coverage_height = getCoverageSize(ground_sample_distance,image_x,image_y)
+if altitude is None and ground_sample_distance is None:
+    print("Altitude or GSD must be a suitable value")
+elif altitude is None:
+    altitude = getAltitude(focal_length,coverage_width,sensor_x)
+elif ground_sample_distance is None:
+    ground_sample_distance = getGSD(focal_length,altitude,coverage_width)
+else:
+    print("All inputs are ok")
 
 ########################
 # CREATE TERRAIN
@@ -107,39 +181,14 @@ for y in range(height):
 ######################
 # Setup
 ######################
-# UAV settings
-min_turn = 20 #m
-max_incline_grad = 31 #degs
+
 glide_slope = 20
-uav_mass = 18 # Kg
-uav_speed = 50
 
-# Camera settings
-side_overlap = 0.2          # Percentage
-forward_overlap = 0.1       # Percentage
-sensor_x = 5.62    *10**-3  # mm
-sensor_y = 7.4     *10**-3  # mm
-focal_length = 3.6 *10**-3  # mm
-aspect_ratio = (4,3)        # x:y
-cam_resolution = 12         # MP
-image_x = 4000              # px
-image_y = 3000              # px
-fov = 20                    # degs
-
-# Flight settings
-wind = (10,math.radians(0)) #Polar coords (Mag, degrees)
-coverage_resolution = 0.02  # m/px
+start_loc[2] = terrain[int(start_loc[1])][int(start_loc[0])]
 
 uav = UAV(uav_mass,uav_speed,min_turn,max_incline_grad)
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
-config = Configuration(uav,camera,side_overlap,forward_overlap,coverage_resolution,wind)
-
-# Test cases
-polygon = [[100,100],[100,650],[650,650],[650,100]]
-NFZ = [[300,450],[450,450],[450,200],[300,200]]
-NFZ2 = [[200,450],[300,450],[300,350],[200,350]]
-NFZs = []#[NFZ,NFZ2]
-start_loc = [400,730,terrain[730][400]]
+config = Configuration(uav,camera,side_overlap,forward_overlap,ground_sample_distance,wind)
 
 # Create canvas/ choose area
 # Get startpoint, 2D points from canvas and elevation data via intermediate text file + flight settings
@@ -157,6 +206,13 @@ start_time = time.clock()
 
 image_passes = createPasses(polygon,NFZs,terrain,config)
 
+with open("intermediate/gpslookup.txt","w") as f:
+    for image_pass in image_passes:
+        for image_loc in image_pass.image_locs:
+            f.write(f"{round(image_loc.x,0)},{round(image_loc.y,0)}\n")
+        f.write("NEW PASS\n")
+f.close()
+
 # DRAW FOR TESTING
 fig = plt.figure(num=1,clear=True,figsize=(12,8))
 ax = fig.add_subplot(1,1,1,projection='3d')
@@ -168,10 +224,11 @@ ax.set(title='Terrain Generated',xlabel='x', ylabel='y', zlabel='z = Height (m)'
 ax.set_aspect(aspect='auto')
 fig.tight_layout()
 
-polygon = np.array([[100,100],[100,650],[650,650],[650,100]])
-NFZ = np.array([[300,450],[450,450],[450,200],[300,200]])
+polygon = np.array([polygon])
 plt.plot(polygon[:,0],polygon[:,1],100,'-bo',zorder=15)
-plt.plot(NFZ[:,0],NFZ[:,1],'-ro')
+for NFZ in NFZs:
+    NFZ = np.array([NFZ])
+    plt.plot(NFZ[:,0],NFZ[:,1],'-ro')
 
 
 for image_pass in image_passes:
@@ -185,6 +242,7 @@ for image_pass in image_passes:
         
     plt.plot(loc_x,loc_y,loc_z,'-ro',zorder=10)
 
+plt.show()
 # Need GPS and altitude before TSP
 # Update passes with altitudes from API
 

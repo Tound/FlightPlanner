@@ -405,7 +405,7 @@ public class FlightSettings {
             System.out.println("Writing to file");
             try {
                 FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
-                writer.write("====SETTINGS====\n");
+                //writer.write("====SETTINGS====\n");
                 //writer.write("UAV_NAME\t" + uavName.getText());
                 writer.write("UAV_WEIGHT\t" + uavWeight.getText() + "\n");
                 writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText() + "\n");
@@ -423,10 +423,12 @@ public class FlightSettings {
                 writer.write("UAV_SPEED\t" + uavSpeed.getText() + "\n");
                 writer.write("WIND_SPEED\t" + windSpeed.getText() + "\n");
                 writer.write("WIND_DIRECTION\t" + windDirection.getText() + "\n");
-                writer.write("ALTITUDE\t" + altitude.getText() + "\n");
+                if(!altitude.getText().isEmpty()) {
+                    writer.write("ALTITUDE\t" + altitude.getText() + "\n");
+                }
                 writer.write("FORWARD_OVERLAP\t" + forwardOverlap.getText() + "\n");
                 writer.write("SIDE_OVERLAP\t" + sideOverlap.getText() + "\n");
-                writer.write("COVERAGE_RESOLUTION\t" + coverageResolution.getText() + "\n");
+                writer.write("GSD\t" + coverageResolution.getText() + "\n");
                 writer.write("====START====\n");
                 Coordinate startLoc = FlightPlanner.getPathDrawer().getStartPoint();
                 writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y + "\n");
@@ -449,6 +451,7 @@ public class FlightSettings {
                 }
                 writer.write("====END====");
                 writer.close();
+
             } catch (IOException ioe) {
                 System.out.println("Cannot write to file");
             }
