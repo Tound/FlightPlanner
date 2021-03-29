@@ -1,13 +1,15 @@
 package main;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.text.Text;
@@ -15,48 +17,53 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.awt.image.RenderedImage;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class FlightSettings {
-    private static ScrollPane sp;
+    private ScrollPane sp;
 
-    public final static String uav_path = "src/UAVs";
-    public final static String cam_path = "src/cameras";
-    public final static String settings_path = "src/flight_settings";
-    public final static String project_path = "src/projects";
+    public final String uav_path = "src/UAVs";
+    public final String cam_path = "src/cameras";
+    public final String settings_path = "src/flight_settings";
+    public final String project_path = "src/projects";
 
-    private static TextField uavName = new TextField();
-    private static TextField uavWeight = new TextField();
-    private static TextField uavMinRadius = new TextField();
-    private static TextField uavMaxIncline = new TextField();
-    private static TextField uavBattery = new TextField();
-    private static TextField uavBatteryCapacity = new TextField();
+    private TextField uavName = new TextField();
+    private TextField uavWeight = new TextField();
+    private TextField uavMinRadius = new TextField();
+    private TextField uavMaxIncline = new TextField();
+    private TextField uavBattery = new TextField();
+    private TextField uavBatteryCapacity = new TextField();
 
-    private static TextField camName = new TextField();
-    private static TextField camSensorX = new TextField();
-    private static TextField camSensorY = new TextField();
-    private static TextField camFocalLength = new TextField();
-    private static TextField camResolution = new TextField();
-    private static TextField camAspectRatio = new TextField();
+    private TextField camName = new TextField();
+    private TextField camSensorX = new TextField();
+    private TextField camSensorY = new TextField();
+    private TextField camFocalLength = new TextField();
+    private TextField camResolution = new TextField();
+    private TextField camAspectRatio = new TextField();
 
-    private static TextField uavSpeed = new TextField();
-    private static TextField windSpeed = new TextField();
-    private static TextField windDirection = new TextField();
-    private static TextField altitude = new TextField();
-    private static TextField forwardOverlap = new TextField();
-    private static TextField sideOverlap = new TextField();
-    private static TextField coverageResolution = new TextField();
+    private TextField uavSpeed = new TextField();
+    private TextField windSpeed = new TextField();
+    private TextField windDirection = new TextField();
+    private TextField altitude = new TextField();
+    private TextField forwardOverlap = new TextField();
+    private TextField sideOverlap = new TextField();
+    private TextField coverageResolution = new TextField();
 
-    private static String defaultUavSpeed = "20";
-    private static String defaultForwardOverlap = "40";
-    private static String defaultSideOverlay = "60";
-    private static String defaultCoverageResolution = "0.02";
-    private static String defaultAltitude = "120";
+    private String defaultUavSpeed = "20";
+    private String defaultForwardOverlap = "40";
+    private String defaultSideOverlay = "60";
+    private String defaultCoverageResolution = "0.02";
+    private String defaultAltitude = "120";
 
-    public static FileChooser fileChooser = new FileChooser();
+    public FileChooser fileChooser = new FileChooser();
 
     public FlightSettings(){
         uavName.setPromptText("Name of UAV");
@@ -338,7 +345,25 @@ public class FlightSettings {
             @Override
             public void handle(MouseEvent event) {
                 // GET ALL THINGS AND SEND TO SCRIPTS
-                createRoute();
+                if(createRoute()) { // If route can be created
+                    // Screenshot
+                    try {
+                        File file = new File("src/intermediate/map.png");
+                        WritableImage writableImage = FlightPlanner.getPathDrawer().getMapNode().snapshot(new SnapshotParameters(), null);
+                        RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
+                        ImageIO.write(renderedImage, "png", file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    // Find passes and terraces
+                    if(runScript("find_flight_path")){
+                        if(runScript("shortest_path")){
+
+                        }
+                    }
+                }else{
+                    System.out.println("Cannot create route");
+                }
             }
         });
         gp.setPadding(new Insets(5,5,5,5));
@@ -349,7 +374,65 @@ public class FlightSettings {
         return sp;
     }
 
-    public static void createRoute(){
+    public boolean runScript(String scriptName){
+        System.out.println("Running "+scriptName);
+        try {
+            Runtime rt = Runtime.getRuntime();
+            Process pr = rt.exec("python src/scripts/" + scriptName + ".py");
+            BufferedReader bf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+            BufferedReader stdError = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
+            String line = "";
+            while ((line = bf.readLine()) != null) {
+                if (line == "error") {
+                    System.out.println("Script error");
+                    return false;
+                }
+                System.out.println(line);
+            }
+            if(stdError != null) {
+                String errorMessage = "Script error in " + scriptName + ":\n";
+                while ((line = stdError.readLine()) != null) {
+                    errorMessage = errorMessage + line + "\n";
+                }
+                dialog(errorMessage);
+                return false;
+            }
+            return true;
+        }catch (IOException ioe){
+            System.out.println("Script error");
+            return false;
+        }
+    }
+
+    public void writeSettings(){
+
+
+    }
+
+    public void lookupFiles(){
+        try {
+            File gpsLookup = new File("src/intermediate/gpslookup.txt");
+            Scanner reader = new Scanner(gpsLookup);
+            FileWriter writer = new FileWriter("src/intermediate/gpsresults.txt");
+            while(reader.hasNextLine()){
+                String line = reader.nextLine();
+                System.out.println(line);
+                if(line != "NEW PASS"){
+                    //GPS LOOKUP
+                    writer.write("GPS");
+                }else{
+                    writer.write("NEW PASS");
+                }
+            }
+            reader.close();
+        } catch(FileNotFoundException fnfe){
+            System.out.println("File not found");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Boolean createRoute(){
         //System.out.println(altitude.getText());
         //Run
         String errorString = "";
@@ -398,7 +481,9 @@ public class FlightSettings {
         }
 
         if(errorString != ""){
-            dialog(errorString);
+            errorString = errorString.substring(0,errorString.length()-1);
+            dialog(errorString + "\n\nAre missing from the flight settings. Make sure all of the settings above are configured.");
+            return false;
         }else {
             System.out.println("All inputs are correct");
             //Write intermediate file
@@ -407,6 +492,7 @@ public class FlightSettings {
                 FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
                 //writer.write("====SETTINGS====\n");
                 //writer.write("UAV_NAME\t" + uavName.getText());
+                writer.write("SCALE\t" + FlightPlanner.getPathDrawer().getMapScale() + "\n");
                 writer.write("UAV_WEIGHT\t" + uavWeight.getText() + "\n");
                 writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText() + "\n");
                 writer.write("UAV_MAX_INCLINE\t" + uavMaxIncline.getText() + "\n");
@@ -457,15 +543,16 @@ public class FlightSettings {
             }
             //Run scripts
         }
+        return true;
     }
 
-    public static void dialog(String message){
+    public void dialog(String message){
         Stage dialogStage = new Stage();
         dialogStage.setTitle("Missing Inputs");
         BorderPane bp = new BorderPane();
         Button ok = new Button("OK");
 
-        message = message.substring(0,message.length()-1) + "\n\nAre missing from the flight settings. Make sure all of the settings above are configured.";
+
         ok.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {

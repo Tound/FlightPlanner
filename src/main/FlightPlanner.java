@@ -26,7 +26,7 @@ public class FlightPlanner extends Application {
         stage = primaryStage;
         primaryStage.setTitle("FlightPlanner V1.0");
 
-        FlightSettings flightSettings = new FlightSettings();
+        flightSettings = new FlightSettings();
         pathDrawer = new PathDrawer();
 
         BorderPane bp = new BorderPane();
@@ -83,17 +83,11 @@ public class FlightPlanner extends Application {
         //Export flight menu?
         //File export = new File();
         //export.write();
-
-
     }
 
-    public static Stage getStage() {
-        return stage;
-    }
+    public static Stage getStage() { return stage; }
     public static PathDrawer getPathDrawer(){return pathDrawer;}
     public static FlightSettings getFlightSettings(){ return flightSettings; }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+    public static void main(String[] args) { launch(args); }
 }

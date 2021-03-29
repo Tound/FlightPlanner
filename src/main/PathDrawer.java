@@ -1,5 +1,6 @@
 package main;
 
+import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
@@ -14,7 +15,25 @@ import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 
+import java.awt.*;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
+
+import org.jxmapviewer.JXMapKit;
+import org.jxmapviewer.JXMapViewer;
+import org.jxmapviewer.OSMTileFactoryInfo;
+import org.jxmapviewer.input.CenterMapListener;
+import org.jxmapviewer.input.PanKeyListener;
+import org.jxmapviewer.input.PanMouseInputListener;
+import org.jxmapviewer.input.ZoomMouseWheelListenerCenter;
+import org.jxmapviewer.viewer.DefaultTileFactory;
+import org.jxmapviewer.viewer.GeoPosition;
+import org.jxmapviewer.viewer.TileFactoryInfo;
+
+import javax.swing.*;
+import javax.swing.event.MouseInputListener;
 
 
 public class PathDrawer{
@@ -51,6 +70,8 @@ public class PathDrawer{
     private Button setStart = new Button("Mark Takeoff and Landing");
     //private Button done = new Button("Done");
     public HBox hBox = new HBox(drawROI,drawNFZ,clear,setStart);
+    private JXMapViewer mapViewer;
+    private SwingNode sn;
 
     public PathDrawer(){
         this.canvas = new Canvas();
@@ -59,7 +80,12 @@ public class PathDrawer{
         this.width = canvas.getWidth();
         this.height = canvas.getWidth();
         //stack.setMaxHeight(Double.MAX_VALUE);
-        stack.getChildren().addAll(canvas,hBox);
+
+        canvas.setFocusTraversable(true);
+
+        sn = addMap();
+        sn.setPickOnBounds(false);
+        stack.getChildren().addAll(sn,hBox);
         //stack.setPickOnBounds(false);
         hBox.setPickOnBounds(false);
         //stack.setFocusTraversable(true);
@@ -88,6 +114,10 @@ public class PathDrawer{
             @Override
             public void handle(MouseEvent event) {
                 if(!drawingROI && !drawingNFZ){
+                    if(!stack.getChildren().contains(canvas)) {
+                        stack.getChildren().remove(hBox);
+                        stack.getChildren().addAll(canvas, hBox);
+                    }
                     drawROI.setText("Done");
                     drawingROI = true;
                     complete = false;
@@ -119,10 +149,14 @@ public class PathDrawer{
             @Override
             public void handle(MouseEvent event) {
                 if(!drawingNFZ && !drawingROI){ //If not drawing the NFZ and not drawing the ROI
-                    drawNFZ.setText("Done");
+                     drawNFZ.setText("Done");
                     drawingNFZ = true;
 
                 }else if(!drawingROI){ //If not drawing the ROI
+                    if(!stack.getChildren().contains(canvas)) {
+                        stack.getChildren().remove(hBox);
+                        stack.getChildren().addAll(canvas, hBox);
+                    }
                     drawNFZ.setText("Draw NFZ");
                     drawingNFZ = false;
                     //if(allNFZPoints.get(allNFZPoints.size()-1).add())
@@ -143,6 +177,7 @@ public class PathDrawer{
         clear.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                stack.getChildren().remove(canvas);
                 points.clear();
                 nfzPoints.clear();
                 allNFZPoints.clear();
@@ -170,6 +205,101 @@ public class PathDrawer{
             }
         });
         return stack;
+    }
+
+    public SwingNode addMap(){
+        //JAVA MAP
+        mapViewer = new JXMapViewer();
+        JXMapKit mapKit = new JXMapKit();
+        JToolTip toolTip = new JToolTip();
+        toolTip.setComponent(mapKit.getMainMap());
+
+        TileFactoryInfo info = new OSMTileFactoryInfo();
+        DefaultTileFactory tileFactory = new DefaultTileFactory(info);
+        mapViewer.setTileFactory(tileFactory);
+        tileFactory.setThreadPoolSize(8);
+
+        MouseInputListener mia = new PanMouseInputListener(mapViewer);
+        mapViewer.addMouseListener(mia);
+        mapViewer.addMouseMotionListener(mia);
+        mapViewer.addMouseListener(new CenterMapListener(mapViewer));
+        mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCenter(mapViewer));
+        mapViewer.addKeyListener(new PanKeyListener(mapViewer));
+
+        GeoPosition whitby = new GeoPosition(54.48860179430841, -0.6231669702867165);
+        mapViewer.setZoom(8);
+        mapViewer.setAddressLocation(whitby);
+
+        mapViewer.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if(e.getButton() == java.awt.event.MouseEvent.BUTTON3){
+                    Point p = e.getPoint();
+                    GeoPosition geo = mapViewer.convertPointToGeoPosition(p);
+                    System.out.println("x:" + geo.getLatitude()+"Y:"+geo.getLongitude());
+                }
+            }
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+
+            }
+        });
+        mapKit.setTileFactory(tileFactory);
+        mapKit.getMainMap().addMouseMotionListener(new MouseMotionListener() {
+            @Override
+            public void mouseDragged(java.awt.event.MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+
+                JXMapViewer map = mapKit.getMainMap();
+
+                // convert to world bitmap
+                Point2D worldPos = map.getTileFactory().geoToPixel(whitby, map.getZoom());
+
+                // convert to screen
+                Rectangle rect = map.getViewportBounds();
+                int sx = (int) worldPos.getX() - rect.x;
+                int sy = (int) worldPos.getY() - rect.y;
+                Point screenPos = new Point(sx, sy);
+
+                // check if near the mouse
+                if (screenPos.distance(e.getPoint()) < 20)
+                {
+                    screenPos.x -= toolTip.getWidth() / 2;
+
+                    toolTip.setLocation(screenPos);
+                    toolTip.setVisible(true);
+                }
+                else
+                {
+                    toolTip.setVisible(false);
+                }
+            }
+        });
+
+
+        SwingNode sn = new SwingNode();
+        sn.setContent(mapViewer);
+        return sn;
     }
 
     public void placePoint(double x, double y){
@@ -212,8 +342,10 @@ public class PathDrawer{
         }
     }
     public ArrayList<Coordinate> getPoints(){
-        return points;
+        return this.points;
     }
-    public Coordinate getStartPoint(){ return startPoint;}
-    public ArrayList<ArrayList<Coordinate>> getAllNFZs(){ return allNFZPoints; }
+    public Coordinate getStartPoint(){ return this.startPoint;}
+    public ArrayList<ArrayList<Coordinate>> getAllNFZs(){ return this.allNFZPoints; }
+    public SwingNode getMapNode(){ return sn; }
+    public int getMapScale(){ return mapViewer.getZoom(); }
 }

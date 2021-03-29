@@ -158,8 +158,6 @@ elif ground_sample_distance is None:
 else:
     print("All inputs are ok")
 
-print(NFZs)
-
 ########################
 # CREATE TERRAIN
 ########################
