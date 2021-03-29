@@ -3,10 +3,10 @@ package main;
 import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -47,6 +47,7 @@ public class PathDrawer{
     private ArrayList<Coordinate> points = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> nfzPoints = new ArrayList<Coordinate>();
     private ArrayList<ArrayList<Coordinate>> allNFZPoints = new ArrayList<ArrayList<Coordinate>>();
+    private ArrayList<ArrayList<Coordinate>> pass_coords = new ArrayList<ArrayList<Coordinate>>();
     private Coordinate startPoint = null;
     private Coordinate takeoff;
 
@@ -62,14 +63,17 @@ public class PathDrawer{
     private Paint nfzMarkerPaint = Color.RED;
     private Paint startMarkerPaint = Color.BLUE;
     private Paint textPaint = Color.WHITE;
+    private Paint passPaint = Color.BLUE;
     private Font markerFont = Font.font("Arial",FontPosture.ITALIC,15);//new Font("Arial", 16);
 
     private Button drawROI = new Button("Draw ROI");
     private Button drawNFZ = new Button("Draw NFZ");
     private Button clear = new Button("Clear");
     private Button setStart = new Button("Mark Takeoff and Landing");
+    private Button findButton = new Button("Find");
+    private TextField chooseLocation = new TextField();
     //private Button done = new Button("Done");
-    public HBox hBox = new HBox(drawROI,drawNFZ,clear,setStart);
+    public HBox hBox = new HBox(drawROI,drawNFZ,clear,setStart,chooseLocation,findButton);
     private JXMapViewer mapViewer;
     private SwingNode sn;
 
@@ -79,6 +83,7 @@ public class PathDrawer{
         this.gc = canvas.getGraphicsContext2D();
         this.width = canvas.getWidth();
         this.height = canvas.getWidth();
+        this.chooseLocation.setPromptText("Jump to location");
         //stack.setMaxHeight(Double.MAX_VALUE);
 
         canvas.setFocusTraversable(true);
@@ -181,6 +186,7 @@ public class PathDrawer{
                 points.clear();
                 nfzPoints.clear();
                 allNFZPoints.clear();
+                pass_coords.clear();
                 startPoint = null;
                 complete = false;
                 drawingNFZ = false;
@@ -201,6 +207,15 @@ public class PathDrawer{
                     drawingROI = false;
                     drawingNFZ = false;
                     setStart.setText("Click start location");
+                }
+            }
+        });
+        findButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if(!chooseLocation.getText().isEmpty()){
+                    //GeoPosition position = new GeoPosition();
+                    //mapViewer.setAddressLocation();
                 }
             }
         });
@@ -339,6 +354,19 @@ public class PathDrawer{
         }
         else{
             System.out.println("Press the reset button as the path has been finalised!");
+        }
+    }
+    public void addPassCoords(Coordinate coord1, Coordinate coord2){
+        ArrayList<Coordinate> pass = new ArrayList<Coordinate>();
+        pass.add(coord1);
+        pass.add(coord2);
+        this.pass_coords.add(pass);
+    }
+    public void drawPasses(){
+        gc.setStroke(passPaint);
+        for(int i=0;i<pass_coords.size();i++) {
+            ArrayList<Coordinate> coords = pass_coords.get(i);
+            gc.strokeLine(coords.get(0).x,coords.get(0).y,coords.get(1).x,coords.get(1).y);
         }
     }
     public ArrayList<Coordinate> getPoints(){

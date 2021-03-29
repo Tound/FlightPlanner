@@ -26,8 +26,9 @@ public class FlightPlanner extends Application {
         stage = primaryStage;
         primaryStage.setTitle("FlightPlanner V1.0");
 
-        flightSettings = new FlightSettings();
+
         pathDrawer = new PathDrawer();
+        flightSettings = new FlightSettings(pathDrawer);
 
         BorderPane bp = new BorderPane();
         bp.setId("borderpane");

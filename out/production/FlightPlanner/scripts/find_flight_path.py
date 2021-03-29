@@ -8,10 +8,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from opensimplex import OpenSimplex
 
-from create_passes_V2 import *
-from Passes_TSP_V2 import *
+from create_passes_GUI import *
+from Passes_TSP_GUI import *
 from camera_calculations import *
 from Image_Classes_V2 import *
+#from create_terraces import *
 
 import time
 
@@ -54,6 +55,11 @@ class Configuration:
         self.coverage_resolution = coverage_resolution
         self.wind = wind
 
+
+polygon = []
+NFZs = []
+wind = [None,None]
+
 """
 For testing purposes only, a set of predefined settings 
 for a test case are present here
@@ -85,7 +91,7 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
     ######################
     # UAV settings
     min_turn = 20 #m
-    max_incline_grad = 31 #degs
+    max_incline_angle = 31 #degs
     glide_slope = 20
     uav_mass = 18 # Kg
     uav_speed = 8
@@ -105,6 +111,7 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
     # Flight settings
     wind = (5,math.radians(90)) #Polar coords (Mag, degrees)
     coverage_resolution = 0.02  # m/px
+    ground_sample_distance = coverage_resolution
 
     max_current_draw = 20
     battery_capacity = 2200
@@ -119,7 +126,7 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
 else:
     print("Reading text file")
     # Read intermediate file
-    f = open("intermediate/intermediate.txt","r")
+    f = open("src/intermediate/intermediate.txt","r")
     while True:
         line = f.readline()
         if line.startswith("====START===="):
@@ -130,12 +137,15 @@ else:
                 contents = contents[1].split(",")
                 start_loc = [int(float(contents[0])),int(float(contents[1])),None]
             line = f.readline()
-            while not line.startswith("====NFZ===="):
+
+            while not line.startswith("====NFZ====") and not line.startswith("====END===="):
                 line = line.strip("\n")
                 contents = line.split(",")
                 point = [int(float(contents[0])),int(float(contents[1]))]
                 polygon.append(point)
                 line = f.readline()
+            if line.startswith("====END===="):
+                break
             line = f.readline()
             NFZ = []
             while line != "====END====":
@@ -177,11 +187,11 @@ else:
                 contents = contents.split(":")
                 aspect_ratio = (int(contents[0]),int(contents[1]))
             elif line.startswith("UAV_SPEED"):
-                uav_speed = contents[1]
+                uav_speed = float(contents[1])
             elif line.startswith("WIND_SPEED"):
-                wind[0] = contents[1]
+                wind[0] = float(contents[1])
             elif line.startswith("WIND_DIRECTION"):
-                wind[1] = math.radians(float(contents[1])-90)
+                wind[1] = math.radians(90-float(contents[1]))
             elif line.startswith("ALTITUDE"):
                 altitude = contents[1]
             elif line.startswith("FORWARD_OVERLAP"):
@@ -198,6 +208,12 @@ else:
                 exit(1)
     f.close()
 
+scaling_factor = 0
+
+if scale == 0:
+    scaling_factor = 0
+else:
+    scaling_factor = 0
 
 # Viablility checks
 if wind[0] > uav_speed:
@@ -211,10 +227,24 @@ heading_angle = math.asin(wind[0]/uav_speed)
 print(f"Plane will fly with a heading angle of {round(math.degrees(heading_angle),2)} degrees towards the wind!")
 
 # Create UAV, camera and configuration object and store all variables
-uav = UAV(uav_mass,uav_speed,min_turn,max_incline_grad)
+uav = UAV(uav_mass,uav_speed,min_turn,max_incline_angle)
+
+image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
+
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
-config = Configuration(uav,camera,side_overlap,forward_overlap,coverage_resolution,wind)
+config = Configuration(uav,camera,side_overlap,forward_overlap,ground_sample_distance,wind)
 
-start_time = time.clock()   # Get current time for measuring solve time
+polygon_edges = []
+for i in range(0,len(polygon)):
+    polygon_edges.append(Edge(polygon[i-1][0],polygon[i-1][1],
+                    polygon[i][0],polygon[i][1]))
 
-image_passes = createPasses(polygon,NFZs,terrain,config) # Create pass objects for current configuration
+NFZ_edges = []
+for NFZ in NFZs:
+    for i in range(0,len(NFZ)):
+        NFZ_edges.append(Edge(NFZ[i-1][0],NFZ[i-1][1],
+                        NFZ[i][0],NFZ[i][1]))
+
+#start_time = time.clock()   # Get current time for measuring solve time
+
+createPasses(polygon,polygon_edges,NFZs,config) # Create pass objects for current configuration
