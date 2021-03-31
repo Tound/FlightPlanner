@@ -22,6 +22,7 @@ import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.ArrayList;
@@ -63,9 +64,11 @@ public class FlightSettings {
     private String defaultCoverageResolution = "0.02";
     private String defaultAltitude = "120";
 
+    private PathDrawer pathDrawer;
+
     public FileChooser fileChooser = new FileChooser();
 
-    public FlightSettings(){
+    public FlightSettings(PathDrawer pathDrawer){
         uavName.setPromptText("Name of UAV");
         uavWeight.setPromptText("Weight of UAV (Kg)");
         uavMinRadius.setPromptText("Minimum Radius (m)");
@@ -87,6 +90,7 @@ public class FlightSettings {
         forwardOverlap.setPromptText("Forward Overlap %");
         sideOverlap.setPromptText("Side Overlap %");
         coverageResolution.setPromptText("Coverage Resolution (metres/pixel)");
+        this.pathDrawer = pathDrawer;
 
     }
 
@@ -349,7 +353,7 @@ public class FlightSettings {
                     // Screenshot
                     try {
                         File file = new File("src/intermediate/map.png");
-                        WritableImage writableImage = FlightPlanner.getPathDrawer().getMapNode().snapshot(new SnapshotParameters(), null);
+                        WritableImage writableImage = pathDrawer.getMapNode().snapshot(new SnapshotParameters(), null);
                         RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
                         ImageIO.write(renderedImage, "png", file);
                     } catch (IOException e) {
@@ -357,8 +361,29 @@ public class FlightSettings {
                     }
                     // Find passes and terraces
                     if(runScript("find_flight_path")){
-                        if(runScript("shortest_path")){
+                        try {
+                            File pass_coords = new File("src/intermediate/passes.txt");
+                            Scanner scanner = new Scanner(pass_coords);
+                            String line = "";
+                            String[] content;
+                            while (scanner.hasNextLine()) {
+                                line = scanner.nextLine();
+                                content = line.split(",");
+                                Coordinate coord1 = new Coordinate(Double.parseDouble(content[0]),Double.parseDouble(content[1]));
+                                line = scanner.nextLine();
+                                content = line.split(",");
+                                Coordinate coord2 = new Coordinate(Double.parseDouble(content[0]),Double.parseDouble(content[1]));
+                                pathDrawer.addPassCoords(coord1,coord2);
+                            }
+                            pathDrawer.drawPasses();
 
+                        }catch (IOException ioe){
+                            ioe.printStackTrace();
+                        }
+                        if(runScript("create_terraces")) {
+                            if (runScript("shortest_path")) {
+                                System.out.println("Drawn passes");
+                            }
                         }
                     }
                 }else{
@@ -389,13 +414,18 @@ public class FlightSettings {
                 }
                 System.out.println(line);
             }
-            if(stdError != null) {
-                String errorMessage = "Script error in " + scriptName + ":\n";
+            System.out.println(stdError.lines());
+            if(stdError.ready()) {
+                String errorMessage = "";
                 while ((line = stdError.readLine()) != null) {
                     errorMessage = errorMessage + line + "\n";
                 }
-                dialog(errorMessage);
-                return false;
+                if(errorMessage != null) {
+                    errorMessage = "Script error in " + scriptName + ":\n" + errorMessage;
+                    dialog(errorMessage);
+                    return false;
+                }
+
             }
             return true;
         }catch (IOException ioe){
@@ -492,7 +522,7 @@ public class FlightSettings {
                 FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
                 //writer.write("====SETTINGS====\n");
                 //writer.write("UAV_NAME\t" + uavName.getText());
-                writer.write("SCALE\t" + FlightPlanner.getPathDrawer().getMapScale() + "\n");
+                writer.write("SCALE\t" + pathDrawer.getMapScale() + "\n");
                 writer.write("UAV_WEIGHT\t" + uavWeight.getText() + "\n");
                 writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText() + "\n");
                 writer.write("UAV_MAX_INCLINE\t" + uavMaxIncline.getText() + "\n");
@@ -516,11 +546,11 @@ public class FlightSettings {
                 writer.write("SIDE_OVERLAP\t" + sideOverlap.getText() + "\n");
                 writer.write("GSD\t" + coverageResolution.getText() + "\n");
                 writer.write("====START====\n");
-                Coordinate startLoc = FlightPlanner.getPathDrawer().getStartPoint();
+                Coordinate startLoc = pathDrawer.getStartPoint();
                 writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y + "\n");
 
-                ArrayList<Coordinate> points = FlightPlanner.getPathDrawer().getPoints();
-                ArrayList<ArrayList<Coordinate>> allNFZPoints = FlightPlanner.getPathDrawer().getAllNFZs();
+                ArrayList<Coordinate> points = pathDrawer.getPoints();
+                ArrayList<ArrayList<Coordinate>> allNFZPoints = pathDrawer.getAllNFZs();
 
                 for (int i = 0; i < points.size(); i++) {
                     writer.write(points.get(i).x + "," + points.get(i).y + "\n");

@@ -11,7 +11,7 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 from dubins_3D import *
-from create_passes_V2 import *
+#from create_passes_V2 import *
 from Image_Classes_V2 import *
 import shapely.geometry
 
