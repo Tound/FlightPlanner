@@ -92,7 +92,7 @@ def convertCoords(vertices,angle,coord_system):
         print("Unknown coord system - Choose either 'xy' or 'uv'")
     return new_coords
 
-def createPasses(area,NFZs,terrain,config):
+def createPasses(area,NFZs,config):
     """
     Create passes across specified area for known terrain
     Parameters
