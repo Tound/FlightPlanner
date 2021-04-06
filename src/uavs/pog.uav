@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<UAV>
+    <name>pog</name>
+    <weight/>
+    <turn_radius/>
+    <max_incline/>
+    <battery/>
+    <battery_capacity/>
+</UAV>

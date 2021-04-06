@@ -47,13 +47,16 @@ class Configuration:
     Configuration class holds the settings for an entire flight 
     including Camera object and UAV object
     """
-    def __init__(self,uav,camera,side_overlap,forward_overlap,coverage_resolution,wind_angle):
+    def __init__(self,uav,camera,side_overlap,forward_overlap,wind_angle,scale,altitude,coverage_resolution):
         self.uav = uav
         self.camera = camera
         self.side_overlap = side_overlap
         self.forward_overlap = forward_overlap
-        self.coverage_resolution = coverage_resolution
         self.wind = wind
+        self.scale = scale
+        self.altitude = altitude
+        self.coverage_resolution = coverage_resolution
+
 
 
 polygon = []
@@ -165,7 +168,7 @@ else:
         else:
             contents = line.split("\t")
             if line.startswith("SCALE"):
-                scale = contents[1]
+                scale = float(contents[1])
             elif line.startswith("UAV_WEIGHT"):
                 uav_mass = contents[1]
             elif line.startswith("UAV_MIN_RADIUS"):
@@ -193,13 +196,19 @@ else:
             elif line.startswith("WIND_DIRECTION"):
                 wind[1] = math.radians(90-float(contents[1]))
             elif line.startswith("ALTITUDE"):
-                altitude = contents[1]
+                if contents[1] not "NONE":
+                    altitude = float(contents[1])
+                else:
+                    altitude = None
             elif line.startswith("FORWARD_OVERLAP"):
                 forward_overlap = float(contents[1])/100
             elif line.startswith("SIDE_OVERLAP"):
                 side_overlap = float(contents[1])/100
             elif line.startswith("GSD"):
-                ground_sample_distance = float(contents[1])
+                if contents[1] not "NONE"
+                    ground_sample_distance = float(contents[1])
+                else:
+                    ground_sample_distance = None
             elif line == "":
                 break
             else:
@@ -208,12 +217,8 @@ else:
                 exit(1)
     f.close()
 
-scaling_factor = 0
-
 if scale == 0:
-    scaling_factor = 0
-else:
-    scaling_factor = 0
+    scale = 1
 
 # Viablility checks
 if wind[0] > uav_speed:
@@ -224,6 +229,7 @@ elif wind[0] > uav_speed/2:
 
 # Calculate heading angle
 heading_angle = math.asin(wind[0]/uav_speed)
+print(math.degrees(wind[1]))
 print(f"Plane will fly with a heading angle of {round(math.degrees(heading_angle),2)} degrees towards the wind!")
 
 # Create UAV, camera and configuration object and store all variables
@@ -232,7 +238,7 @@ uav = UAV(uav_mass,uav_speed,min_turn,max_incline_angle)
 image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
 
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
-config = Configuration(uav,camera,side_overlap,forward_overlap,ground_sample_distance,wind)
+config = Configuration(uav,camera,side_overlap,forward_overlap,wind,scale,ground_sample_distance,altitude)
 
 polygon_edges = []
 for i in range(0,len(polygon)):

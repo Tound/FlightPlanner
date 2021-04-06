@@ -136,20 +136,27 @@ def createPasses(area,polygon_edges,NFZs,config):
 
 
 
-
     # Find footprint size
-    coverage_width = config.coverage_resolution * camera.image_x
-    coverage_height = config.coverage_resolution * camera.image_y
+    if config.altitude is None:
+        coverage_width = config.scale * (config.coverage_resolution * camera.image_x)
+        coverage_height = config.scale * (config.coverage_resolution * camera.image_y)
 
+        uav_altitude = coverage_width *camera.focal_length/camera.sensor_x
+        max_uav_alt = config.scale * (camera.image_x * (config.coverage_resolution + 0.0015)) * camera.focal_length/camera.sensor_x
+        min_uav_alt = config.scale * (camera.image_x * (config.coverage_resolution - 0.0015)) * camera.focal_length/camera.sensor_x
 
-    uav_altitude = coverage_width *camera.focal_length/camera.sensor_x
-    max_uav_alt = (camera.image_x * (config.coverage_resolution + 0.0015)) * camera.focal_length/camera.sensor_x
-    min_uav_alt = (camera.image_x * (config.coverage_resolution - 0.0015)) * camera.focal_length/camera.sensor_x
+    else:
+        coverage_width = config.scale * (camera.sensor_x*config.altitude/camera.focal_length)
+        coverage_height = config.scale * (camera.sensor_y*config.altitude/camera.focal_length)
+
+        uav_altitude = config.altitude
+
+        ground_sample_distance = uav_altitude*camera.sensor_x/(camera.focal_length * camera.image_x)
+
+        max_uav_alt = config.scale * (camera.image_x * (ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x
+        min_uav_alt = config.scale * (camera.image_x * (ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x
 
     distance_between_photos_width = coverage_width - coverage_width*config.side_overlap
-
-
-
 
     # Obtain properties about the area
     sorted_vertices = sorted(new_area_coords, key=lambda u:u[0])
@@ -195,7 +202,7 @@ def createPasses(area,polygon_edges,NFZs,config):
     # Shift passes to allow for even distribution
     u = start_u + coverage_width/2 + pass_shift
     for i in range(0,int(number_of_passes)):        # Cycle through all full-length passes across entirety of area
-        # Find points hwere passes intersect with ROI
+        # Find points where passes intersect with ROI
         intersection_points = []
         pass_edge = sg.LineString([(u,min_height-1),(u,max_height+1)])
         max_intersect = (-math.inf,-math.inf)

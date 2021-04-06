@@ -43,12 +43,17 @@ public class PathDrawer{
     private double NFZs;
     private double width;
     private double height;
+    private double scale;
     private GraphicsContext gc;
-    private ArrayList<Coordinate> points = new ArrayList<Coordinate>();
+    private ArrayList<Coordinate> canvasPoints = new ArrayList<Coordinate>();
+    private ArrayList<Coordinate> realPoints = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> nfzPoints = new ArrayList<Coordinate>();
+    private ArrayList<Coordinate> realNfzPoints = new ArrayList<Coordinate>();
     private ArrayList<ArrayList<Coordinate>> allNFZPoints = new ArrayList<ArrayList<Coordinate>>();
+    private ArrayList<ArrayList<Coordinate>> allRealNFZPoints = new ArrayList<ArrayList<Coordinate>>();
     private ArrayList<ArrayList<Coordinate>> pass_coords = new ArrayList<ArrayList<Coordinate>>();
     private Coordinate startPoint = null;
+    private Coordinate realStartPoint = null;
     private Coordinate takeoff;
 
     private boolean drawingROI = false;
@@ -110,7 +115,7 @@ public class PathDrawer{
             public void handle(MouseEvent event) {
                 MouseButton button = event.getButton();
                 if(button.equals(MouseButton.PRIMARY)){
-                    placePoint(event.getX(), event.getY());
+                    placePoint(event);
                 }
             }
         });
@@ -126,8 +131,8 @@ public class PathDrawer{
                     drawROI.setText("Done");
                     drawingROI = true;
                     complete = false;
-                    if(points.size()>0) {
-                        points.clear();
+                    if(canvasPoints.size()>0) {
+                        canvasPoints.clear();
                         gc.clearRect(0,0,stack.getWidth(),stack.getHeight());
                         for(int i=0;i<nfzPoints.size();i++) {
                             gc.strokeOval(nfzPoints.get(i).getX() - nfzMarkerRadius / 2, nfzPoints.get(i).getY() - nfzMarkerRadius / 2, nfzMarkerRadius, nfzMarkerRadius);
@@ -141,9 +146,9 @@ public class PathDrawer{
                     drawROI.setText("Draw ROI");
                     drawingROI = false;
                     complete = true;
-                    if(points.size()>0) {
-                        gc.strokeLine(points.get(points.size() - 1).getX(), points.get(points.size() - 1).getY(), points.get(0).getX(), points.get(0).getY());
-                        points.add(points.get(0));
+                    if(canvasPoints.size()>0) {
+                        gc.strokeLine(canvasPoints.get(canvasPoints.size() - 1).getX(), canvasPoints.get(canvasPoints.size() - 1).getY(), canvasPoints.get(0).getX(), canvasPoints.get(0).getY());
+                        canvasPoints.add(canvasPoints.get(0));
                     }
                 }else{
                     System.out.println("You must finish drawing the NFZ first");
@@ -171,8 +176,11 @@ public class PathDrawer{
                     }
                     if(nfzPoints.size()>2){ // If enough points have been added to the NFZ
                         ArrayList<Coordinate> points = new ArrayList<>(nfzPoints);
+                        ArrayList<Coordinate> realPoints = new ArrayList<>(realNfzPoints);
                         allNFZPoints.add(points);
+                        allRealNFZPoints.add(realPoints);
                         nfzPoints.clear();
+                        realNfzPoints.clear();
                     }
                 }else{
                     System.out.println("You must finish drawing the ROI first");
@@ -183,11 +191,15 @@ public class PathDrawer{
             @Override
             public void handle(MouseEvent event) {
                 stack.getChildren().remove(canvas);
-                points.clear();
+                canvasPoints.clear();
+                realPoints.clear();
                 nfzPoints.clear();
+                realNfzPoints.clear();
                 allNFZPoints.clear();
+                allRealNFZPoints.clear();
                 pass_coords.clear();
                 startPoint = null;
+                realStartPoint = null;
                 complete = false;
                 drawingNFZ = false;
                 drawingROI = false;
@@ -317,18 +329,24 @@ public class PathDrawer{
         return sn;
     }
 
-    public void placePoint(double x, double y){
+    public void placePoint(MouseEvent event){
+        Double x =  event.getX();
+        Double y = event.getY();
         if(!complete && drawingROI) {
             gc.setStroke(markerPaint);
             gc.setFill(markerPaint);
             gc.setLineWidth(2);
             gc.fillOval(x - markerRadius / 2, y - markerRadius / 2, markerRadius, markerRadius);
-            points.add(new Coordinate((int)x, (int)y));
-            if(points.size()>1){
-                gc.strokeLine(points.get(points.size()-1).getX(),points.get(points.size()-1).getY(), points.get(points.size()-2).getX(), points.get(points.size()-2).getY());
+            Point2D point2D = new Point((int)Math.round(x),(int)Math.round(y));
+            GeoPosition geoPosition = mapViewer.convertPointToGeoPosition(point2D);
+
+            canvasPoints.add(new Coordinate(x, y,geoPosition.getLongitude(),geoPosition.getLatitude()));
+            realPoints.add(new Coordinate(x,this.canvas.getHeight()-y,geoPosition.getLongitude(),geoPosition.getLatitude()));
+            if(canvasPoints.size()>1){
+                gc.strokeLine(canvasPoints.get(canvasPoints.size()-1).getX(),canvasPoints.get(canvasPoints.size()-1).getY(), canvasPoints.get(canvasPoints.size()-2).getX(), canvasPoints.get(canvasPoints.size()-2).getY());
             }
             gc.setFill(textPaint);
-            String num = Integer.toString(points.size());
+            String num = Integer.toString(canvasPoints.size());
             System.out.println(num.length());
             gc.fillText(num, x - num.length()*4, y - -4);
             System.out.println("X: " + x + " Y: " + y);
@@ -338,13 +356,15 @@ public class PathDrawer{
             gc.setFill(nfzMarkerPaint);
             gc.setLineWidth(2);
             gc.fillOval(x - nfzMarkerRadius/2, y - nfzMarkerRadius/2, nfzMarkerRadius, nfzMarkerRadius);
-            nfzPoints.add(new Coordinate((int) x, (int) y));
+            nfzPoints.add(new Coordinate(x,y));
+            realNfzPoints.add(new Coordinate(x,this.canvas.getHeight()-y));
             //gc.fillText(Integer.toString(nfzPoints.size()), x, y);
             if(nfzPoints.size()>1){
                 gc.strokeLine(nfzPoints.get(nfzPoints.size()-1).getX(),nfzPoints.get(nfzPoints.size()-1).getY(), nfzPoints.get(nfzPoints.size()-2).getX(), nfzPoints.get(nfzPoints.size()-2).getY());
             }
         }else if(drawingStart){
             startPoint = new Coordinate(x,y);
+            realStartPoint = new Coordinate(x,this.canvas.getHeight()-y);
             gc.setFill(startMarkerPaint);
             gc.fillOval(x-startMarkerRadius/2,y-startMarkerRadius/2,startMarkerRadius,startMarkerRadius);
             gc.setFill(textPaint);
@@ -369,11 +389,15 @@ public class PathDrawer{
             gc.strokeLine(coords.get(0).x,coords.get(0).y,coords.get(1).x,coords.get(1).y);
         }
     }
-    public ArrayList<Coordinate> getPoints(){
-        return this.points;
+    public ArrayList<Coordinate> getCanvasPoints(){
+        return this.canvasPoints;
     }
+    public ArrayList<Coordinate> getRealPoints(){return this.realPoints; }
     public Coordinate getStartPoint(){ return this.startPoint;}
+    public Coordinate getRealStartPoint(){ return this.realStartPoint;}
     public ArrayList<ArrayList<Coordinate>> getAllNFZs(){ return this.allNFZPoints; }
+    public ArrayList<ArrayList<Coordinate>> getAllRealNFZPoints(){ return this.allRealNFZPoints; }
     public SwingNode getMapNode(){ return sn; }
+    public Canvas getCanvas(){ return this.canvas; }
     public int getMapScale(){ return mapViewer.getZoom(); }
 }
