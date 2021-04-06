@@ -30,29 +30,6 @@ class Edge:
     def getEdge(self):
         return self.edge
 
-def getAltitudeProfile(pass_length,terrain,uav_altitude,u,start_v,wind_angle):
-    """
-    Obtain altitude data for entire pass across generated terrain
-    """
-    altitude_profile = []
-    v = start_v
-    for k in range(0,round(pass_length)):
-        coord = convertCoords([[u,v]],wind_angle,'xy')
-        x = coord[0][0]
-        y = coord[0][1]
-        x_points = [int(x),int(x),int(x)+1,int(x)+1]
-        y_points = [int(y),int(y)+1,int(y)+1,int(y)]
-        z_points = [terrain[int(y)][int(x)],terrain[int(y)+1][int(x)],
-                    terrain[int(y)+1][int(x)+1],terrain[int(y)][int(x)+1]]
-
-        # For created terrain ONLY
-        z = griddata((x_points,y_points),z_points,(x,y))    # Interpolate        
-        altitude = z + uav_altitude
-
-        altitude_profile.append(altitude)
-        v +=1
-    return altitude_profile
-
 def getDistance(point1,point2):
     """
     Get the distance between two points in 2D

@@ -8,6 +8,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -19,6 +23,8 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.jxmapviewer.JXMapViewer;
+import org.jxmapviewer.viewer.GeoPosition;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -29,6 +35,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.awt.*;
+import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.ArrayList;
@@ -364,17 +372,14 @@ public class FlightSettings {
         gp.add(windDirectionLabel, 0,20);
         gp.add(windDirection, 1,20);
 
-        gp.add(forwardOverlapLabel, 0,21);
-        gp.add(forwardOverlap, 1,21);
+        gp.add(sideOverlapLabel,0,21);
+        gp.add(sideOverlap,1,21);
 
-        gp.add(sideOverlapLabel,0,22);
-        gp.add(sideOverlap,1,22);
+        gp.add(coverageResolutionLabel,0,22);
+        gp.add(coverageResolution,1,22);
 
-        gp.add(coverageResolutionLabel,0,23);
-        gp.add(coverageResolution,1,23);
-
-        gp.add(uavAltitudeLabel,0,24);
-        gp.add(altitude,1,24);
+        gp.add(uavAltitudeLabel,0,23);
+        gp.add(altitude,1,23);
 
         //Buttons
         gp.add(save,0,25);
@@ -508,8 +513,6 @@ public class FlightSettings {
                         }catch (IOException ioe){
                             ioe.printStackTrace();
                         }
-
-
                         if(runScript("create_terraces")) {
                             if (runScript("shortest_path")) {
                                 System.out.println("Drawn passes");
@@ -530,7 +533,6 @@ public class FlightSettings {
     }
 
     public void createAltitudeCoords(Writer writer, Coordinate coord1, Coordinate coord2) throws IOException {
-        writer.write("NEW_TERRACE");
         Double dy = coord2.getY() - coord1.getY();
         Double dx = coord2.getX() - coord1.getX();
         Double length = Math.sqrt(dy*dy + dx*dx);
@@ -538,16 +540,30 @@ public class FlightSettings {
         int sampleDistance = 30;
         Double samples = realLength / sampleDistance;
 
-        Double lat = 0.0;
-        Double lon = 0.0;
-        Double x = 0.0;
-        Double y = 0.0;
-        for(int i = 0;i<(int)Math.round(samples);i=i+sampleDistance){
+        //Double lat = coord1.getLat();
+        //Double lon = coord1.getLong_();
+        Double x = coord1.getX();
+        Double y = coord1.getY();
 
-            writer.write(lat+","+lon);
+        JXMapViewer mapViewer = pathDrawer.getMap();
 
+        Double MAX_CALLS = 100.0;
+
+        dx = dx/1;
+        dy = dy/1;
+
+        writer.write("SCALE\t"+scale+"\n");
+        writer.write("SAMPLE_DISTANCE\t"+scale+"\n");
+        writer.write("WIND_ANGLE\t"+(90-Double.parseDouble(windDirection.getText())) + "\n");
+        writer.write("NEW_TERRACE\t" + x + "\t" + y + "\t" + length + "\n");
+        System.out.println(length + "," + realLength + "m");
+        for(int i = 0;i<(int)Math.round(samples);i++){
+            Point2D point2D = new Point((int)Math.round(x),(int)Math.round(y)); // This takes the closest pixel which loses accuracy
+            GeoPosition position = mapViewer.convertPointToGeoPosition(point2D);
+            writer.write(position.getLatitude()+","+ position.getLongitude()+"\n");
+            x = x + dx;
+            y = y + dy;
         }
-
     }
 
     public Coordinate flipCoords(Double coord1,Double coord2){
@@ -645,29 +661,6 @@ public class FlightSettings {
 
     }
 
-    public void lookupFiles(){
-        try {
-            File gpsLookup = new File("src/intermediate/gpslookup.txt");
-            Scanner reader = new Scanner(gpsLookup);
-            FileWriter writer = new FileWriter("src/intermediate/gpsresults.txt");
-            while(reader.hasNextLine()){
-                String line = reader.nextLine();
-                System.out.println(line);
-                if(line != "NEW PASS"){
-                    //GPS LOOKUP
-                    writer.write("GPS");
-                }else{
-                    writer.write("NEW PASS");
-                }
-            }
-            reader.close();
-        } catch(FileNotFoundException fnfe){
-            System.out.println("File not found");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public Double getScale(ArrayList<Coordinate> coordinates){
         //Haversine formula
         Double scale = 1.0;
@@ -731,8 +724,6 @@ public class FlightSettings {
             errorString = errorString + "Camera Resolution,";
         }if(camAspectRatio.getText().isEmpty()){
             errorString = errorString + "Camera Aspect Ratio,";
-        }if(forwardOverlap.getText().isEmpty()){
-            errorString = errorString + "Forward Overlap,";
         }if(sideOverlap.getText().isEmpty()){
             errorString = errorString + "Side Overlap,";
         }if(FlightPlanner.getPathDrawer().getStartPoint() == null){
