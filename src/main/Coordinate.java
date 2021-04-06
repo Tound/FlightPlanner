@@ -8,8 +8,13 @@ public class Coordinate {
     public Coordinate(double x,double y){//,double long_,double lat){
         this.x = x;
         this.y = y;
-        //this.long_ = long_;
-        //this.lat = lat;
+    }
+
+    public Coordinate(double x, double y, double long_, double lat){
+        this.x = x;
+        this.y = y;
+        this.long_ = long_;
+        this.lat = lat;
     }
 
     public double getX() {

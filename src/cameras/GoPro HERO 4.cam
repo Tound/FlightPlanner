@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<camera>
+    <name>GoPro HERO 4</name>
+    <sensor_x>5.82</sensor_x>
+    <sensor_y>3.82</sensor_y>
+    <focal_length>3.72</focal_length>
+    <resolution>12</resolution>
+    <aspect_ratio>4:3</aspect_ratio>
+</camera>

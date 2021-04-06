@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -16,14 +17,21 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
 
 public class CreateUAV {
     private static Stage createStage = new Stage();
     private static Scene createScene;
-    private static String path = "src/UAVs";
+    private static String path = "src/uavs";
     private static TextField name = new TextField();
     private static TextField weight = new TextField();
     private static TextField turnRadius = new TextField();
@@ -32,7 +40,7 @@ public class CreateUAV {
     private static TextField batteryCapacity = new TextField();
 
     private static Stage dialog = new Stage();
-    private static Text dialogMessage = new Text("The filename "+name+".uav already exists in "+path+".\n Would you like to overwrite?");
+    private static Label dialogMessage = new Label("The filename "+ name.getText() +".uav already exists in "+path+".\n Would you like to overwrite?");
 
     public CreateUAV(){
         createStage.setTitle("UAV Setup");
@@ -47,16 +55,21 @@ public class CreateUAV {
         BorderPane bp = new BorderPane();
         bp.setCenter(dialogMessage);
         HBox hb = new HBox(yes, no);
+
+        BorderPane.setAlignment(hb, Pos.CENTER);
         bp.setBottom(hb);
-        Scene dialogScene = new Scene(bp,200,100, Color.web("rgb(42, 45, 48)"));
+
+        Scene dialogScene = new Scene(bp,400,100, Color.web("rgb(42, 45, 48)"));
+        dialogScene.setUserAgentStylesheet("style/menus.css");
         dialog.setScene(dialogScene);
 
         yes.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 System.out.println("Set overwrite to true");
-                writeFile();
+                writeUAV();
                 dialog.close();
+                createStage.close();
             }
         });
         no.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -95,7 +108,7 @@ public class CreateUAV {
 
         Button save = new Button("Save");
         Button cancel = new Button("Cancel");
-        Button def = new Button("Set to default");
+        Button clear = new Button("Clear");
 
         gp.add(title,0,0);
         //title.setFont(Font.font("Arial", FontPosture.ITALIC, 24));
@@ -115,7 +128,7 @@ public class CreateUAV {
 
         gp.add(save,0,7);
         gp.add(cancel,2,7);
-        gp.add(def,1,7);
+        gp.add(clear,1,7);
 
         gp.setHgap(10);
         gp.setVgap(20);
@@ -123,10 +136,101 @@ public class CreateUAV {
 
         //gp.setStyle("-fx-background-color: rgb(42, 45, 48)");
 
+        save.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+
+                if(name.getText().isEmpty()){
+                    System.out.println("Missing name for UAV");
+                }else {
+                    File file = new File("src/uavs/"+name.getText()+".uav");
+                    if(file.exists()){
+                        dialogMessage.setText("The filename "+ name.getText() + ".uav already exists in "+path+".\n Would you like to overwrite?");
+                        dialog.show();
+                    }else {
+                        writeUAV();
+                        createStage.close();
+                    }
+                }
+            }
+        });
+
+        cancel.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                createStage.close();
+            }
+        });
+
+        clear.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                name.clear();
+                weight.clear();
+                turnRadius.clear();
+                maxIncline.clear();
+                battery.clear();
+                batteryCapacity.clear();
+            }
+        });
+
         createScene = new Scene(gp,500,700, Color.GRAY);
         createScene.setUserAgentStylesheet("style/menus.css");
         createStage.setScene(createScene);
         createStage.show();
+    }
+
+    public static void writeUAV(){
+        System.out.println("Writing new UAV");
+        Document dom;
+        Element e = null;
+
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        try {
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            dom = documentBuilder.newDocument();
+            Element rootElement = dom.createElement("UAV");
+
+            e = dom.createElement("name");
+            e.appendChild(dom.createTextNode(name.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("weight");
+            e.appendChild(dom.createTextNode(weight.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("turn_radius");
+            e.appendChild(dom.createTextNode(turnRadius.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("max_incline");
+            e.appendChild(dom.createTextNode(maxIncline.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("battery");
+            e.appendChild(dom.createTextNode(battery.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("battery_capacity");
+            e.appendChild(dom.createTextNode(batteryCapacity.getText()));
+            rootElement.appendChild(e);
+
+            dom.appendChild(rootElement);
+
+            Transformer tr = TransformerFactory.newInstance().newTransformer();
+            tr.setOutputProperty(OutputKeys.INDENT,"yes");
+            tr.setOutputProperty(OutputKeys.METHOD,"xml");
+            tr.setOutputProperty(OutputKeys.ENCODING,"UTF-8");
+            //tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,"uav.dtd");
+            tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount","4");
+
+            tr.transform(new DOMSource(dom),new StreamResult(new FileOutputStream("src/uavs/"+name.getText()+".uav")));
+
+        }catch (IOException | ParserConfigurationException | TransformerConfigurationException ioe){
+            ioe.printStackTrace();
+        } catch (TransformerException transformerException) {
+            transformerException.printStackTrace();
+        }
     }
 
     public String loadUAV(){

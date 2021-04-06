@@ -14,147 +14,143 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Parser {
-    private static ArrayList<String> output = new ArrayList<>();
-    static String name;
-    static String weight;
-    static String turnRad;
-    static String maxIncline;
-    static String battery;
-    static String batteryCapacity;
-    public static ArrayList<String> load(File file){
-        output.clear();
+    private static Object output;
+
+    public static UAV parseUAV(NodeList nodeList){
+        UAV uavSettings = new UAV();
+        for(int i=0;i<nodeList.getLength();i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                System.out.println(node.getNodeName() + "," + node.getTextContent());
+                if (node.getNodeName() == "name") {
+                    uavSettings.setName(node.getTextContent());
+                } else if (node.getNodeName() == "weight") {
+                    uavSettings.setWeight(node.getTextContent());
+                } else if (node.getNodeName() == "turn_radius") {
+                    uavSettings.setTurnRad(node.getTextContent());
+                } else if (node.getNodeName() == "max_incline") {
+                    uavSettings.setMaxIncline(node.getTextContent());
+                } else if (node.getNodeName() == "battery") {
+                    uavSettings.setBattery(node.getTextContent());
+                } else if (node.getNodeName() == "battery_capacity") {
+                    uavSettings.setCapacity(node.getTextContent());
+                } else {
+                    System.out.println("Unknown node");
+                }
+            }
+        }
+        System.out.println(uavSettings);
+        return uavSettings;
+    }
+
+    public static Camera parseCam(NodeList nodeList) {
+        Camera camSettings = new Camera();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                System.out.println(node.getNodeName() + "," + node.getTextContent());
+                if (node.getNodeName() == "name") {
+                    camSettings.setName(node.getTextContent());
+                } else if (node.getNodeName() == "sensor_x") {
+                    camSettings.setSensorX(node.getTextContent());
+                } else if (node.getNodeName() == "sensor_y") {
+                    camSettings.setSensorY(node.getTextContent());
+                } else if (node.getNodeName() == "focal_length") {
+                    camSettings.setFocalLength(node.getTextContent());
+                } else if (node.getNodeName() == "resolution") {
+                    camSettings.setResolution(node.getTextContent());
+                } else if (node.getNodeName() == "aspect_ratio") {
+                    camSettings.setAspectRatio(node.getTextContent());
+                } else {
+                    System.out.println("Unknown node");
+                }
+            }
+        }
+        return camSettings;
+    }
+    public static Settings parseSettings(NodeList nodeList){
+        Settings flightSettings = new Settings();
+        for(int i=0;i<nodeList.getLength();i++) {
+            Node node = nodeList.item(i);
+            System.out.println(node.getNodeName());
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                System.out.println(node.getNodeName() + "," + node.getTextContent());
+                if (node.getNodeName() == "uav_speed") {
+                    flightSettings.setUavSpeed(node.getTextContent());
+                } else if (node.getNodeName() == "wind_speed") {
+                    flightSettings.setWindSpeed(node.getTextContent());
+                } else if (node.getNodeName() == "wind_direction") {
+                    flightSettings.setWindDirection(node.getTextContent());
+                } else if (node.getNodeName() == "side_overlap") {
+                    flightSettings.setSideOverlap(node.getTextContent());
+                } else if (node.getNodeName() == "gsd") {
+                    flightSettings.setGsd(node.getTextContent());
+                } else if (node.getNodeName() == "altitude") {
+                    flightSettings.setAltitude(node.getTextContent());
+                } else {
+                    System.out.println("Unknown node");
+                }
+            }
+        }
+        return flightSettings;
+    }
+
+    public static ArrayList<String> parseProject(NodeList nodeList){
+        ArrayList<String> projectSettings = new ArrayList<String>();
+        for(int i=0;i<nodeList.getLength();i++) {
+            Node node = nodeList.item(i);
+            System.out.println(node.getNodeName());
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                System.out.println(node.getNodeName() + "," + node.getTextContent());
+                /*if (node.getNodeName() == "name") {
+                    name = node.getTextContent();
+                } else if (node.getNodeName() == "weight") {
+                    weight = node.getTextContent();
+                } else if (node.getTextContent() == "turn_radius") {
+                    turnRad = node.getTextContent();
+                } else if () {
+
+                } else if () {
+
+                } else if () {
+
+                } else {
+                    System.out.println("");
+                }*/
+            }
+        }
+        return projectSettings;
+    }
+
+    public static Object parseFile(File file){
         try{
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(file);
             doc.normalize();
+            doc.getDocumentElement().normalize();
+            Element root = doc.getDocumentElement();
+            String rootName = root.getNodeName();
+            NodeList nodeList = root.getChildNodes();
+            if(rootName == "UAV"){
+                System.out.println("Parsing UAVs");
+                output = parseUAV(nodeList);
+            }else if(rootName == "camera"){
+                System.out.println("Parsing Camera");
+                output = parseCam(nodeList);
+            }else if(rootName == "flight_settings"){
+                System.out.println("Parsing flight settings");
+                output = parseSettings(nodeList);
+            }else if(rootName == "project"){
+                System.out.println("Parsing project");
+                output = parseProject(nodeList);
+            } else{
+                System.out.println("Unknown tag");
+            }
+        }catch (IOException | SAXException | ParserConfigurationException ioe){
 
-            if(file.getName().endsWith(".uav")){
-                NodeList nodeList = doc.getElementsByTagName("uav");
-
-                Node nNode = nodeList.item(0);
-                if(nNode.getNodeType() ==  Node.ELEMENT_NODE){
-                    Element element = (Element) nNode;
-                    name = element.getElementsByTagName("name").item(0).getTextContent();
-                    NodeList subNodes = nNode.getChildNodes();
-                    for(int i =0;i<subNodes.getLength();i++) {
-                        Node cNode = nodeList.item(i);
-                        if(cNode.getNodeType() ==  Node.ELEMENT_NODE) {
-                            Element subElement = (Element) cNode;
-                            System.out.println(cNode);
-                            if(cNode.getNodeName()=="weight") {
-                                weight = subElement.getElementsByTagName("weight").item(0).getTextContent();
-                            }
-                            else if(cNode.getNodeName()=="weight") {
-                                turnRad = subElement.getElementsByTagName("turn_rad").item(0).getTextContent();
-                            }
-                            else if(cNode.getNodeName()=="weight") {
-                                maxIncline = subElement.getElementsByTagName("max_incline").item(0).getTextContent();
-                            }
-                            else if(cNode.getNodeName()=="weight") {
-                                battery = subElement.getElementsByTagName("battery").item(0).getTextContent();
-                            }
-                            else if(cNode.getNodeName()=="weight") {
-                                batteryCapacity = subElement.getElementsByTagName("battery_capacity").item(0).getTextContent();
-                            }
-                        }
-                    }
-                }
-                output.add(name);
-                output.add(weight);
-                output.add(turnRad);
-                output.add(maxIncline);
-                output.add(battery);
-                output.add(batteryCapacity);
-                System.out.println(output);
-            }
-            else if(file.getName().endsWith(".cam")){
-                NodeList nodeList = doc.getElementsByTagName("camera");
-                String name;
-                String weight;
-                String turnRad;
-                String maxIncline;
-                String battery;
-                String batteryCapacity;
-                for(int i=0;i<nodeList.getLength();i++){
-                    Node nNode = nodeList.item(i);
-                    if(nNode.getNodeType() ==  Node.ELEMENT_NODE){
-                        Element element = (Element) nNode;
-                        name = element.getElementsByTagName("name").item(0).getTextContent();
-                        weight = element.getElementsByTagName("weight").item(0).getTextContent();
-                        turnRad = element.getElementsByTagName("turn rad").item(0).getTextContent();
-                        maxIncline = element.getElementsByTagName("max incline").item(0).getTextContent();
-                        battery = element.getElementsByTagName("battery").item(0).getTextContent();
-                        batteryCapacity = element.getElementsByTagName("battery capacity").item(0).getTextContent();
-                        output.add(name);
-                        output.add(weight);
-                        output.add(turnRad);
-                        output.add(maxIncline);
-                        output.add(battery);
-                        output.add(batteryCapacity);
-                    }
-                }
-            }
-            else if(file.getName().endsWith(".fsettings")){
-                NodeList nodeList = doc.getElementsByTagName("flight settings");
-                String name;
-                String weight;
-                String turnRad;
-                String maxIncline;
-                String battery;
-                String batteryCapacity;
-                for(int i=0;i<nodeList.getLength();i++){
-                    Node nNode = nodeList.item(i);
-                    if(nNode.getNodeType() ==  Node.ELEMENT_NODE){
-                        Element element = (Element) nNode;
-                        name = element.getElementsByTagName("name").item(0).getTextContent();
-                        weight = element.getElementsByTagName("weight").item(0).getTextContent();
-                        turnRad = element.getElementsByTagName("turn rad").item(0).getTextContent();
-                        maxIncline = element.getElementsByTagName("max incline").item(0).getTextContent();
-                        battery = element.getElementsByTagName("battery").item(0).getTextContent();
-                        batteryCapacity = element.getElementsByTagName("battery capacity").item(0).getTextContent();
-                        output.add(name);
-                        output.add(weight);
-                        output.add(turnRad);
-                        output.add(maxIncline);
-                        output.add(battery);
-                        output.add(batteryCapacity);
-                    }
-                }
-            }
-            else if(file.getName().endsWith(".fpproj")){
-                NodeList nodeList = doc.getElementsByTagName("project");
-                String name;
-                String weight;
-                String turnRad;
-                String maxIncline;
-                String battery;
-                String batteryCapacity;
-                for(int i=0;i<nodeList.getLength();i++){
-                    Node nNode = nodeList.item(i);
-                    if(nNode.getNodeType() ==  Node.ELEMENT_NODE){
-                        Element element = (Element) nNode;
-                        name = element.getElementsByTagName("name").item(0).getTextContent();
-                        weight = element.getElementsByTagName("weight").item(0).getTextContent();
-                        turnRad = element.getElementsByTagName("turn rad").item(0).getTextContent();
-                        maxIncline = element.getElementsByTagName("max incline").item(0).getTextContent();
-                        battery = element.getElementsByTagName("battery").item(0).getTextContent();
-                        batteryCapacity = element.getElementsByTagName("battery capacity").item(0).getTextContent();
-                        output.add(name);
-                        output.add(weight);
-                        output.add(turnRad);
-                        output.add(maxIncline);
-                        output.add(battery);
-                        output.add(batteryCapacity);
-                    }
-                }
-            }
-            else{
-                return null;
-            }
-        } catch (ParserConfigurationException | SAXException | IOException pce){
-            return null;
         }
         return output;
     }
+
 }

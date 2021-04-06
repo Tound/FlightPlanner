@@ -12,17 +12,23 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.imageio.ImageIO;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.swing.plaf.synth.SynthEditorPaneUI;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.ArrayList;
@@ -60,13 +66,21 @@ public class FlightSettings {
 
     private String defaultUavSpeed = "20";
     private String defaultForwardOverlap = "40";
-    private String defaultSideOverlay = "60";
+    private String defaultSideOverlap = "60";
     private String defaultCoverageResolution = "0.02";
     private String defaultAltitude = "120";
+
+    private Stage createStage = new Stage();
+    private Scene createScene;
+    private TextField settingsName = new TextField();
 
     private PathDrawer pathDrawer;
 
     public FileChooser fileChooser = new FileChooser();
+
+    private static Stage dialog = new Stage();
+    private static Label dialogMessage = new Label();
+    private Double scale;
 
     public FlightSettings(PathDrawer pathDrawer){
         uavName.setPromptText("Name of UAV");
@@ -92,6 +106,101 @@ public class FlightSettings {
         coverageResolution.setPromptText("Coverage Resolution (metres/pixel)");
         this.pathDrawer = pathDrawer;
 
+
+        GridPane gp = new GridPane();
+        Text title =  new Text("Name the settings");
+        title.setTextAlignment(TextAlignment.CENTER);
+        title.setId("title");
+        GridPane.setColumnSpan(title,3);
+        GridPane.setHalignment(title, HPos.CENTER);
+
+        gp.setId("gridpane");
+        gp.getStyleClass().add("grid");
+
+        Label nameLabel =  new Label("Name:");
+        settingsName.setPromptText("Name of settings");
+
+        Button save = new Button("Save");
+        Button cancel = new Button("Cancel");;
+
+        gp.add(title,0,0);
+        //title.setFont(Font.font("Arial", FontPosture.ITALIC, 24));
+        gp.add(settingsName,1,1);
+
+        gp.add(nameLabel,0,1);
+
+        gp.add(save,0,2);
+        gp.add(cancel,2,2);
+
+        gp.setHgap(10);
+        gp.setVgap(5);
+        gp.setAlignment(Pos.CENTER);
+
+        //gp.setStyle("-fx-background-color: rgb(42, 45, 48)");
+
+        save.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if(settingsName.getText().isEmpty()){
+                    System.out.println("Missing name for settings");
+                }else {
+                    File file = new File("src/flight_settings/" + settingsName.getText() + ".fsettings");
+                    if(file.exists()){
+                        dialogMessage.setText("The filename "+ settingsName.getText() + ".fsettings already exists in " + settings_path + ".\n Would you like to overwrite?");
+                        dialog.show();
+                    }else {
+                        writeSettings();
+                        createStage.close();
+                    }
+                }
+            }
+        });
+
+        cancel.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                createStage.close();
+            }
+        });
+
+        createScene = new Scene(gp,400,100);
+        createScene.setUserAgentStylesheet("style/menus.css");
+        createStage.setScene(createScene);
+
+
+        // Setup dialog box
+        dialog.setTitle("Overwrite File?");
+        dialog.initModality(Modality.APPLICATION_MODAL);
+
+        Button yes = new Button("Yes");
+        Button no = new Button("No");
+        BorderPane bp = new BorderPane();
+        bp.setCenter(dialogMessage);
+        HBox hb = new HBox(yes, no);
+
+        BorderPane.setAlignment(hb, Pos.CENTER);
+        bp.setBottom(hb);
+
+        Scene dialogScene = new Scene(bp,400,100, Color.web("rgb(42, 45, 48)"));
+        dialogScene.setUserAgentStylesheet("style/menus.css");
+        dialog.setScene(dialogScene);
+
+        yes.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                System.out.println("Set overwrite to true");
+                writeSettings();
+                dialog.close();
+                createStage.close();
+            }
+        });
+        no.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                System.out.println("Change the name of the craft and re-save");
+                dialog.close();
+            }
+        });
     }
 
     public ScrollPane setupFlight(){
@@ -294,15 +403,17 @@ public class FlightSettings {
             @Override
             public void handle(MouseEvent event) {
                 fileChooser.setInitialDirectory(new File(uav_path));
-                fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("UAV Files (*.uav)","*.uav"));
+                FileChooser.ExtensionFilter uavFilter = new FileChooser.ExtensionFilter("UAV Files (*.uav)","*.uav");
+                fileChooser.getExtensionFilters().add(uavFilter);
+                fileChooser.setSelectedExtensionFilter(uavFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
-                ArrayList<String> output = Parser.load(file);
-                uavName.setText(output.get(0));
-                uavWeight.setText(output.get(1));
-                uavMinRadius.setText(output.get(2));
-                uavMaxIncline.setText(output.get(3));
-                uavBattery.setText(output.get(4));
-                uavBatteryCapacity.setText(output.get(5));
+                UAV uav = (UAV) Parser.parseFile(file);
+                uavName.setText(uav.getName());
+                uavWeight.setText(uav.getWeight());
+                uavMinRadius.setText(uav.getTurnRad());
+                uavMaxIncline.setText(uav.getMaxIncline());
+                uavBattery.setText(uav.getBattery());
+                uavBatteryCapacity.setText(uav.getCapacity());
             }
         });
 
@@ -310,22 +421,25 @@ public class FlightSettings {
             @Override
             public void handle(MouseEvent event) {
                 fileChooser.setInitialDirectory(new File(cam_path));
-                fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Camera Files (*.cam)","*.cam"));
+                FileChooser.ExtensionFilter camFilter = new FileChooser.ExtensionFilter("Camera Files (*.cam)","*.cam");
+                fileChooser.getExtensionFilters().add(camFilter);
+                fileChooser.setSelectedExtensionFilter(camFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
-                ArrayList<String> output = Parser.load(file);
-                String camString = createCamera.loadCamera();
-                camName.setText(camString);
-                camSensorX.setText(camString);
-                camSensorY.setText(camString);
-                camFocalLength.setText(camString);
-                camResolution.setText(camString);
-                camAspectRatio.setText(camString);
+                Camera camera = (Camera) Parser.parseFile(file);
+                //String camString = createCamera.loadCamera();
+                camName.setText(camera.getName());
+                camSensorX.setText(camera.getSensorX());
+                camSensorY.setText(camera.getSensorY());
+                camFocalLength.setText(camera.getFocalLength());
+                camResolution.setText(camera.getResolution());
+                camAspectRatio.setText(camera.getAspectRatio());
             }
         });
+
         save.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-
+                createStage.show();
             }
         });
         defaultSettings.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -333,7 +447,7 @@ public class FlightSettings {
             public void handle(MouseEvent event) {
                 uavSpeed.setText(defaultUavSpeed);
                 forwardOverlap.setText(defaultForwardOverlap);
-                sideOverlap.setText(defaultSideOverlay);
+                sideOverlap.setText(defaultSideOverlap);
                 coverageResolution.setText(defaultCoverageResolution);
                 altitude.setText(defaultAltitude);
             }
@@ -341,7 +455,19 @@ public class FlightSettings {
         load.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-
+                fileChooser.setInitialDirectory(new File(settings_path));
+                FileChooser.ExtensionFilter settingsFilter = new FileChooser.ExtensionFilter("Settings Files (*.cam)","*.fsettings");
+                fileChooser.getExtensionFilters().add(settingsFilter);
+                fileChooser.setSelectedExtensionFilter(settingsFilter);
+                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
+                Settings settings = (Settings) Parser.parseFile(file);
+                //String camString = createCamera.loadCamera();
+                uavSpeed.setText(settings.getUavSpeed());
+                windSpeed.setText(settings.getWindSpeed());
+                windDirection.setText(settings.getWindDirection());
+                sideOverlap.setText(settings.getSideOverlap());
+                coverageResolution.setText(settings.getGsd());
+                altitude.setText(settings.getAltitude());
             }
         });
 
@@ -363,23 +489,27 @@ public class FlightSettings {
                     if(runScript("find_flight_path")){
                         try {
                             File pass_coords = new File("src/intermediate/passes.txt");
+                            Writer writer = new FileWriter("src/intermediate/altitudeProfile.gps");
                             Scanner scanner = new Scanner(pass_coords);
                             String line = "";
                             String[] content;
                             while (scanner.hasNextLine()) {
                                 line = scanner.nextLine();
                                 content = line.split(",");
-                                Coordinate coord1 = new Coordinate(Double.parseDouble(content[0]),Double.parseDouble(content[1]));
+                                Coordinate coord1 = flipCoords(Double.parseDouble(content[0]),Double.parseDouble(content[1]));;
                                 line = scanner.nextLine();
                                 content = line.split(",");
-                                Coordinate coord2 = new Coordinate(Double.parseDouble(content[0]),Double.parseDouble(content[1]));
+                                Coordinate coord2 = flipCoords(Double.parseDouble(content[0]),Double.parseDouble(content[1]));
                                 pathDrawer.addPassCoords(coord1,coord2);
+                                createAltitudeCoords(writer,coord1,coord2);
                             }
                             pathDrawer.drawPasses();
 
                         }catch (IOException ioe){
                             ioe.printStackTrace();
                         }
+
+
                         if(runScript("create_terraces")) {
                             if (runScript("shortest_path")) {
                                 System.out.println("Drawn passes");
@@ -397,6 +527,33 @@ public class FlightSettings {
         sp.setFitToWidth(true);
         sp.setMaxWidth(Double.MAX_VALUE);
         return sp;
+    }
+
+    public void createAltitudeCoords(Writer writer, Coordinate coord1, Coordinate coord2) throws IOException {
+        writer.write("NEW_TERRACE");
+        Double dy = coord2.getY() - coord1.getY();
+        Double dx = coord2.getX() - coord1.getX();
+        Double length = Math.sqrt(dy*dy + dx*dx);
+        Double realLength = length/scale;
+        int sampleDistance = 30;
+        Double samples = realLength / sampleDistance;
+
+        Double lat = 0.0;
+        Double lon = 0.0;
+        Double x = 0.0;
+        Double y = 0.0;
+        for(int i = 0;i<(int)Math.round(samples);i=i+sampleDistance){
+
+            writer.write(lat+","+lon);
+
+        }
+
+    }
+
+    public Coordinate flipCoords(Double coord1,Double coord2){
+        Double flippedY = this.pathDrawer.getCanvas().getHeight() - coord2;
+        Coordinate coordinate = new Coordinate(coord1,flippedY);
+        return coordinate;
     }
 
     public boolean runScript(String scriptName){
@@ -435,7 +592,56 @@ public class FlightSettings {
     }
 
     public void writeSettings(){
+        System.out.println("Writing new Settings");
+        Document dom;
+        Element e = null;
 
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        try {
+            DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+            dom = documentBuilder.newDocument();
+            Element rootElement = dom.createElement("flight_settings");
+
+            e = dom.createElement("uav_speed");
+            e.appendChild(dom.createTextNode(uavSpeed.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("wind_speed");
+            e.appendChild(dom.createTextNode(windSpeed.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("wind_direction");
+            e.appendChild(dom.createTextNode(windDirection.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("side_overlap");
+            e.appendChild(dom.createTextNode(sideOverlap.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("gsd");
+            e.appendChild(dom.createTextNode(coverageResolution.getText()));
+            rootElement.appendChild(e);
+
+            e = dom.createElement("alititude");
+            e.appendChild(dom.createTextNode(altitude.getText()));
+            rootElement.appendChild(e);
+
+            dom.appendChild(rootElement);
+
+            Transformer tr = TransformerFactory.newInstance().newTransformer();
+            tr.setOutputProperty(OutputKeys.INDENT,"yes");
+            tr.setOutputProperty(OutputKeys.METHOD,"xml");
+            tr.setOutputProperty(OutputKeys.ENCODING,"UTF-8");
+            //tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,"uav.dtd");
+            tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount","4");
+
+            tr.transform(new DOMSource(dom),new StreamResult(new FileOutputStream("src/flight_settings/"+settingsName.getText()+".fsettings")));
+
+        }catch (IOException | ParserConfigurationException | TransformerConfigurationException ioe){
+            ioe.printStackTrace();
+        } catch (TransformerException transformerException) {
+            transformerException.printStackTrace();
+        }
 
     }
 
@@ -460,6 +666,32 @@ public class FlightSettings {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public Double getScale(ArrayList<Coordinate> coordinates){
+        //Haversine formula
+        Double scale = 1.0;
+        Double radiusEarth = 6378.137;
+        Double lat1 = coordinates.get(0).getLat();
+        Double lon1 = coordinates.get(0).getLong_();
+        Double lat2 = coordinates.get(1).getLat();
+        Double lon2 = coordinates.get(1).getLong_();
+
+        Double dx = coordinates.get(1).getX() - coordinates.get(0).getX();
+        Double dy = coordinates.get(1).getY() - coordinates.get(0).getY();
+        Double pixelDistance = Math.sqrt(dx*dx + dy*dy);
+
+        Double dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
+        Double dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
+        Double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+        Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        Double d = radiusEarth * c * 1000;
+
+        System.out.println("Distance = " + d);
+        scale = pixelDistance/d;
+        this.scale = scale;
+        return scale;
     }
 
     public Boolean createRoute(){
@@ -506,7 +738,7 @@ public class FlightSettings {
         }if(FlightPlanner.getPathDrawer().getStartPoint() == null){
             System.out.println("No start location specified");
             errorString = errorString + "Takeoff and Landing location,";
-        }if(FlightPlanner.getPathDrawer().getPoints().isEmpty()){
+        }if(FlightPlanner.getPathDrawer().getCanvasPoints().isEmpty()){
             errorString = errorString + "Area of Interest,";
         }
 
@@ -519,10 +751,15 @@ public class FlightSettings {
             //Write intermediate file
             System.out.println("Writing to file");
             try {
+                ArrayList<Coordinate> points = pathDrawer.getRealPoints();
+                ArrayList<ArrayList<Coordinate>> allNFZPoints = pathDrawer.getAllRealNFZPoints();
+
+                Double scale = getScale(points);
+
                 FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
                 //writer.write("====SETTINGS====\n");
                 //writer.write("UAV_NAME\t" + uavName.getText());
-                writer.write("SCALE\t" + pathDrawer.getMapScale() + "\n");
+                writer.write("SCALE\t" + scale + "\n");
                 writer.write("UAV_WEIGHT\t" + uavWeight.getText() + "\n");
                 writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText() + "\n");
                 writer.write("UAV_MAX_INCLINE\t" + uavMaxIncline.getText() + "\n");
@@ -541,16 +778,19 @@ public class FlightSettings {
                 writer.write("WIND_DIRECTION\t" + windDirection.getText() + "\n");
                 if(!altitude.getText().isEmpty()) {
                     writer.write("ALTITUDE\t" + altitude.getText() + "\n");
+                }else{
+                    writer.write("ALTITUDE\tNONE\n");
                 }
                 writer.write("FORWARD_OVERLAP\t" + forwardOverlap.getText() + "\n");
                 writer.write("SIDE_OVERLAP\t" + sideOverlap.getText() + "\n");
-                writer.write("GSD\t" + coverageResolution.getText() + "\n");
+                if(!coverageResolution.getText().isEmpty()) {
+                    writer.write("GSD\t" + coverageResolution.getText() + "\n");
+                }else{
+                    writer.write("GSD\tNONE\n");
+                }
                 writer.write("====START====\n");
-                Coordinate startLoc = pathDrawer.getStartPoint();
+                Coordinate startLoc = pathDrawer.getRealStartPoint();
                 writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y + "\n");
-
-                ArrayList<Coordinate> points = pathDrawer.getPoints();
-                ArrayList<ArrayList<Coordinate>> allNFZPoints = pathDrawer.getAllNFZs();
 
                 for (int i = 0; i < points.size(); i++) {
                     writer.write(points.get(i).x + "," + points.get(i).y + "\n");

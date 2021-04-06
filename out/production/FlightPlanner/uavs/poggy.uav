@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<UAV>
+    <name>poggy</name>
+    <weight>25</weight>
+    <turn_radius>18</turn_radius>
+    <max_incline>30</max_incline>
+    <battery>LiPo</battery>
+    <battery_capacity>10000</battery_capacity>
+</UAV>
