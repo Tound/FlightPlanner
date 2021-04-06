@@ -92,11 +92,7 @@ def convertCoords(vertices,angle,coord_system):
         print("Unknown coord system - Choose either 'xy' or 'uv'")
     return new_coords
 
-<<<<<<< HEAD
-def createPasses(area,NFZs,config):
-=======
 def createPasses(area,polygon_edges,NFZs,config):
->>>>>>> 2885d6ec90e51f77eec9234d8f09df90fef2ad70
     """
     Create passes across specified area for known area
     Parameters

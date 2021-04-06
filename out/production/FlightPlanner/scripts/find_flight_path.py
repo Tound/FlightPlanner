@@ -9,11 +9,7 @@ import matplotlib.pyplot as plt
 from opensimplex import OpenSimplex
 
 from create_passes_GUI import *
-<<<<<<< HEAD
-from Passes_TSP_V2 import *
-=======
 from Passes_TSP_GUI import *
->>>>>>> 2885d6ec90e51f77eec9234d8f09df90fef2ad70
 from camera_calculations import *
 from Image_Classes_V2 import *
 #from create_terraces import *
@@ -237,8 +233,6 @@ image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
 
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
 config = Configuration(uav,camera,side_overlap,forward_overlap,ground_sample_distance,wind)
-<<<<<<< HEAD
-=======
 
 polygon_edges = []
 for i in range(0,len(polygon)):
@@ -250,12 +244,7 @@ for NFZ in NFZs:
     for i in range(0,len(NFZ)):
         NFZ_edges.append(Edge(NFZ[i-1][0],NFZ[i-1][1],
                         NFZ[i][0],NFZ[i][1]))
->>>>>>> 2885d6ec90e51f77eec9234d8f09df90fef2ad70
 
 #start_time = time.clock()   # Get current time for measuring solve time
 
-<<<<<<< HEAD
-image_passes = createPasses(polygon,NFZs,config) # Create pass objects for current configuration
-=======
 createPasses(polygon,polygon_edges,NFZs,config) # Create pass objects for current configuration
->>>>>>> 2885d6ec90e51f77eec9234d8f09df90fef2ad70
