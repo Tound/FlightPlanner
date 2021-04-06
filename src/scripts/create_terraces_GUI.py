@@ -117,6 +117,7 @@ def createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_
 # Make terraces
 
 # Get altitude data
+gpsCoords = open()
 altitude_profile = getAltitudeProfile(pass_length,terrain,uav_altitude,u,start_v,wind_angle)
 
 createTerraces()
