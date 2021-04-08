@@ -196,8 +196,9 @@ else:
             elif line.startswith("WIND_DIRECTION"):
                 wind[1] = math.radians(90-float(contents[1]))
             elif line.startswith("ALTITUDE"):
-                if contents[1] not "NONE":
-                    altitude = float(contents[1])
+                contents = contents[1].strip("\n")
+                if contents != "NONE":
+                    altitude = float(contents)
                 else:
                     altitude = None
             elif line.startswith("FORWARD_OVERLAP"):
@@ -205,8 +206,9 @@ else:
             elif line.startswith("SIDE_OVERLAP"):
                 side_overlap = float(contents[1])/100
             elif line.startswith("GSD"):
-                if contents[1] not "NONE"
-                    ground_sample_distance = float(contents[1])
+                contents = contents[1].strip("\n")
+                if contents != "NONE":
+                    ground_sample_distance = float(contents)
                 else:
                     ground_sample_distance = None
             elif line == "":
@@ -238,7 +240,7 @@ uav = UAV(uav_mass,uav_speed,min_turn,max_incline_angle)
 image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
 
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
-config = Configuration(uav,camera,side_overlap,forward_overlap,wind,scale,ground_sample_distance,altitude)
+config = Configuration(uav,camera,side_overlap,forward_overlap,wind,scale,altitude,ground_sample_distance)
 
 polygon_edges = []
 for i in range(0,len(polygon)):

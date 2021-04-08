@@ -146,8 +146,8 @@ def createPasses(area,polygon_edges,NFZs,config):
         min_uav_alt = config.scale * (camera.image_x * (config.coverage_resolution - 0.0015)) * camera.focal_length/camera.sensor_x
 
     else:
-        coverage_width = config.scale * (config.coverage_resolution * camera.image_x)
-        coverage_height = config.scale * (config.coverage_resolution * camera.image_y)
+        coverage_width = config.scale * (camera.sensor_x*config.altitude/camera.focal_length)
+        coverage_height = config.scale * (camera.sensor_y*config.altitude/camera.focal_length)
 
         uav_altitude = config.altitude
 
