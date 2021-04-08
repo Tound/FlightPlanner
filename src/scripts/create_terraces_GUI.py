@@ -1,3 +1,10 @@
+import requests
+import numpy as np
+from create_passes_GUI import convertCoords
+from Image_Classes_V2 import *
+
+image_passes = []
+
 # Create Terraces
 def createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len):
     """
@@ -113,11 +120,3 @@ def createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_
     else:
         pass
     return image_passes
-
-# Make terraces
-
-# Get altitude data
-gpsCoords = open()
-altitude_profile = getAltitudeProfile(pass_length,terrain,uav_altitude,u,start_v,wind_angle)
-
-createTerraces()

@@ -400,4 +400,5 @@ public class PathDrawer{
     public SwingNode getMapNode(){ return sn; }
     public Canvas getCanvas(){ return this.canvas; }
     public int getMapScale(){ return mapViewer.getZoom(); }
+    public JXMapViewer getMap(){ return this.mapViewer; }
 }
