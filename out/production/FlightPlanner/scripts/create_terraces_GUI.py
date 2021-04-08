@@ -1,5 +1,7 @@
 import requests
 
+image_passes = []
+
 # Create Terraces
 def createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len):
     """
@@ -115,25 +117,3 @@ def createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_
     else:
         pass
     return image_passes
-
-# Make terraces
-api_url = "https://api.opentopodata.org/v1/test-dataset?locations=56,123"
-# Get altitude data
-gpsCoords = open("intermediate/altitudeCoords")
-line = gpsCoords.readline()
-while line != None:
-    line = line.strip("\n")
-    contents = line.split("\t")
-    if line.startswith("SCALE"):
-        scale = float(contents[1])
-    else:
-        api_url = api_url + "|"
-
-gpsCoords.close()
-
-data = requests.get(api_url)
-data.json()
-
-altitude_profile = getAltitudeProfile(pass_length,terrain,uav_altitude,u,start_v,wind_angle)
-
-createTerraces()

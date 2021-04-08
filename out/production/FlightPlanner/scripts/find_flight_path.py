@@ -11,11 +11,8 @@ from opensimplex import OpenSimplex
 from create_passes_GUI import *
 from Passes_TSP_GUI import *
 from camera_calculations import *
-from Image_Classes_V2 import *
-#from create_terraces import *
 
 import time
-
 import sys
 
 class Camera:
@@ -47,15 +44,14 @@ class Configuration:
     Configuration class holds the settings for an entire flight 
     including Camera object and UAV object
     """
-    def __init__(self,uav,camera,side_overlap,forward_overlap,wind_angle,scale,altitude,coverage_resolution):
+    def __init__(self,uav,camera,side_overlap,wind_angle,scale,altitude,ground_sample_distance):
         self.uav = uav
         self.camera = camera
         self.side_overlap = side_overlap
-        self.forward_overlap = forward_overlap
         self.wind = wind
         self.scale = scale
         self.altitude = altitude
-        self.coverage_resolution = coverage_resolution
+        self.ground_sample_distance = ground_sample_distance
 
 
 
@@ -113,8 +109,7 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
 
     # Flight settings
     wind = (5,math.radians(90)) #Polar coords (Mag, degrees)
-    coverage_resolution = 0.02  # m/px
-    ground_sample_distance = coverage_resolution
+    ground_sample_distance = 0.02  # m/px
 
     max_current_draw = 20
     battery_capacity = 2200
@@ -201,8 +196,6 @@ else:
                     altitude = float(contents)
                 else:
                     altitude = None
-            elif line.startswith("FORWARD_OVERLAP"):
-                forward_overlap = float(contents[1])/100
             elif line.startswith("SIDE_OVERLAP"):
                 side_overlap = float(contents[1])/100
             elif line.startswith("GSD"):
@@ -215,6 +208,7 @@ else:
                 break
             else:
                 print("Unknown line")
+                print(line)
                 print("Error")
                 exit(1)
     f.close()
@@ -240,7 +234,7 @@ uav = UAV(uav_mass,uav_speed,min_turn,max_incline_angle)
 image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
 
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
-config = Configuration(uav,camera,side_overlap,forward_overlap,wind,scale,altitude,ground_sample_distance)
+config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance)
 
 polygon_edges = []
 for i in range(0,len(polygon)):

@@ -111,16 +111,14 @@ def createPasses(area,polygon_edges,NFZs,config):
         new_NFZ_coords = convertCoords(NFZ,wind_angle,'uv')
         new_NFZs.append(new_NFZ_coords)
 
-
-
     # Find footprint size
     if config.altitude is None:
-        coverage_width = config.scale * (config.coverage_resolution * camera.image_x)
-        coverage_height = config.scale * (config.coverage_resolution * camera.image_y)
+        coverage_width = config.scale * (config.ground_sample_distance * camera.image_x)
+        coverage_height = config.scale * (config.ground_sample_distance * camera.image_y)
 
         uav_altitude = coverage_width *camera.focal_length/camera.sensor_x
-        max_uav_alt = config.scale * (camera.image_x * (config.coverage_resolution + 0.0015)) * camera.focal_length/camera.sensor_x
-        min_uav_alt = config.scale * (camera.image_x * (config.coverage_resolution - 0.0015)) * camera.focal_length/camera.sensor_x
+        max_uav_alt = config.scale * (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x
+        min_uav_alt = config.scale * (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x
 
     else:
         coverage_width = config.scale * (camera.sensor_x*config.altitude/camera.focal_length)
@@ -129,9 +127,10 @@ def createPasses(area,polygon_edges,NFZs,config):
         uav_altitude = config.altitude
 
         ground_sample_distance = uav_altitude*camera.sensor_x/(camera.focal_length * camera.image_x)
-
+        config.ground_sample_distance = ground_sample_distance
         max_uav_alt = config.scale * (camera.image_x * (ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x
         min_uav_alt = config.scale * (camera.image_x * (ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x
+
 
     distance_between_photos_width = coverage_width - coverage_width*config.side_overlap
 
@@ -175,6 +174,8 @@ def createPasses(area,polygon_edges,NFZs,config):
     max_alt_diff = max_uav_alt - min_uav_alt
 
     pass_file = open("src/intermediate/passes.txt",'w')
+    pass_file.write(f"ALTITUDE\t{uav_altitude}\t{max_alt_diff}\n")
+    pass_file.write(f"GSD\t{config.ground_sample_distance}\n")
 
     # Shift passes to allow for even distribution
     u = start_u + coverage_width/2 + pass_shift
@@ -223,15 +224,11 @@ def createPasses(area,polygon_edges,NFZs,config):
             start_v = start[1] + coverage_height/2  # Shift pass up by half the size of an image height
 
             v = start_v
-            #pass_file.write("NEW PASS\n")
             coords = convertCoords([[u,v]],wind_angle,'xy')
             pass_file.write(f"{coords[0][0]},{coords[0][1]}\n")
             coords = convertCoords([[u,v+pass_length]],wind_angle,'xy')
             pass_file.write(f"{coords[0][0]},{coords[0][1]}\n")
-            #image_passes = createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_alt_diff,min_length)
 
-
-            # Must make sure TSP does not go through land or through NFZ
         u += distance_between_photos_width          # Increase U value on each loop
 
     pass_file.close()

@@ -1,82 +1,82 @@
 # Shortest path
 # Use TSP to find shortest route
-from Passes_TSP import *
+from Passes_TSP_GUI import *
 from create_terraces_GUI import *
 from create_passes_GUI import convertCoords
+from Image_Classes_V2 import *
+from dotenv import load_dotenv
+import json
+import os
 
-def getAltitudeProfile(pass_length,terrain,uav_altitude,u,start_v,wind_angle):
+API_URL = "https://maps.googleapis.com/maps/api/elevation/json?path="
+load_dotenv()
+API_KEY = os.getenv('API_KEY')
+
+def getAltitudeProfile(pass_length,loc_string,uav_altitude,u,start_v,wind_angle):
     """
     Obtain altitude data for entire pass across generated terrain
     """
+    samples = 10
     altitude_profile = []
-    v = start_v
-    for k in range(0,round(pass_length)):
-        coord = convertCoords([[u,v]],wind_angle,'xy')
-        x = coord[0][0]
-        y = coord[0][1]
-        x_points = [int(x),int(x),int(x)+1,int(x)+1]
-        y_points = [int(y),int(y)+1,int(y)+1,int(y)]
-        z_points = [terrain[int(y)][int(x)],terrain[int(y)+1][int(x)],
-                    terrain[int(y)+1][int(x)+1],terrain[int(y)][int(x)+1]]
-
-        # For created terrain ONLY
-        z = griddata((x_points,y_points),z_points,(x,y))    # Interpolate        
-        altitude = z + uav_altitude
-
-        altitude_profile.append(altitude)
-        v +=1
+    request = requests.get(API_URL + loc_string + "&samples=" + f"{samples}" + "&key=" + API_KEY)
+    request = request.json()["results"]
+    for result in request:
+        elevation = float(result['elevation'])
+        altitude_profile.append(elevation)
+    print(altitude_profile)
     return altitude_profile
 
-# Add altitude to passes and make terraces
-class Terrace:
-    def __init__(self,x,y,length,wind_angle):
-        self.x = x
-        self.y = y
-        self.length = length
-        self.wind_angle = wind_angle
-        coords = convertCoords([[x,y]],wind_angle,'uv')
-
-        self.u = coords[0][0]
-        self.v = coords[0][1]
-
-terraces = []
+image_passes = []
 # Make terraces
-api_url = "https://api.opentopodata.org/v1/test-dataset?locations=56,123"
 # Get altitude data
-gpsCoords = open("intermediate/altitudeCoords")
+gpsCoords = open("src/intermediate/altitudeProfile.txt")
 line = gpsCoords.readline()
 while line != None:
+    print(repr(line))
     line = line.strip("\n")
     contents = line.split("\t")
     if line.startswith("SCALE"):
         scale = float(contents[1])
     elif line.startswith("WIND_ANGLE"):
-        wind_angle = float(contents[1])
-    elif line.startswith("NEW_TERRACE")
-        x = contents[1]
-        y = contents[2]
-        length = contents[3]
-        terrace = Terrace(x,y,length,wind_angle)
-        terraces.append(terrace)
+        wind_angle = math.radians(float(contents[1]))
+    elif line.startswith("ALTITUDE"):
+        altitude = float(contents[1])
+        max_alt_diff = float(contents[2])
+    elif line.startswith("MIN_TERRACE_LENGTH"):
+        min_terrace_len = float(contents[1])
+    elif line.startswith("NEW_TERRACE"):
+        x = float(contents[1])
+        y = float(contents[2])
+        coords = convertCoords([[x,y]],wind_angle,'uv')
+        u = coords[0][0]
+        v = coords[0][1]
+        pass_length = float(contents[3])
+        #terrace = Terrace(x,y,length,wind_angle)
+        #terraces.append(terrace)
+    elif line.startswith("MIN_TURN_RADIUS"):
+        min_turn = float(contents[1])
+    elif line.startswith("UAV_MASS")
+        uav_mass = float(contents[1])
+    elif line == '':
+        break
     else:
-        api_url = api_url + "|"
+        loc_string = f"{contents[0]},{contents[1]}|{contents[2]},{contents[3]}"
+        altitude_profile = getAltitudeProfile(pass_length,loc_string,altitude,u,v,wind_angle)
+        image_passes = createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
+    line = gpsCoords.readline()
+
+# Get pass coords
+# Get altitude profile for pass
+# Split into terraces
 
 gpsCoords.close()
 
-data = requests.get(api_url)
-data.json()
-altitude_profile
-
-altitude_profile = getAltitudeProfile(pass_length,terrain,uav_altitude,u,start_v,wind_angle)
-for image_pass in image_passes:
-    createTerraces()
-
-
-shortest_path = TSP(image_passes,wind[1],min_turn,uav_mass,NFZs,max_incline_grad,start_loc,populationSize=50,generations=200,mutationRate=0.3)
+start_time = time.clock()
+shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,max_incline_grad,start_loc,populationSize=50,generations=200,mutationRate=0.3)
 
 end_time = time.clock() - start_time    # Calculate time taken to create passes and findest shortest route
 
-# Print flight stats
+Print flight stats
 print(f"Total time to solve: {round(end_time/60,2)}mins")
 print(f"Total length of route: {round(shortest_path.getLength(),2)}m")
 
