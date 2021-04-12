@@ -22,6 +22,10 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.w3c.dom.Document;
@@ -38,6 +42,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -488,7 +493,30 @@ public class FlightSettings {
                         try {
                             File pass_coords = new File("src/intermediate/passes.txt");
                             Writer writer = new FileWriter("src/intermediate/altitudeProfile.txt");
-                            System.out.println("WRITING ALTITUDE");
+
+                            JSONObject passesJSON = new JSONObject("src/intermediate/passes.json");
+                            JSONObject settingsJSON =  new JSONObject("src/intermediate/settings.json");
+
+                            groundSampleDistance.setText(settingsJSON.get("gsd").toString());
+                            altitude.setText(settingsJSON.get("altitude").toString());
+
+                            JSONArray jsonArray = (JSONArray) passesJSON.get("passes");
+
+                            for(int i = 0; i<jsonArray.length();i++) {
+                                JSONObject pass = (JSONObject) jsonArray.get(i);
+                                String start = pass.get("start").toString();
+                                String end = pass.get("end").toString();
+
+                                String[] startValues = start.split(",");
+                                String[] endValues = end.split(",");
+
+                                Coordinate coord1 = flipCoords(Double.parseDouble(startValues[0]), Double.parseDouble(startValues[1]));
+                                Coordinate coord2 = flipCoords(Double.parseDouble(endValues[0]), Double.parseDouble(endValues[1]));
+                                pathDrawer.addPassCoords(coord1, coord2);
+                                createAltitudeCoords(writer, coord1, coord2);
+                            }
+
+                            /*System.out.println("WRITING ALTITUDE");
                             writer.write("SCALE\t"+scale+"\n");
                             writer.write("WIND_ANGLE\t"+(90-Double.parseDouble(windDirection.getText())) + "\n");
 
@@ -516,9 +544,9 @@ public class FlightSettings {
                                 Coordinate coord2 = flipCoords(Double.parseDouble(content[0]),Double.parseDouble(content[1]));
                                 pathDrawer.addPassCoords(coord1,coord2);
                                 createAltitudeCoords(writer,coord1,coord2);
-                            }
+                            }*/
                             writer.close();
-                            scanner.close();
+                            //scanner.close();
                             pathDrawer.drawPasses();
 
                         }catch (IOException ioe){
@@ -696,7 +724,7 @@ public class FlightSettings {
         Double d = radiusEarth * c * 1000;
 
         System.out.println("Distance = " + d);
-        scale = pixelDistance/d;
+        scale = d/pixelDistance;    // M/PX -> PX* SCALE = M
         this.scale = scale;
         return scale;
     }
@@ -758,58 +786,55 @@ public class FlightSettings {
             try {
                 ArrayList<Coordinate> points = pathDrawer.getRealPoints();
                 ArrayList<ArrayList<Coordinate>> allNFZPoints = pathDrawer.getAllRealNFZPoints();
-
                 Double scale = getScale(points);
 
-                FileWriter writer = new FileWriter("src/intermediate/intermediate.txt");
-                //writer.write("====SETTINGS====\n");
-                //writer.write("UAV_NAME\t" + uavName.getText());
-                writer.write("SCALE\t" + scale + "\n");
-                writer.write("UAV_WEIGHT\t" + uavWeight.getText() + "\n");
-                writer.write("UAV_MIN_RADIUS\t" + uavMinRadius.getText() + "\n");
-                writer.write("UAV_MAX_INCLINE\t" + uavMaxIncline.getText() + "\n");
-                //writer.write(uavBattery.getText();
-                writer.write("BATTERY_CAPACITY\t" + uavBatteryCapacity.getText() + "\n");
+                JSONObject jsonObject = new JSONObject();
 
-                //writer.write("CAMERA_NAME" + camName.getText());
-                writer.write("CAM_SENSOR_X\t" + camSensorX.getText() + "\n");
-                writer.write("CAM_SENSOR_Y\t" + camSensorY.getText() + "\n");
-                writer.write("CAM_FOCAL_LENGTH\t" + camFocalLength.getText() + "\n");
-                writer.write("CAM_RESOLUTION\t" + camResolution.getText() + "\n");
-                writer.write("CAM_ASPECT_RATIO\t" + camAspectRatio.getText() + "\n");
+                jsonObject.put("scale",scale);
+                jsonObject.put("uav_weight",uavWeight.getText());
+                jsonObject.put("uav_min_radius",uavMinRadius.getText());
+                jsonObject.put("uav_max_incline",uavMaxIncline.getText());
+                jsonObject.put("battery_capacity",uavBatteryCapacity.getText());
+                jsonObject.put("cam_sensor_x",camSensorX.getText());
+                jsonObject.put("cam_sensor_y",camSensorY.getText());
+                jsonObject.put("cam_focal_length",camFocalLength.getText());
+                jsonObject.put("cam_resolution",camResolution.getText());
+                jsonObject.put("cam_aspect_ratio",camAspectRatio.getText());
+                jsonObject.put("uav_speed",uavSpeed.getText());
+                jsonObject.put("wind_speed",windSpeed.getText());
+                jsonObject.put("wind_direction",windDirection.getText());
+                jsonObject.put("altitude",altitude.getText());
+                jsonObject.put("side_overlap",sideOverlap.getText());
+                jsonObject.put("gsd",groundSampleDistance.getText());
+                jsonObject.put("min_terrace_length",minTerraceLength);
 
-                writer.write("UAV_SPEED\t" + uavSpeed.getText() + "\n");
-                writer.write("WIND_SPEED\t" + windSpeed.getText() + "\n");
-                writer.write("WIND_DIRECTION\t" + windDirection.getText() + "\n");
-                if(!altitude.getText().isEmpty()) {
-                    writer.write("ALTITUDE\t" + altitude.getText() + "\n");
-                }else{
-                    writer.write("ALTITUDE\tNONE\n");
-                }
-                writer.write("SIDE_OVERLAP\t" + sideOverlap.getText() + "\n");
-                if(!groundSampleDistance.getText().isEmpty()) {
-                    writer.write("GSD\t" + groundSampleDistance.getText() + "\n");
-                }else{
-                    writer.write("GSD\tNONE\n");
-                }
-                writer.write("====START====\n");
+                //JSONObject pointsJSON = new JSONObject();
                 Coordinate startLoc = pathDrawer.getRealStartPoint();
-                writer.write("START_LOC: \t" + startLoc.x + "," + startLoc.y + "\n");
+                jsonObject.put("start_loc",startLoc.getX() +","+startLoc.getY());
 
-                for (int i = 0; i < points.size(); i++) {
-                    writer.write(points.get(i).x + "," + points.get(i).y + "\n");
+                JSONArray pointsArray = new JSONArray();
+                for(int i=0;i<points.size();i++){
+                    pointsArray.put(points.get(i).getX() + "," + points.get(i).getY());
                 }
+
+                jsonObject.put("points",pointsArray);
+
                 if (allNFZPoints.size() > 0) {
-                    writer.write("====NFZ====\n");
+                    JSONArray nfzArray = new JSONArray();
                     for (int i = 0; i < allNFZPoints.size(); i++) {
-                        writer.write("NFZ START\n");
+                        JSONArray nfzPointsJSON = new JSONArray();
                         ArrayList<Coordinate> nfzPoint = allNFZPoints.get(i);
                         for (int j = 0; j < nfzPoint.size(); j++) {
-                            writer.write(nfzPoint.get(j).x + "," + nfzPoint.get(j).y + "\n");
+                            nfzPointsJSON.put(nfzPoint.get(j).x + "," + nfzPoint.get(j).y);
+                            //writer.write(nfzPoint.get(j).x + "," + nfzPoint.get(j).y + "\n");
                         }
+                        nfzArray.put(nfzPointsJSON);
                     }
+                    jsonObject.put("nfzs",nfzArray);
                 }
-                writer.write("====END====");
+
+                FileWriter writer = new FileWriter("src/intermediate/settings.json");
+                writer.write(jsonObject.toString());
                 writer.close();
 
             } catch (IOException ioe) {

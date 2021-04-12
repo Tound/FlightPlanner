@@ -14,6 +14,9 @@ from camera_calculations import *
 
 import time
 import sys
+import traceback
+
+import json
 
 class Camera:
     """
@@ -122,96 +125,65 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
     start_loc = [400,730,terrain[730][400]]
 
 else:
-    print("Reading text file")
+    #print("Reading text file")
     # Read intermediate file
-    f = open("src/intermediate/intermediate.txt","r")
-    while True:
-        line = f.readline()
-        if line.startswith("====START===="):
-            line = f.readline()
-            if line.startswith("START_LOC"):
-                line = line.strip("\n")
-                contents = line.split("\t")
-                contents = contents[1].split(",")
-                start_loc = [int(float(contents[0])),int(float(contents[1])),None]
-            line = f.readline()
+    try:
+        data = open("src/intermediate/settings.json","r")
+        settings = json.load(data)
+        
+        scale = float(settings['scale'])
 
-            while not line.startswith("====NFZ====") and not line.startswith("====END===="):
-                line = line.strip("\n")
-                contents = line.split(",")
-                point = [int(float(contents[0])),int(float(contents[1]))]
-                polygon.append(point)
-                line = f.readline()
-            if line.startswith("====END===="):
-                break
-            line = f.readline()
-            NFZ = []
-            while line != "====END====":
-                if line.startswith("NFZ START"):
-                    if len(NFZ) > 0:
-                        NFZs.append(NFZ)
-                        NFZ = []
-                else:
-                    line = line.strip("\n")
-                    contents = line.split(",")
-                    NFZ.append([int(float(contents[0])),int(float(contents[1]))])
-                line = f.readline()
-            if len(NFZ) > 0:
-                NFZs.append(NFZ)
-                NFZ = []
+        start_loc = settings['start_loc']
+        start_loc = start_loc.split(",")
+        start_loc = [float(start_loc[0]),float(start_loc[1])]
 
+        uav_mass = float(settings['uav_weight'])
+        uav_speed = float(settings['uav_speed'])
+        min_turn = float(settings['uav_min_radius'])
+        max_incline_angle = float(settings['uav_max_incline'])
+        battery_capacity = float(settings['battery_capacity'])
+
+        sensor_x = float(settings['cam_sensor_x'])  *10**-3
+        sensor_y= float(settings['cam_sensor_y'])   *10**-3
+        focal_length = float(settings['cam_focal_length'])  *10**-3
+        cam_resolution = float(settings['cam_resolution'])
+
+        aspect_ratio = settings['cam_aspect_ratio']
+        values = aspect_ratio.split(":")
+        aspect_ratio = (int(values[0]),int(values[1]))
+
+        wind = [float(settings['wind_speed']),math.radians(90-float(settings['wind_direction']))]
+        altitude = settings['altitude']
+        if altitude == "":
+            altitude = None
         else:
-            contents = line.split("\t")
-            if line.startswith("SCALE"):
-                scale = float(contents[1])
-            elif line.startswith("UAV_WEIGHT"):
-                uav_mass = contents[1]
-            elif line.startswith("UAV_MIN_RADIUS"):
-                min_turn = contents[1]
-            elif line.startswith("UAV_MAX_INCLINE"):
-                max_incline_angle = contents[1]
-            elif line.startswith("BATTERY_CAPACITY"):
-                battery_capacity = contents[1]
-            elif line.startswith("CAM_SENSOR_X"):
-                sensor_x = float(contents[1])*10**-3
-            elif line.startswith("CAM_SENSOR_Y"):
-                sensor_y = float(contents[1])*10**-3
-            elif line.startswith("CAM_FOCAL_LENGTH"):
-                focal_length = float(contents[1])*10**-3
-            elif line.startswith("CAM_RESOLUTION"):
-                cam_resolution = int(contents[1])
-            elif line.startswith("CAM_ASPECT_RATIO"):
-                contents = contents[1].strip("\n")
-                contents = contents.split(":")
-                aspect_ratio = (int(contents[0]),int(contents[1]))
-            elif line.startswith("UAV_SPEED"):
-                uav_speed = float(contents[1])
-            elif line.startswith("WIND_SPEED"):
-                wind[0] = float(contents[1])
-            elif line.startswith("WIND_DIRECTION"):
-                wind[1] = math.radians(90-float(contents[1]))
-            elif line.startswith("ALTITUDE"):
-                contents = contents[1].strip("\n")
-                if contents != "NONE":
-                    altitude = float(contents)
-                else:
-                    altitude = None
-            elif line.startswith("SIDE_OVERLAP"):
-                side_overlap = float(contents[1])/100
-            elif line.startswith("GSD"):
-                contents = contents[1].strip("\n")
-                if contents != "NONE":
-                    ground_sample_distance = float(contents)
-                else:
-                    ground_sample_distance = None
-            elif line == "":
-                break
-            else:
-                print("Unknown line")
-                print(line)
-                print("Error")
-                exit(1)
-    f.close()
+            altitude = float(altitude)
+
+        side_overlap = float(settings['side_overlap'])/100
+        ground_sample_distance = settings['gsd']
+        if ground_sample_distance == "":
+            ground_sample_distance = None
+        else:
+            ground_sample_distance = float(ground_sample_distance)
+        
+        for point in settings['points']:
+            values = point.split(",")
+            polygon.append([float(values[0]),float(values[1])])
+
+        if 'nfzs' in settings:
+            for nfz in settings['nfzs']:
+                NFZ = []
+                for nfz_points in nfz:
+                    values = nfz_points.split(",")
+                    NFZ.append([float(values[0]),float(values[1])])
+                NFZs.append(NFZ)
+
+        data.close()
+    except Exception:
+        traceback.print_exc()
+        print("Cannot find settings.json")
+        sys.stderr.write("Cannot find settings.json")
+        exit(1)
 
 if scale == 0:
     scale = 1
@@ -247,6 +219,5 @@ for NFZ in NFZs:
         NFZ_edges.append(Edge(NFZ[i-1][0],NFZ[i-1][1],
                         NFZ[i][0],NFZ[i][1]))
 
-#start_time = time.clock()   # Get current time for measuring solve time
 
 createPasses(polygon,polygon_edges,NFZs,config) # Create pass objects for current configuration

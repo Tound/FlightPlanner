@@ -1,4 +1,7 @@
 import requests
+import numpy as np
+from create_passes_GUI import convertCoords
+from Image_Classes_V2 import *
 
 image_passes = []
 

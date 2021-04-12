@@ -6,6 +6,8 @@ from dubins_3D import *
 from scipy.interpolate import griddata
 from Image_Classes_V2 import *
 
+import json
+
 import time
 
 G = 9.81
@@ -111,44 +113,77 @@ def createPasses(area,polygon_edges,NFZs,config):
         new_NFZ_coords = convertCoords(NFZ,wind_angle,'uv')
         new_NFZs.append(new_NFZ_coords)
 
+    data = open("src/intermediate/settings.json",'r')
+    settings = json.load(data)
+    data.close()
+
+    data = open("src/intermediate/settings.json",'w')
+
     # Find footprint size
-    if config.altitude is None:
-        coverage_width = config.scale * (config.ground_sample_distance * camera.image_x)
-        coverage_height = config.scale * (config.ground_sample_distance * camera.image_y)
+    if config.altitude is None and config.ground_sample_distance is not None:
+        coverage_width = (config.ground_sample_distance * camera.image_x)   # In meters
+        coverage_height = (config.ground_sample_distance * camera.image_y)  # In meters
 
-        uav_altitude = coverage_width *camera.focal_length/camera.sensor_x
-        max_uav_alt = config.scale * (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x
-        min_uav_alt = config.scale * (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x
+        uav_altitude = coverage_width *camera.focal_length/camera.sensor_x # In meters
+        max_uav_alt = (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+        min_uav_alt = (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
 
-    else:
-        coverage_width = config.scale * (camera.sensor_x*config.altitude/camera.focal_length)
-        coverage_height = config.scale * (camera.sensor_y*config.altitude/camera.focal_length)
+        settings['altitude'] = uav_altitude # Update altitude in settings json file
+        json.dump(settings,data,indent=4)
+        data.close()
+
+    elif config.altitude is not None and config.ground_sample_distance is None:
+        coverage_width = (camera.sensor_x*config.altitude/camera.focal_length)  # In meters
+        coverage_height = (camera.sensor_y*config.altitude/camera.focal_length) # In meters
 
         uav_altitude = config.altitude
 
         ground_sample_distance = uav_altitude*camera.sensor_x/(camera.focal_length * camera.image_x)
         config.ground_sample_distance = ground_sample_distance
-        max_uav_alt = config.scale * (camera.image_x * (ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x
-        min_uav_alt = config.scale * (camera.image_x * (ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x
+        max_uav_alt = (camera.image_x * (ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+        min_uav_alt = (camera.image_x * (ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+
+        settings['gsd'] = ground_sample_distance # Update gsd in settings json file
+        json.dump(settings,data,indent=4)
+        data.close()
+
+    elif config.altitude is not None and config.ground_sample_distance is not None:   # if both have been initialised
+        coverage_width = (camera.sensor_x*config.altitude/camera.focal_length)  # In meters
+        coverage_height = (camera.sensor_y*config.altitude/camera.focal_length) # In meters
+
+        uav_altitude = config.altitude # In meters
+        
+        max_uav_alt = (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+        min_uav_alt = (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+
+        json.dump(settings,data,indent=4)
+        data.close()
+
+
+    else:
+        print("Requires atleast one value of altitude or gsd")
 
 
     distance_between_photos_width = coverage_width - coverage_width*config.side_overlap
 
     # Obtain properties about the area
     sorted_vertices = sorted(new_area_coords, key=lambda u:u[0])
-    length_of_area = sorted_vertices[len(sorted_vertices)-1][0] - sorted_vertices[0][0]
+    length_of_area = config.scale * abs(sorted_vertices[len(sorted_vertices)-1][0] - sorted_vertices[0][0]) # In meters
 
     np_area = np.array(new_area_coords)
     max_height = np.max(np_area[:,1])           # Store highest V value
     min_height = np.min(np_area[:,1])           # Store lowest V value
     start_u = np.min(np_area[:,0])
     
-    number_of_passes = (length_of_area-config.side_overlap*coverage_width)/distance_between_photos_width
+    # Need scaling for calculations and drawing need pixels in meters by using scale
+
+    number_of_passes = (length_of_area-config.side_overlap*coverage_width)/distance_between_photos_width    # All in meters
+
     # Overlap must be above 0 or the pass shift will not work
     if number_of_passes % 1 > 0 or config.wind[0] > 0: # If number of passes is not an integer to create complete coverage
         number_of_passes +=1 # If the number of passes is an integer and wind is present and the side overlap is above
         # Create shift value to center the passes
-        remainder = length_of_area - (int(number_of_passes) * coverage_width - int(number_of_passes-1)*config.side_overlap*coverage_width) 
+        remainder = length_of_area - (int(number_of_passes) * coverage_width - int(number_of_passes-1)*config.side_overlap*coverage_width)  # All in meters
         pass_shift = remainder/2
     else:
         print("Shift is not required due to no wind and exact amount of passes")
@@ -173,12 +208,18 @@ def createPasses(area,polygon_edges,NFZs,config):
     min_length = 10
     max_alt_diff = max_uav_alt - min_uav_alt
 
+
+
     pass_file = open("src/intermediate/passes.txt",'w')
     pass_file.write(f"ALTITUDE\t{uav_altitude}\t{max_alt_diff}\n")
     pass_file.write(f"GSD\t{config.ground_sample_distance}\n")
 
+    passes_data =  open("src/intermediate/passes.json","w")
+    data = {}
+    data['passes'] = []
+
     # Shift passes to allow for even distribution
-    u = start_u + coverage_width/2 + pass_shift
+    u = start_u + (coverage_width/2 + pass_shift)/config.scale  # In pixels
     for i in range(0,int(number_of_passes)):        # Cycle through all full-length passes across entirety of area
         # Find points where passes intersect with ROI
         intersection_points = []
@@ -190,20 +231,20 @@ def createPasses(area,polygon_edges,NFZs,config):
             if intersection.is_empty:
                 continue
             if type(intersection) == sg.Point:
-                if intersection.y >= max_intersect[1]:               # Even though we are using uv axis, shapely requires xy
-                    max_intersect = [intersection.x,intersection.y]
-                if intersection.y <= min_intersect[1]:
-                    min_intersect = [intersection.x,intersection.y]
+                #if intersection.y >= max_intersect[1]:               # Even though we are using uv axis, shapely requires xy
+                #    max_intersect = [intersection.x,intersection.y]
+                #if intersection.y <= min_intersect[1]:
+                #    min_intersect = [intersection.x,intersection.y]
                 intersection_points.append([intersection.x,intersection.y])
             elif type(intersection) == sg.LineString:
                 for point in intersection.coords:
-                    if point[1] >= max_intersect[1]:
-                        max_intersect = [point[0],point[1]]
-                    if point[1] <= min_intersect[1]:
-                        min_intersect = [point[0],point[1]]
-                intersection_points.append([intersection.x,intersection.y])
+                    #if point[1] >= max_intersect[1]:
+                    #    max_intersect = [point[0],point[1]]
+                    #if point[1] <= min_intersect[1]:
+                    #    min_intersect = [point[0],point[1]]
+                    intersection_points.append([point[0],point[1]])
 
-        total_pass_length = getDistance(min_intersect,max_intersect)    # Pass length for entire area
+        #total_pass_length = getDistance(min_intersect,max_intersect)    # Pass length for entire area
 
         # Find where passes interesect with NFZs
         for edge in NFZ_edges:        # Cycle through all NFZs
@@ -219,21 +260,32 @@ def createPasses(area,polygon_edges,NFZs,config):
         for j in range(0,int(subpasses)):   # Split full length passes into sub passes if obstacles are found
             start = points_on_pass[j*2]
             end = points_on_pass[j*2 + 1]
-            pass_length = getDistance(start,end)-coverage_height
+            pass_length = getDistance(start,end)-coverage_height/config.scale   # Pixel values
 
-            start_v = start[1] + coverage_height/2  # Shift pass up by half the size of an image height
+            start_v = start[1] + coverage_height/(2 * config.scale)  # Shift pass up by half the size of an image height
 
             v = start_v
-            coords = convertCoords([[u,v]],wind_angle,'xy')
-            pass_file.write(f"{coords[0][0]},{coords[0][1]}\n")
-            coords = convertCoords([[u,v+pass_length]],wind_angle,'xy')
-            pass_file.write(f"{coords[0][0]},{coords[0][1]}\n")
+            start = convertCoords([[u,v]],wind_angle,'xy')
+            pass_file.write(f"{start[0][0]},{start[0][1]}\n")
 
-        u += distance_between_photos_width          # Increase U value on each loop
+            end = convertCoords([[u,v+pass_length]],wind_angle,'xy')
+            pass_file.write(f"{end[0][0]},{end[0][1]}\n")
+
+            data['passes'].append({
+                'start':f'{start[0][0]},{start[0][1]}',
+                'end':f'{end[0][0]},{end[0][1]}'
+            })
+
+
+
+        u += distance_between_photos_width/config.scale          # Increase U value on each loop
 
     pass_file.close()
+    
+    json.dump(data,passes_data,indent=4)
+    passes_data.close()
 
-    print(f"length = {length_of_area}")
+    print(f"length = {length_of_area}, px length = {length_of_area/config.scale}")
     print(f"Footprint of image: {coverage_width}x{coverage_height}")
     print(f"Distance between passes: {round(distance_between_photos_width,2)} m")
     print(f"number_of_passes = {number_of_passes}")
