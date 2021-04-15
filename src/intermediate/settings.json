@@ -1,0 +1,26 @@
+{
+    "uav_max_incline": "30",
+    "altitude": 51.134020618556704,
+    "min_terrace_length": 3,
+    "uav_weight": "25",
+    "scale": 2.7749463405275727,
+    "wind_direction": "135",
+    "cam_aspect_ratio": "4:3",
+    "uav_min_radius": "18",
+    "cam_focal_length": "3.72",
+    "uav_speed": "20",
+    "points": [
+        "174.0,562.0",
+        "140.0,112.0",
+        "658.0,126.0",
+        "645.0,424.0"
+    ],
+    "cam_resolution": "12",
+    "side_overlap": "20",
+    "gsd": "0.02",
+    "start_loc": "143.0,568.0",
+    "wind_speed": "10",
+    "battery_capacity": "10000",
+    "cam_sensor_y": "3.82",
+    "cam_sensor_x": "5.82"
+}

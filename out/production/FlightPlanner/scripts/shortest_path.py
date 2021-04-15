@@ -18,12 +18,12 @@ def getAltitudeProfile(pass_length,loc_string,uav_altitude,u,start_v,wind_angle)
     """
     samples = 10
     altitude_profile = []
-    request = requests.get(API_URL + loc_string + "&samples=" + f"samples" + "&key=" + API_KEY)
-    request = request.json()['results']
+    request = requests.get(API_URL + loc_string + "&samples=" + f"{samples}" + "&key=" + API_KEY)
+    request = request.json()["results"]
     for result in request:
-        altitude_profile.append(float(result['elevation']))
+        elevation = float(result['elevation'])
+        altitude_profile.append(elevation)
     print(altitude_profile)
-
     return altitude_profile
 
 image_passes = []
@@ -32,7 +32,7 @@ image_passes = []
 gpsCoords = open("src/intermediate/altitudeProfile.txt")
 line = gpsCoords.readline()
 while line != None:
-    print(line)
+    print(repr(line))
     line = line.strip("\n")
     contents = line.split("\t")
     if line.startswith("SCALE"):
@@ -55,12 +55,13 @@ while line != None:
         #terraces.append(terrace)
     elif line.startswith("MIN_TURN_RADIUS"):
         min_turn = float(contents[1])
-    elif line == "":
+    elif line.startswith("UAV_MASS")
+        uav_mass = float(contents[1])
+    elif line == '':
         break
     else:
         loc_string = f"{contents[0]},{contents[1]}|{contents[2]},{contents[3]}"
         altitude_profile = getAltitudeProfile(pass_length,loc_string,altitude,u,v,wind_angle)
-        print("MAKING TERRACE")
         image_passes = createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
     line = gpsCoords.readline()
 
@@ -75,30 +76,30 @@ shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,max_incline_g
 
 end_time = time.clock() - start_time    # Calculate time taken to create passes and findest shortest route
 
-# Print flight stats
-# print(f"Total time to solve: {round(end_time/60,2)}mins")
-# print(f"Total length of route: {round(shortest_path.getLength(),2)}m")
+Print flight stats
+print(f"Total time to solve: {round(end_time/60,2)}mins")
+print(f"Total length of route: {round(shortest_path.getLength(),2)}m")
 
-# time_of_flight = shortest_path.getLength()/uav_speed
-# print(f"Estimated time of flight: {round(time_of_flight/60,2)}mins")
-# current_used = max_current_draw*time_of_flight/3600
-# print(f"Estimated Current draw (Worst case): {round(current_used,2)}A")
-# if current_used > battery_capacity*10**-3:
-#     print("Current battery capacity will not suffice")
-# else:
-#     print("Current battery capacity will suffice")
+time_of_flight = shortest_path.getLength()/uav_speed
+print(f"Estimated time of flight: {round(time_of_flight/60,2)}mins")
+current_used = max_current_draw*time_of_flight/3600
+print(f"Estimated Current draw (Worst case): {round(current_used,2)}A")
+if current_used > battery_capacity*10**-3:
+    print("Current battery capacity will not suffice")
+else:
+    print("Current battery capacity will suffice")
 
-# dpaths = shortest_path.getDPaths()  # Get the Dubins paths that make up the shortest route
+dpaths = shortest_path.getDPaths()  # Get the Dubins paths that make up the shortest route
 
-# stepSize = 0.5  # Specify step size for sampling each dubins path
+stepSize = 0.5  # Specify step size for sampling each dubins path
 
-# f = open("src/intermediate/dubins.txt")
-# for dpath in dpaths:
-#     points = dubins_path_sample_many(dpath,stepSize)
-#     f.write("DUBINS\n")
-#     for point in points:
-#         f.write(f"{point[0],point[1],point[2]}\n")
-# f.close()
+f = open("src/intermediate/dubins.txt")
+for dpath in dpaths:
+    points = dubins_path_sample_many(dpath,stepSize)
+    f.write("DUBINS\n")
+    for point in points:
+        f.write(f"{point[0],point[1],point[2]}\n")
+f.close()
 
 # Convert into GPS coords
 # Requires API for elevation

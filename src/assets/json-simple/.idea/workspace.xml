@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="13f7f929-2df9-44c0-94fd-f5cc041d9882" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../../../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../FlightPlanner.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../FlightPlanner.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/altitudeProfile.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/altitudeProfile.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/intermediate.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/intermediate.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/map.png" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/map.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/passes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/intermediate/passes.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$10.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$10.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$11.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$11.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$12.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$12.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$13.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$13.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$2.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$2.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$3.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$3.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$4.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$4.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$5.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$5.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$6.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$6.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$7.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$7.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$8.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$8.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$9.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings$9.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings.class" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/main/FlightSettings.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/scripts/create_terraces_GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/scripts/create_terraces_GUI.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../out/production/FlightPlanner/scripts/shortest_path.py" beforeDir="false" afterPath="$PROJECT_DIR$/../../../out/production/FlightPlanner/scripts/shortest_path.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../main/FlightSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../main/FlightSettings.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="ProjectId" id="1r2FFDQ2GIMjlNINLzaTDtq9AI1" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Software\FlightPlanner\src\assets\json-simple\target\test-classes" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="13f7f929-2df9-44c0-94fd-f5cc041d9882" name="Default Changelist" comment="" />
+      <created>1618166174726</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1618166174726</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+</project>
