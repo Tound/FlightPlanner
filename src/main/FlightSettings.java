@@ -491,19 +491,28 @@ public class FlightSettings {
                     // Find passes and terraces
                     if(runScript("find_flight_path")){
                         try {
-                            File pass_coords = new File("src/intermediate/passes.txt");
-                            Writer writer = new FileWriter("src/intermediate/altitudeProfile.txt");
+                            Scanner passes = new Scanner(new File("src/intermediate/passes.json"));
+                            Scanner settings = new Scanner(new File("src/intermediate/settings.json"));
+                            FileWriter altitudeWriter = new FileWriter("src/intermediate/altitude_profile.json");
 
-                            JSONObject passesJSON = new JSONObject("src/intermediate/passes.json");
-                            JSONObject settingsJSON =  new JSONObject("src/intermediate/settings.json");
+                            String passesContent = "";
+                            String settingsContent = "";
+                            while(passes.hasNextLine()){ passesContent += passes.nextLine(); }
+                            while(settings.hasNextLine()){ settingsContent += settings.nextLine(); }
 
-                            groundSampleDistance.setText(settingsJSON.get("gsd").toString());
+                            JSONObject passesJSON = new JSONObject(passesContent);
+                            JSONObject settingsJSON =  new JSONObject(settingsContent);
+                            JSONArray passesArray = (JSONArray) passesJSON.get("passes");
+
+                            Double gsd = Double.parseDouble(settingsJSON.get("gsd").toString());
+                            groundSampleDistance.setText(String.valueOf(Math.round(gsd*100)/100));  // Round to 2 decimal places
                             altitude.setText(settingsJSON.get("altitude").toString());
 
-                            JSONArray jsonArray = (JSONArray) passesJSON.get("passes");
+                            JSONObject altitudeGPS = new JSONObject();
+                            JSONArray altitudeArray = new JSONArray();
 
-                            for(int i = 0; i<jsonArray.length();i++) {
-                                JSONObject pass = (JSONObject) jsonArray.get(i);
+                            for(int i = 0; i<passesArray.length();i++) {
+                                JSONObject pass = (JSONObject) passesArray.get(i);
                                 String start = pass.get("start").toString();
                                 String end = pass.get("end").toString();
 
@@ -513,40 +522,14 @@ public class FlightSettings {
                                 Coordinate coord1 = flipCoords(Double.parseDouble(startValues[0]), Double.parseDouble(startValues[1]));
                                 Coordinate coord2 = flipCoords(Double.parseDouble(endValues[0]), Double.parseDouble(endValues[1]));
                                 pathDrawer.addPassCoords(coord1, coord2);
-                                createAltitudeCoords(writer, coord1, coord2);
+                                altitudeArray = createAltitudeCoords(altitudeArray, coord1, coord2);
                             }
+                            passes.close();
+                            settings.close();
 
-                            /*System.out.println("WRITING ALTITUDE");
-                            writer.write("SCALE\t"+scale+"\n");
-                            writer.write("WIND_ANGLE\t"+(90-Double.parseDouble(windDirection.getText())) + "\n");
-
-                            Scanner scanner = new Scanner(pass_coords);
-                            String line = "";
-                            String[] content;
-
-                            line = scanner.nextLine();
-                            String[] contents = line.split("\t");
-
-                            altitude.setText(contents[1]);
-                            Double maxAltitudeDifference = Double.parseDouble(contents[2]);
-                            line = scanner.nextLine();
-                            contents = line.split("\t");
-                            groundSampleDistance.setText(contents[1]);
-                            writer.write("ALTITUDE\t" + altitude.getText() + "\t" + maxAltitudeDifference + "\n");
-                            writer.write("MIN_TERRACE_LENGTH\t" + minTerraceLength + "\n");
-                            writer.write("MIN_TURN_RADIUS\t" + uavMinRadius.getText() + "\n");
-                            while (scanner.hasNextLine()) {
-                                line = scanner.nextLine();
-                                content = line.split(",");
-                                Coordinate coord1 = flipCoords(Double.parseDouble(content[0]),Double.parseDouble(content[1]));;
-                                line = scanner.nextLine();
-                                content = line.split(",");
-                                Coordinate coord2 = flipCoords(Double.parseDouble(content[0]),Double.parseDouble(content[1]));
-                                pathDrawer.addPassCoords(coord1,coord2);
-                                createAltitudeCoords(writer,coord1,coord2);
-                            }*/
-                            writer.close();
-                            //scanner.close();
+                            altitudeGPS.put("gps",altitudeArray);
+                            altitudeWriter.write(altitudeGPS.toString());
+                            altitudeWriter.close();
                             pathDrawer.drawPasses();
 
                         }catch (IOException ioe){
@@ -554,6 +537,18 @@ public class FlightSettings {
                         }
                         if(runScript("shortest_path")) {
                             System.out.println("Drawn passes");
+                            try {
+                                Scanner dubins = new Scanner(new File("src/intermediate/dubins.json"));
+                                String dubinsContent = "";
+                                while(dubins.hasNextLine()){ dubinsContent += dubins.nextLine(); }
+                                JSONObject dubinsObject = new JSONObject(dubinsContent);
+                                pathDrawer.drawDubins(dubinsObject);
+                                dubins.close();
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            }
+
+
                         }
                     }
                 }else{
@@ -562,50 +557,37 @@ public class FlightSettings {
             }
         });
         gp.setPadding(new Insets(5,5,5,5));
-        //gp.setGridLinesVisible(true);
         sp = new ScrollPane(gp);
         sp.setFitToWidth(true);
         sp.setMaxWidth(Double.MAX_VALUE);
         return sp;
     }
 
-    public void createAltitudeCoords(Writer writer, Coordinate coord1, Coordinate coord2) throws IOException {
+    public JSONArray createAltitudeCoords(JSONArray jsonArray, Coordinate coord1, Coordinate coord2) throws IOException {
+
         Double dy = coord2.getY() - coord1.getY();
         Double dx = coord2.getX() - coord1.getX();
         Double length = Math.sqrt(dy*dy + dx*dx);
         Double realLength = length/scale;
-        int sampleDistance = 30;
-        Double samples = realLength / sampleDistance;
 
-        //Double lat = coord1.getLat();
-        //Double lon = coord1.getLong_();
         Double x = coord1.getX();
         Double y = coord1.getY();
 
         JXMapViewer mapViewer = pathDrawer.getMap();
-
-        Double MAX_CALLS = 100.0;
-
-        dx = dx/1;
-        dy = dy/1;
-
-
-        writer.write("NEW_TERRACE\t" + x + "\t" + y + "\t" + length + "\n");
-        //System.out.println(length + "," + realLength + "m");
+        JSONObject jsonObject = new JSONObject();
 
         Point2D point = new Point((int)coord1.getX(),(int)coord1.getY()); // This takes the closest pixel which loses accuracy
         GeoPosition position = mapViewer.convertPointToGeoPosition(point);
         //writer.write(position.getLatitude()+","+ position.getLongitude()+"\n");
         Point2D point2 = new Point((int)coord2.getX(),(int)coord2.getY()); // This takes the closest pixel which loses accuracy
         GeoPosition position2 = mapViewer.convertPointToGeoPosition(point2);
-        writer.write(position.getLatitude()+"\t"+ position.getLongitude()+ "\t" + position2.getLatitude() + "\t" + position2.getLongitude() + "\n");
-        /*for(int i = 0;i<(int)Math.round(samples);i++){
-            Point2D point2D = new Point((int)Math.round(x),(int)Math.round(y)); // This takes the closest pixel which loses accuracy
-            GeoPosition position = mapViewer.convertPointToGeoPosition(point2D);
-            writer.write(position.getLatitude()+","+ position.getLongitude()+"\n");
-            x = x + dx;
-            y = y + dy;
-        }*/
+
+        jsonObject.put("lat1",position.getLatitude());
+        jsonObject.put("long1", position.getLongitude());
+        jsonObject.put("lat2", position2.getLatitude());
+        jsonObject.put("long2", position2.getLongitude());
+        jsonArray.put(jsonObject);
+        return jsonArray;
     }
 
     public Coordinate flipCoords(Double coord1,Double coord2){
@@ -811,6 +793,11 @@ public class FlightSettings {
                 //JSONObject pointsJSON = new JSONObject();
                 Coordinate startLoc = pathDrawer.getRealStartPoint();
                 jsonObject.put("start_loc",startLoc.getX() +","+startLoc.getY());
+
+                Coordinate startPoint = pathDrawer.getStartPoint();
+                Point start = new Point((int)startPoint.getX(),(int)startPoint.getY());
+                GeoPosition position = pathDrawer.getMap().convertPointToGeoPosition(start);
+                jsonObject.put("start_loc_gps",position.getLatitude() + "," + position.getLongitude());
 
                 JSONArray pointsArray = new JSONArray();
                 for(int i=0;i<points.size();i++){

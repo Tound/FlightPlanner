@@ -8,75 +8,122 @@ from dotenv import load_dotenv
 import json
 import os
 
-API_URL = "https://maps.googleapis.com/maps/api/elevation/json?path="
+PATH_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?path="
+LOCATION_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?locations="
 load_dotenv()
 API_KEY = os.getenv('API_KEY')
 
-def getAltitudeProfile(pass_length,loc_string,uav_altitude,u,start_v,wind_angle):
+
+def start_loc_alt(gps_coords):
+    data = requests.get(LOCATION_API_URL + gps_coords + "&key=" + API_KEY)
+    data = data.json()
+    alt = float(data['results'][0]['elevation'])
+    return alt
+
+def getAltitudeProfile(real_length,loc_string,uav_altitude):
     """
     Obtain altitude data for entire pass across generated terrain
     """
-    samples = 10
+    samples = int(real_length+1)
+    sample_distance = real_length/samples   # Find the distance between each sample
     altitude_profile = []
-    request = requests.get(API_URL + loc_string + "&samples=" + f"{samples}" + "&key=" + API_KEY)
+    request = requests.get(PATH_API_URL + loc_string + "&samples=" + f"{samples}" + "&key=" + API_KEY)
     request = request.json()["results"]
     for result in request:
-        elevation = float(result['elevation'])
+        elevation = float(result['elevation']) + uav_altitude
         altitude_profile.append(elevation)
-    print(altitude_profile)
-    return altitude_profile
+    return altitude_profile, sample_distance
 
 image_passes = []
 # Make terraces
 # Get altitude data
-gpsCoords = open("src/intermediate/altitudeProfile.txt")
-line = gpsCoords.readline()
-while line != None:
-    print(repr(line))
-    line = line.strip("\n")
-    contents = line.split("\t")
-    if line.startswith("SCALE"):
-        scale = float(contents[1])
-    elif line.startswith("WIND_ANGLE"):
-        wind_angle = math.radians(float(contents[1]))
-    elif line.startswith("ALTITUDE"):
-        altitude = float(contents[1])
-        max_alt_diff = float(contents[2])
-    elif line.startswith("MIN_TERRACE_LENGTH"):
-        min_terrace_len = float(contents[1])
-    elif line.startswith("NEW_TERRACE"):
-        x = float(contents[1])
-        y = float(contents[2])
-        coords = convertCoords([[x,y]],wind_angle,'uv')
-        u = coords[0][0]
-        v = coords[0][1]
-        pass_length = float(contents[3])
-        #terrace = Terrace(x,y,length,wind_angle)
-        #terraces.append(terrace)
-    elif line.startswith("MIN_TURN_RADIUS"):
-        min_turn = float(contents[1])
-    elif line.startswith("UAV_MASS")
-        uav_mass = float(contents[1])
-    elif line == '':
-        break
-    else:
-        loc_string = f"{contents[0]},{contents[1]}|{contents[2]},{contents[3]}"
-        altitude_profile = getAltitudeProfile(pass_length,loc_string,altitude,u,v,wind_angle)
-        image_passes = createTerraces(u,v,altitude_profile,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
-    line = gpsCoords.readline()
+
+data = open("src/intermediate/settings.json")
+settings = json.load(data)
+
+gps_coords = open("src/intermediate/altitude_profile.json")
+gps_data = json.load(gps_coords)
+
+passes_data = open("src/intermediate/passes.json")
+passes = json.load(passes_data)
+
+
+# Store required settings
+wind_angle = 90-float(settings['wind_direction'])
+scale = float(settings['scale'])
+max_alt_diff = float(settings['max_alt_diff'])
+altitude =  float(settings['altitude'])
+min_terrace_len = float(settings['min_terrace_length'])
+uav_mass = float(settings['uav_weight'])
+uav_speed = float(settings['uav_speed'])
+min_turn = float(settings['uav_min_radius'])
+max_incline_grad = float(settings['uav_max_incline'])
+battery_capacity = float(settings['battery_capacity'])
+start_loc_string = settings['start_loc']
+start_loc_gps = settings['start_loc_gps']
+start_loc_string = start_loc_string.split(",")
+start_loc = [float(start_loc_string[0]),float(start_loc_string[1]),start_loc_alt(start_loc_gps)]
+glide_slope = 10
+NFZs = []
+NFZ_edges = []
+if 'nfzs' in settings:
+    NFZ_coords = settings['nfzs']
+    for NFZ_coord in NFZ_coords:
+        NFZ_points = []
+        for NFZ_point in NFZ:
+            coords = NFZ_point.split(",")
+            NFZ_points.append([float(coords[0]),float(coords[1])])
+        NFZs.append(NFZ_points)
+
+    # Create NFZ edges
+
+    for NFZ in NFZs:
+        for NFZ_points,index in enumerate(NFZ):
+            NFZ_edges.append(sg.LineString([(NFZ_points[0],NFZ_points[1]),(NFZ[index-1][0],NFZ[index-1][1])]))
+data.close()
+
+pass_coords = gps_data['gps']   # Get list of GPS coords
+pass_data = passes['passes']    # Get list of pixel points on passes
+
+# Cycle through all GPS points and corresponding pass coords
+for index,coord in enumerate(pass_coords):
+    start_gps = f"{coord['lat1']},{coord['long1']}"
+    end_gps = f"{coord['lat2']},{coord['long2']}"
+
+    start = pass_data[index]['start']
+    end = pass_data[index]['end']
+    pass_length = float(pass_data[index]['length']) # Length in px
+    real_length = scale*pass_length
+
+    start_contents =  start.split(",")
+    end_contents = end.split(",")
+
+    coords = convertCoords([[float(start_contents[0]),float(start_contents[1])],
+                            [float(end_contents[0]),float(end_contents[1])]],
+                            wind_angle,'uv')
+    
+    u = coords[0][0]
+    v = coords[0][1]
+    loc_string = f"{start_gps}|{end_gps}"
+    altitude_profile, sample_distance = getAltitudeProfile(real_length,loc_string,altitude)
+    image_passes = createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
 
 # Get pass coords
 # Get altitude profile for pass
 # Split into terraces
 
-gpsCoords.close()
+
+print(image_passes)
 
 start_time = time.clock()
-shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,max_incline_grad,start_loc,populationSize=50,generations=200,mutationRate=0.3)
+shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_incline_grad,glide_slope,start_loc,populationSize=50,generations=200,mutationRate=0.3)
 
 end_time = time.clock() - start_time    # Calculate time taken to create passes and findest shortest route
 
-Print flight stats
+
+max_current_draw = 20
+
+#Print flight stats
 print(f"Total time to solve: {round(end_time/60,2)}mins")
 print(f"Total length of route: {round(shortest_path.getLength(),2)}m")
 
@@ -93,13 +140,20 @@ dpaths = shortest_path.getDPaths()  # Get the Dubins paths that make up the shor
 
 stepSize = 0.5  # Specify step size for sampling each dubins path
 
-f = open("src/intermediate/dubins.txt")
+dubins_file = open("src/intermediate/dubins.json",'w')
+dubins_data = {}
+dubins_data['dubins'] = []
 for dpath in dpaths:
     points = dubins_path_sample_many(dpath,stepSize)
-    f.write("DUBINS\n")
+    dubins_points = {}
+    dubins_points['points'] = []
     for point in points:
-        f.write(f"{point[0],point[1],point[2]}\n")
-f.close()
+        dubins_points['points'].append(f"{point[0],point[1],point[2]}")
+
+    dubins_data['dubins'].append(dubins_points)
+json.dump(dubins_data,dubins_file,indent=4)
+
+dubins_file.close()
 
 # Convert into GPS coords
 # Requires API for elevation

@@ -1,28 +1,29 @@
 {
     "uav_max_incline": "30",
-    "altitude": "51.134020618556704",
+    "altitude": 51.134020618556704,
     "min_terrace_length": 3,
     "uav_weight": "25",
-    "scale": 2.7749074316638853,
+    "scale": 1.3874262187274669,
     "wind_direction": "135",
     "cam_aspect_ratio": "4:3",
     "uav_min_radius": "18",
     "cam_focal_length": "3.72",
     "uav_speed": "20",
     "points": [
-        "354.0,831.0",
-        "297.0,187.0",
-        "1052.0,255.0",
-        "1030.0,689.0"
+        "324.0,514.0",
+        "132.0,216.0",
+        "419.0,113.0",
+        "754.0,168.0",
+        "695.0,435.0"
     ],
     "cam_resolution": "12",
     "side_overlap": "20",
-    "gsd": "0",
-    "start_loc": "212.0,667.0",
+    "gsd": "0.02",
+    "start_loc": "140.0,464.0",
     "wind_speed": "10",
     "battery_capacity": "10000",
     "cam_sensor_y": "3.82",
     "cam_sensor_x": "5.82",
-    "start_loc_gps": "54.493523721638425,-0.6476354598999023",
-    "max_alt_diff": 7.6701030927835046
+    "start_loc_gps": "54.49162937651487,-0.6290102005004883",
+    "max_alt_diff": 7.670103092783506
 }

@@ -19,8 +19,12 @@ import java.awt.*;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.jxmapviewer.JXMapKit;
 import org.jxmapviewer.JXMapViewer;
 import org.jxmapviewer.OSMTileFactoryInfo;
@@ -81,6 +85,8 @@ public class PathDrawer{
     public HBox hBox = new HBox(drawROI,drawNFZ,clear,setStart,chooseLocation,findButton);
     private JXMapViewer mapViewer;
     private SwingNode sn;
+
+    private String geocodeAPI = "https://maps.googleapis.com/maps/api/geocode/json?address=";
 
     public PathDrawer(){
         this.canvas = new Canvas();
@@ -226,6 +232,12 @@ public class PathDrawer{
             @Override
             public void handle(MouseEvent event) {
                 if(!chooseLocation.getText().isEmpty()){
+                    String geocodeString = geocodeAPI;
+                    try {
+                        URL url = new URL(geocodeAPI);
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    }
                     //GeoPosition position = new GeoPosition();
                     //mapViewer.setAddressLocation();
                 }
@@ -389,6 +401,28 @@ public class PathDrawer{
             gc.strokeLine(coords.get(0).x,coords.get(0).y,coords.get(1).x,coords.get(1).y);
         }
     }
+
+    public void drawDubins(JSONObject dubinsObject){
+        JSONArray dubinsArray = (JSONArray) dubinsObject.get("dubins");
+        gc.setFill(Color.YELLOW);
+        for(int i = 0; i<dubinsArray.length();i++){
+            JSONObject dubinsPoints = (JSONObject) dubinsArray.get(i);
+            JSONArray pointArray = (JSONArray) dubinsPoints.get("points");
+            for(int j = 0;j<pointArray.length();j++){
+                String pointString = pointArray.get(j).toString();
+                System.out.println(pointString);
+                pointString = pointString.replace("(","");
+                pointString = pointString.replace(")","");
+                System.out.println(pointString);
+                String[] pointContents = pointString.split(",");
+                int x = (int) Double.parseDouble(pointContents[0].trim());
+                int y = (int)Double.parseDouble(pointContents[1].trim());
+                gc.fillOval(x,canvas.getHeight()-y,2,2);
+            }
+        }
+        gc.setFill(passPaint);
+    }
+
     public ArrayList<Coordinate> getCanvasPoints(){
         return this.canvasPoints;
     }
