@@ -91,8 +91,12 @@ public class FlightSettings {
     private static Stage dialog = new Stage();
     private static Label dialogMessage = new Label();
     private Double scale;
-    private Double minTerraceLength = 3.0;
+    private Double minTerraceLength = 5.0;
 
+    /**
+     *  Flight settings constructor
+     *  @param pathDrawer - A path drawer object
+     */
     public FlightSettings(PathDrawer pathDrawer){
         uavName.setPromptText("Name of UAV");
         uavWeight.setPromptText("Weight of UAV (Kg)");
@@ -130,11 +134,10 @@ public class FlightSettings {
         Label nameLabel =  new Label("Name:");
         settingsName.setPromptText("Name of settings");
 
-        Button save = new Button("Save");
-        Button cancel = new Button("Cancel");;
+        Button save = new Button("Save");       // Create save button
+        Button cancel = new Button("Cancel");   // Create cancel button
 
         gp.add(title,0,0);
-        //title.setFont(Font.font("Arial", FontPosture.ITALIC, 24));
         gp.add(settingsName,1,1);
 
         gp.add(nameLabel,0,1);
@@ -146,8 +149,9 @@ public class FlightSettings {
         gp.setVgap(5);
         gp.setAlignment(Pos.CENTER);
 
-        //gp.setStyle("-fx-background-color: rgb(42, 45, 48)");
-
+        /*
+            Event handler for save button
+         */
         save.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -176,7 +180,6 @@ public class FlightSettings {
         createScene = new Scene(gp,400,100);
         createScene.setUserAgentStylesheet("style/menus.css");
         createStage.setScene(createScene);
-
 
         // Setup dialog box
         dialog.setTitle("Overwrite File?");
@@ -230,6 +233,7 @@ public class FlightSettings {
         cameraSettings.setId("subsubtitle");
         flightSettings.setId("subsubtitle");
 
+        // Create run button
         Button run = new Button("Run!");
         run.setPrefWidth(gp.getMaxWidth());
         run.setAlignment(Pos.CENTER);
@@ -239,6 +243,7 @@ public class FlightSettings {
         GridPane.setHalignment(run,HPos.CENTER);
         run.setId("run-button");
 
+        // Set up column span for all elements
         GridPane.setColumnSpan(uavName,2);
         GridPane.setColumnSpan(uavWeight,2);
         GridPane.setColumnSpan(uavMinRadius,2);
@@ -305,6 +310,8 @@ public class FlightSettings {
         gp.setVgap(10);
         gp.setHgap(2);
 
+
+        // Add elements to gridpane
         //Title
         gp.add(flightSettingsTitle, 0,0);
 
@@ -385,10 +392,6 @@ public class FlightSettings {
         gp.add(defaultSettings,2,25);
         gp.add(load,1,25);
         gp.add(run,0,26);
-
-        /*for(int i=0 ;i<gp.getChildren().size();i++){
-            GridPane.setHalignment(gp.getChildren().get(i), HPos.CENTER);
-        }*/
 
         newUAV.setOnMouseClicked(new EventHandler<MouseEvent>(){
             @Override
@@ -477,7 +480,6 @@ public class FlightSettings {
         run.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                // GET ALL THINGS AND SEND TO SCRIPTS
                 if(createRoute()) { // If route can be created
                     // Screenshot
                     try {
@@ -504,8 +506,7 @@ public class FlightSettings {
                             JSONObject settingsJSON =  new JSONObject(settingsContent);
                             JSONArray passesArray = (JSONArray) passesJSON.get("passes");
 
-                            Double gsd = Double.parseDouble(settingsJSON.get("gsd").toString());
-                            groundSampleDistance.setText(String.valueOf(Math.round(gsd*100)/100));  // Round to 2 decimal places
+                            groundSampleDistance.setText(settingsJSON.get("gsd").toString());  // Round to 2 decimal places
                             altitude.setText(settingsJSON.get("altitude").toString());
 
                             JSONObject altitudeGPS = new JSONObject();
@@ -547,8 +548,6 @@ public class FlightSettings {
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
                             }
-
-
                         }
                     }
                 }else{
@@ -605,13 +604,9 @@ public class FlightSettings {
             BufferedReader stdError = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
             String line = "";
             while ((line = bf.readLine()) != null) {
-                /*if (line == "error") {
-                    System.out.println("Script error");
-                    return false;
-                }*/
-                System.out.println(line);
+                //System.out.println(line);
             }
-            System.out.println(stdError.lines());
+            //System.out.println(stdError.lines());
             if(stdError.ready()) {
                 String errorMessage = "";
                 while ((line = stdError.readLine()) != null) {
@@ -622,7 +617,6 @@ public class FlightSettings {
                     dialog(errorMessage);
                     return false;
                 }
-
             }
             return true;
         }catch (IOException ioe){

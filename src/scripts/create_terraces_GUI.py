@@ -25,10 +25,10 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
             terrace_start = (u,v,average_alt)
             terrace_end = (u,v+pass_length,average_alt)
 
-            coords = convertCoords([[terrace_start[0],terrace_start[1]]],wind_angle,'xy')
+            coords = convertCoords([[terrace_start[0],terrace_start[1]]],wind_angle,'xy')   # Convert coords back to x and y
             terrace_start = (coords[0][0],coords[0][1],average_alt)
 
-            coords = convertCoords([[terrace_end[0],terrace_end[1]]],wind_angle,'xy')
+            coords = convertCoords([[terrace_end[0],terrace_end[1]]],wind_angle,'xy')       # Convert coords back to x and y
             terrace_end = (coords[0][0],coords[0][1],average_alt)
 
             image_passes.append(Image_Pass(terrace_start,terrace_end,average_alt,wind_angle))

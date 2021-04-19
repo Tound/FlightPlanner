@@ -128,7 +128,8 @@ def createPasses(area,polygon_edges,NFZs,config):
         max_uav_alt = (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
         min_uav_alt = (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
 
-        settings['altitude'] = uav_altitude # Update altitude in settings json file
+        config.altitude = uav_altitude
+
     elif config.altitude is not None and config.ground_sample_distance is None:
         coverage_width = (camera.sensor_x*config.altitude/camera.focal_length)  # In meters
         coverage_height = (camera.sensor_y*config.altitude/camera.focal_length) # In meters
@@ -140,7 +141,7 @@ def createPasses(area,polygon_edges,NFZs,config):
         max_uav_alt = (camera.image_x * (ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
         min_uav_alt = (camera.image_x * (ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
 
-        settings['gsd'] = ground_sample_distance # Update gsd in settings json file
+
     elif config.altitude is not None and config.ground_sample_distance is not None:   # if both have been initialised
         coverage_width = (camera.sensor_x*config.altitude/camera.focal_length)  # In meters
         coverage_height = (camera.sensor_y*config.altitude/camera.focal_length) # In meters
@@ -150,12 +151,11 @@ def createPasses(area,polygon_edges,NFZs,config):
         max_uav_alt = (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
         min_uav_alt = (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
 
-
-
-
     else:
         print("Requires atleast one value of altitude or gsd")
 
+    settings['altitude'] = f"{config.altitude}" # Update altitude in settings json file
+    settings['gsd'] = f"{config.ground_sample_distance}" # Update gsd in settings json file
 
     distance_between_photos_width = coverage_width - coverage_width*config.side_overlap
 

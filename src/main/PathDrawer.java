@@ -404,16 +404,14 @@ public class PathDrawer{
 
     public void drawDubins(JSONObject dubinsObject){
         JSONArray dubinsArray = (JSONArray) dubinsObject.get("dubins");
-        gc.setFill(Color.YELLOW);
+        gc.setFill(Color.RED);
         for(int i = 0; i<dubinsArray.length();i++){
             JSONObject dubinsPoints = (JSONObject) dubinsArray.get(i);
             JSONArray pointArray = (JSONArray) dubinsPoints.get("points");
             for(int j = 0;j<pointArray.length();j++){
                 String pointString = pointArray.get(j).toString();
-                System.out.println(pointString);
                 pointString = pointString.replace("(","");
                 pointString = pointString.replace(")","");
-                System.out.println(pointString);
                 String[] pointContents = pointString.split(",");
                 int x = (int) Double.parseDouble(pointContents[0].trim());
                 int y = (int)Double.parseDouble(pointContents[1].trim());
