@@ -19,10 +19,12 @@ import java.awt.*;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
+import javafx.scene.text.TextAlignment;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jxmapviewer.JXMapKit;
@@ -43,11 +45,6 @@ import javax.swing.event.MouseInputListener;
 public class PathDrawer{
     private Canvas canvas;
     private StackPane stack;
-    private double polygon;
-    private double NFZs;
-    private double width;
-    private double height;
-    private double scale;
     private GraphicsContext gc;
     private ArrayList<Coordinate> canvasPoints = new ArrayList<Coordinate>();
     private ArrayList<Coordinate> realPoints = new ArrayList<Coordinate>();
@@ -58,7 +55,6 @@ public class PathDrawer{
     private ArrayList<ArrayList<Coordinate>> pass_coords = new ArrayList<ArrayList<Coordinate>>();
     private Coordinate startPoint = null;
     private Coordinate realStartPoint = null;
-    private Coordinate takeoff;
 
     private boolean drawingROI = false;
     private boolean drawingNFZ = false;
@@ -78,22 +74,24 @@ public class PathDrawer{
     private Button drawROI = new Button("Draw ROI");
     private Button drawNFZ = new Button("Draw NFZ");
     private Button clear = new Button("Clear");
-    private Button setStart = new Button("Mark Takeoff and Landing");
+    private Button setStartLoc = new Button("Mark Takeoff and Landing");
     private Button findButton = new Button("Find");
     private TextField chooseLocation = new TextField();
-    //private Button done = new Button("Done");
-    public HBox hBox = new HBox(drawROI,drawNFZ,clear,setStart,chooseLocation,findButton);
+    private GridPane buttonGridPane = new GridPane();
     private JXMapViewer mapViewer;
     private SwingNode sn;
 
     private String geocodeAPI = "https://maps.googleapis.com/maps/api/geocode/json?address=";
 
+    /**
+     * PathDrawer constructor
+     * Constructor to create the path drawer object which includes a stackpane
+     * that holds a map,a canvas and buttons.
+     */
     public PathDrawer(){
         this.canvas = new Canvas();
         this.stack = new StackPane();
         this.gc = canvas.getGraphicsContext2D();
-        this.width = canvas.getWidth();
-        this.height = canvas.getWidth();
         this.chooseLocation.setPromptText("Jump to location");
         //stack.setMaxHeight(Double.MAX_VALUE);
 
@@ -101,18 +99,41 @@ public class PathDrawer{
 
         sn = addMap();
         sn.setPickOnBounds(false);
-        stack.getChildren().addAll(sn,hBox);
-        //stack.setPickOnBounds(false);
-        hBox.setPickOnBounds(false);
-        //stack.setFocusTraversable(true);
-        //HBox.setHgrow(stack,Priority.ALWAYS);
+        stack.getChildren().addAll(sn,buttonGridPane);
+        buttonGridPane.setPickOnBounds(false);
+        buttonGridPane.add(drawROI,0,0);
+        buttonGridPane.add(drawNFZ,1,0);
+        buttonGridPane.add(clear,2,0);
+        buttonGridPane.add(setStartLoc,3,0);
+        buttonGridPane.add(chooseLocation,4,0);
+        buttonGridPane.add(findButton,5,0);
+
+        drawROI.setTextAlignment(TextAlignment.CENTER);
+
+        chooseLocation.setMaxHeight(Double.MAX_VALUE);
+
+        drawROI.setMaxWidth(Double.MAX_VALUE);
+        drawNFZ.setMaxWidth(Double.MAX_VALUE);
+        clear.setMaxWidth(Double.MAX_VALUE);
+        setStartLoc.setMaxWidth(Double.MAX_VALUE);
+        chooseLocation.setMaxWidth(Double.MAX_VALUE);
+        findButton.setMaxWidth(Double.MAX_VALUE);
+
+        ColumnConstraints col25 = new ColumnConstraints();
+        col25.setPercentWidth(25);
+        ColumnConstraints col20 = new ColumnConstraints();
+        col20.setPercentWidth(20);
+        ColumnConstraints col15 = new ColumnConstraints();
+        col15.setPercentWidth(15);
+        ColumnConstraints col5 = new ColumnConstraints();
+        col5.setPercentWidth(5);
+        buttonGridPane.getColumnConstraints().addAll(col15,col15,col15,col25,col25,col5);
         stack.setBackground(new Background(new BackgroundFill(Color.WHITE,CornerRadii.EMPTY,Insets.EMPTY)));
         gc.setFont(markerFont);
     }
 
     public StackPane createPathDrawer(BorderPane bp){
         System.out.println("Added Canvas");
-        //gc.clearRect(0,0,width,height);
         canvas.widthProperty().bind(stack.widthProperty());
         canvas.heightProperty().bind(stack.heightProperty());
         System.out.println(stack.getPrefHeight());
@@ -131,8 +152,8 @@ public class PathDrawer{
             public void handle(MouseEvent event) {
                 if(!drawingROI && !drawingNFZ){
                     if(!stack.getChildren().contains(canvas)) {
-                        stack.getChildren().remove(hBox);
-                        stack.getChildren().addAll(canvas, hBox);
+                        stack.getChildren().remove(buttonGridPane);
+                        stack.getChildren().addAll(canvas, buttonGridPane);
                     }
                     drawROI.setText("Done");
                     drawingROI = true;
@@ -141,10 +162,11 @@ public class PathDrawer{
                         canvasPoints.clear();
                         gc.clearRect(0,0,stack.getWidth(),stack.getHeight());
                         for(int i=0;i<nfzPoints.size();i++) {
-                            gc.strokeOval(nfzPoints.get(i).getX() - nfzMarkerRadius / 2, nfzPoints.get(i).getY() - nfzMarkerRadius / 2, nfzMarkerRadius, nfzMarkerRadius);
-                            //gc.fillText(Integer.toString(i+1), points.get(i).getX(), points.get(i).getY());
+                            gc.strokeOval(nfzPoints.get(i).getX() - nfzMarkerRadius / 2, nfzPoints.get(i).getY() -
+                                    nfzMarkerRadius / 2, nfzMarkerRadius, nfzMarkerRadius);
                             if (i > 0) {
-                                gc.strokeLine(nfzPoints.get(i).getX(), nfzPoints.get(i).getY(), nfzPoints.get(i - 1).getX(), nfzPoints.get(i - 1).getY());
+                                gc.strokeLine(nfzPoints.get(i).getX(), nfzPoints.get(i).getY(),
+                                        nfzPoints.get(i - 1).getX(), nfzPoints.get(i - 1).getY());
                             }
                         }
                     }
@@ -153,7 +175,9 @@ public class PathDrawer{
                     drawingROI = false;
                     complete = true;
                     if(canvasPoints.size()>0) {
-                        gc.strokeLine(canvasPoints.get(canvasPoints.size() - 1).getX(), canvasPoints.get(canvasPoints.size() - 1).getY(), canvasPoints.get(0).getX(), canvasPoints.get(0).getY());
+                        gc.strokeLine(canvasPoints.get(canvasPoints.size() - 1).getX(),
+                                canvasPoints.get(canvasPoints.size() - 1).getY(), canvasPoints.get(0).getX(),
+                                canvasPoints.get(0).getY());
                         canvasPoints.add(canvasPoints.get(0));
                     }
                 }else{
@@ -164,21 +188,19 @@ public class PathDrawer{
         drawNFZ.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(!drawingNFZ && !drawingROI){ //If not drawing the NFZ and not drawing the ROI
+                if(!drawingNFZ && !drawingROI){         //If not drawing the NFZ and not drawing the ROI
                      drawNFZ.setText("Done");
                     drawingNFZ = true;
 
                 }else if(!drawingROI){ //If not drawing the ROI
                     if(!stack.getChildren().contains(canvas)) {
-                        stack.getChildren().remove(hBox);
-                        stack.getChildren().addAll(canvas, hBox);
+                        stack.getChildren().remove(buttonGridPane);
+                        stack.getChildren().addAll(canvas, buttonGridPane);
                     }
                     drawNFZ.setText("Draw NFZ");
                     drawingNFZ = false;
-                    //if(allNFZPoints.get(allNFZPoints.size()-1).add())
                     if(nfzPoints.size()>0) {
                         gc.strokeLine(nfzPoints.get(nfzPoints.size() - 1).getX(), nfzPoints.get(nfzPoints.size() - 1).getY(), nfzPoints.get(0).getX(), nfzPoints.get(0).getY());
-                        //nfzPoints.add(nfzPoints.get(0));
                     }
                     if(nfzPoints.size()>2){ // If enough points have been added to the NFZ
                         ArrayList<Coordinate> points = new ArrayList<>(nfzPoints);
@@ -214,20 +236,22 @@ public class PathDrawer{
                 gc.clearRect(0,0,stack.getWidth(),stack.getHeight());
             }
         });
-        setStart.setOnMouseClicked(new EventHandler<MouseEvent>() {
+        
+        setStartLoc.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if(drawingStart){
-                    setStart.setText("Mark Takeoff and Landing");
+                    setStartLoc.setText("Mark Takeoff and Landing");
                     drawingStart = !drawingStart;
                 }else {
                     drawingStart = true;
                     drawingROI = false;
                     drawingNFZ = false;
-                    setStart.setText("Click start location");
+                    setStartLoc.setText("Click start location");
                 }
             }
         });
+        
         findButton.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -235,8 +259,16 @@ public class PathDrawer{
                     String geocodeString = geocodeAPI;
                     try {
                         URL url = new URL(geocodeAPI);
-                    } catch (MalformedURLException e) {
-                        e.printStackTrace();
+                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                        /*connection.setRequestMethod("GET");
+                        DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
+                        List<NameValuePair> urlParameters = new ArrayList<>();
+                        urlParameters.add(new BasicNameValuePair());
+                        dataOutputStream.writeBytes(urlParameters);
+                        InputStream inputStream = connection.getInputStream();
+                        BufferedReader bufferedReader =  new BufferedReader();*/
+                    } catch (IOException ioe) {
+                        ioe.printStackTrace();
                     }
                     //GeoPosition position = new GeoPosition();
                     //mapViewer.setAddressLocation();
@@ -278,26 +310,17 @@ public class PathDrawer{
                     System.out.println("x:" + geo.getLatitude()+"Y:"+geo.getLongitude());
                 }
             }
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent e) { }
 
             @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-
-            }
+            public void mouseReleased(java.awt.event.MouseEvent e) { }
 
             @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-
-            }
+            public void mouseEntered(java.awt.event.MouseEvent e) { }
 
             @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-
-            }
+            public void mouseExited(java.awt.event.MouseEvent e) { }
         });
         mapKit.setTileFactory(tileFactory);
         mapKit.getMainMap().addMouseMotionListener(new MouseMotionListener() {
@@ -334,7 +357,6 @@ public class PathDrawer{
                 }
             }
         });
-
 
         SwingNode sn = new SwingNode();
         sn.setContent(mapViewer);
@@ -381,7 +403,7 @@ public class PathDrawer{
             gc.fillOval(x-startMarkerRadius/2,y-startMarkerRadius/2,startMarkerRadius,startMarkerRadius);
             gc.setFill(textPaint);
             gc.fillText("S/L",x-10,y+4);
-            setStart.setText("Mark Takeoff and Landing");
+            setStartLoc.setText("Mark Takeoff and Landing");
             drawingStart = false;
         }
         else{

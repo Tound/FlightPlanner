@@ -1,5 +1,5 @@
 #title{
-    -fx-font: italic bold 32px "vermin vibes slant";
+    -fx-font: italic bold 48px "arial";
     -fx-fill: white;
     -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 10, 0.0 , 0 , 5 );
 }
@@ -36,7 +36,8 @@
 .button{
     -fx-background-color: black;
     -fx-text-fill: white;
-    -fx-font: 16"Arial";
+    -fx-alignment: center;
+    -fx-font: 14"Arial";
     -fx-font-style: italic;
     -fx-padding: 5;
     -fx-text-alignment: center;

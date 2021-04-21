@@ -1,2 +1,4 @@
 src/scripts/.env
 out/production/FlightPlanner/scripts/.env
+src/scripts/__pycache__/
+*.pyc

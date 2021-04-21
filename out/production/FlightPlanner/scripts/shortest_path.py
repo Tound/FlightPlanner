@@ -9,6 +9,7 @@ import json
 import os
 
 import matplotlib.pyplot as plt
+import shapely.geometry as sg
 
 PATH_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?path="
 LOCATION_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?locations="
@@ -76,7 +77,7 @@ if 'nfzs' in settings:
     NFZ_coords = settings['nfzs']
     for NFZ_coord in NFZ_coords:
         NFZ_points = []
-        for NFZ_point in NFZ:
+        for NFZ_point in NFZ_coord:
             coords = NFZ_point.split(",")
             NFZ_points.append([float(coords[0]),float(coords[1])])
         NFZs.append(NFZ_points)
