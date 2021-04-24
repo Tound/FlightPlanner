@@ -419,13 +419,15 @@ public class FlightSettings {
                 fileChooser.getExtensionFilters().add(uavFilter);
                 fileChooser.setSelectedExtensionFilter(uavFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
-                UAV uav = (UAV) Parser.parseFile(file);
-                uavName.setText(uav.getName());
-                uavWeight.setText(uav.getWeight());
-                uavMinRadius.setText(uav.getTurnRad());
-                uavMaxIncline.setText(uav.getMaxIncline());
-                uavBattery.setText(uav.getBattery());
-                uavBatteryCapacity.setText(uav.getCapacity());
+                if(file != null) {
+                    UAV uav = (UAV) Parser.parseFile(file);
+                    uavName.setText(uav.getName());
+                    uavWeight.setText(uav.getWeight());
+                    uavMinRadius.setText(uav.getTurnRad());
+                    uavMaxIncline.setText(uav.getMaxIncline());
+                    uavBattery.setText(uav.getBattery());
+                    uavBatteryCapacity.setText(uav.getCapacity());
+                }
             }
         });
 
@@ -437,13 +439,15 @@ public class FlightSettings {
                 fileChooser.getExtensionFilters().add(camFilter);
                 fileChooser.setSelectedExtensionFilter(camFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
-                Camera camera = (Camera) Parser.parseFile(file);
-                camName.setText(camera.getName());
-                camSensorX.setText(camera.getSensorX());
-                camSensorY.setText(camera.getSensorY());
-                camFocalLength.setText(camera.getFocalLength());
-                camResolution.setText(camera.getResolution());
-                camAspectRatio.setText(camera.getAspectRatio());
+                if(file != null) {
+                    Camera camera = (Camera) Parser.parseFile(file);
+                    camName.setText(camera.getName());
+                    camSensorX.setText(camera.getSensorX());
+                    camSensorY.setText(camera.getSensorY());
+                    camFocalLength.setText(camera.getFocalLength());
+                    camResolution.setText(camera.getResolution());
+                    camAspectRatio.setText(camera.getAspectRatio());
+                }
             }
         });
 
@@ -471,13 +475,15 @@ public class FlightSettings {
                 fileChooser.getExtensionFilters().add(settingsFilter);
                 fileChooser.setSelectedExtensionFilter(settingsFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
-                Settings settings = (Settings) Parser.parseFile(file);
-                uavSpeed.setText(settings.getUavSpeed());
-                windSpeed.setText(settings.getWindSpeed());
-                windDirection.setText(settings.getWindDirection());
-                sideOverlap.setText(settings.getSideOverlap());
-                groundSampleDistance.setText(settings.getGsd());
-                altitude.setText(settings.getAltitude());
+                if(file != null) {
+                    Settings settings = (Settings) Parser.parseFile(file);
+                    uavSpeed.setText(settings.getUavSpeed());
+                    windSpeed.setText(settings.getWindSpeed());
+                    windDirection.setText(settings.getWindDirection());
+                    sideOverlap.setText(settings.getSideOverlap());
+                    groundSampleDistance.setText(settings.getGsd());
+                    altitude.setText(settings.getAltitude());
+                }
             }
         });
 
@@ -494,6 +500,7 @@ public class FlightSettings {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+
                     // Find passes and terraces
                     if(runScript("find_flight_path")){
                         try {
@@ -540,6 +547,7 @@ public class FlightSettings {
                         }catch (IOException ioe){
                             ioe.printStackTrace();
                         }
+
                         if(runScript("shortest_path")) {
                             System.out.println("Drawn passes");
                             try {
@@ -621,8 +629,10 @@ public class FlightSettings {
             BufferedReader bf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
             BufferedReader stdError = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
             String line = "";
+            String dialogMessage = "";
             while ((line = bf.readLine()) != null) {
                 System.out.println(line);
+                dialogMessage = dialogMessage + line + "\n";
             }
             if(stdError.ready()) {
                 String errorMessage = "";
@@ -631,9 +641,12 @@ public class FlightSettings {
                 }
                 if(errorMessage != null) {
                     errorMessage = "Script error in " + scriptName + ":\n" + errorMessage;
-                    dialog(errorMessage);
+                    dialog(errorMessage,"Script error");
                     return false;
                 }
+            }
+            if(scriptName == "shortest_path") {
+                dialog(dialogMessage, "Script output");
             }
             return true;
         }catch (IOException ioe){
@@ -770,7 +783,7 @@ public class FlightSettings {
 
         if(errorString != ""){
             errorString = errorString.substring(0,errorString.length()-1);
-            dialog(errorString + "\n\nAre missing from the flight settings. Make sure all of the settings above are configured.");
+            dialog(errorString + "\n\nAre missing from the flight settings. Make sure all of the settings above are configured.","Missing inputs");
             return false;
         }else {
             System.out.println("All inputs are correct");
@@ -840,9 +853,9 @@ public class FlightSettings {
         return true;
     }
 
-    public void dialog(String message){
+    public void dialog(String message, String title){
         Stage dialogStage = new Stage();
-        dialogStage.setTitle("Missing Inputs");
+        dialogStage.setTitle(title);
         BorderPane bp = new BorderPane();
         Button ok = new Button("OK");
 

@@ -10,11 +10,14 @@ import javafx.scene.shape.MeshView;
 import javafx.scene.shape.TriangleMesh;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+
 
 public class Visualiser {
-    Stage visualiserStage;
-    Scene visualiserScene;
-    Camera camera = new PerspectiveCamera();
+    private Stage visualiserStage;
+    private Scene visualiserScene;
+    private Camera camera = new PerspectiveCamera();
+    private ArrayList<Coordinate> coords = new ArrayList<>();
 
     public Visualiser(){
         visualiserStage = new Stage();
@@ -27,7 +30,8 @@ public class Visualiser {
         mesh.getPoints().addAll();
         mesh.getFaces().addAll();
 
-        Material floor = new PhongMaterial(Color.TRANSPARENT,image,null,null,null);
+        PhongMaterial floor = new PhongMaterial(Color.TRANSPARENT,image,null,null,null);
+        floor.setDiffuseMap(image);
 
 
         Group group = new Group();

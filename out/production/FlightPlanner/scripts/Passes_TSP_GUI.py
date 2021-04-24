@@ -324,7 +324,7 @@ def TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_grad,glide_
     pop = ga.evolvePopulation(pop)
     for i in range(0, generations):
         pop = ga.evolvePopulation(pop)
-        print(f"{100 * i/generations} %")   # Print the percentage of completion
+        #print(f"{100 * i/generations} %")   # Print the percentage of completion
 
     bestRoute = pop.getFittest()    # Get best route
 

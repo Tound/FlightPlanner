@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 import json
 import os
 
-import matplotlib.pyplot as plt
 import shapely.geometry as sg
 
 PATH_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?path="
@@ -30,8 +29,33 @@ def getAltitudeProfile(real_length,loc_string,uav_altitude):
     """
     Obtain altitude data for entire pass across generated terrain
     """
-    samples = abs(int((real_length)/3))+1          # MAX OUT AT 512 SAMPLES
-    sample_distance = real_length/samples   # Find the distance between each sample
+    # samples = int(((abs(real_length)+1)/512) +1)
+
+    # if real_length+1 < 512:
+    #     samples = int(abs(real_length)+1)
+    # elif real_length > 512:
+    #     samples = int((abs(real_length)+1)/2)
+    # #elif real_length
+    # print(abs(real_length)+1,samples)
+    # if samples < 2:
+    #     samples = 2
+    # #if samples > 512:
+    # #    samples = 512
+    # #samples = abs(int((real_length)/3))+1          # MAX OUT AT 512 SAMPLES
+    # sample_distance = real_length/samples   # Find the distance between each sample
+
+    sample_distance = 2         # Required sample distance is 5m
+    samples = int(real_length/sample_distance)+1
+
+    if samples < 2:
+        samples = 2
+        sample_distance = real_length/samples 
+
+    if samples > 512:
+        sample_distance += 1
+        samples = int(real_length/sample_distance)+1
+
+
     altitude_profile = []
     request = requests.get(PATH_API_URL + loc_string + "&samples=" + f"{samples}" + "&key=" + API_KEY)
     request = request.json()["results"]
@@ -70,11 +94,14 @@ start_loc_gps = settings['start_loc_gps']
 start_loc_string = start_loc_string.split(",")
 start_loc = [float(start_loc_string[0]),float(start_loc_string[1]),round(start_loc_alt(start_loc_gps),2)]
 
+max_pass_length = 2000
+
 glide_slope = 10
 NFZs = []
 NFZ_edges = []
 if 'nfzs' in settings:
     NFZ_coords = settings['nfzs']
+
     for NFZ_coord in NFZ_coords:
         NFZ_points = []
         for NFZ_point in NFZ_coord:
@@ -85,8 +112,9 @@ if 'nfzs' in settings:
     # Create NFZ edges
 
     for NFZ in NFZs:
-        for NFZ_points,index in enumerate(NFZ):
+        for index,NFZ_points in enumerate(NFZ):
             NFZ_edges.append(sg.LineString([(NFZ_points[0],NFZ_points[1]),(NFZ[index-1][0],NFZ[index-1][1])]))
+
 settings_data.close()           # Close settings file
 
 pass_coords = gps_data['gps']   # Get list of GPS coords
@@ -104,6 +132,10 @@ for index,coord in enumerate(pass_coords):
     pass_length = float(pass_data[index]['length']) # Length in px
     real_length = scale*pass_length                 # Calculate the length in metres
 
+    if real_length > max_pass_length:
+        print("Pass is over 2.5km, too large")
+        raise Exception("Pass is over 2.5km, too large")
+        exit(1)
     start_contents =  start.split(",")              # Split into x and y
     end_contents = end.split(",")                   # Split into x and y
 
@@ -122,19 +154,9 @@ for index,coord in enumerate(pass_coords):
     v = coords[0][1]
     loc_string = f"{start_gps}|{end_gps}"                                                   # Create a string with the gps coords for the 
     altitude_profile, sample_distance_m = getAltitudeProfile(real_length,loc_string,altitude) # Create the altitude profile
-
     sample_distance = sample_distance_m/scale # Sample distance in pixels
     # Create image passes
     image_passes = createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
-
-for image_pass in image_passes:
-    x = np.array([])
-    y = np.array([])
-    x = np.append(x,image_pass.start[0])
-    x = np.append(x,image_pass.end[0])
-    y = np.append(y,image_pass.start[1])
-    y = np.append(y,image_pass.end[1])
-    plt.plot(x,y,'-ro',markersize=2)
 
 
 start_time = time.clock()
@@ -145,6 +167,7 @@ end_time = time.clock() - start_time    # Calculate time taken to create passes 
 
 max_current_draw = 20   # Initialise the maximum current draw for the worst case scenario
 
+print("Flight path created successfully!\n")
 #Print flight stats
 print(f"Total time to solve: {round(end_time/60,2)}mins")
 print(f"Total length of route: {round(shortest_path.getLength(),2)}m")
@@ -162,12 +185,6 @@ dpaths = shortest_path.getDPaths()  # Get the Dubins paths that make up the shor
 
 stepSize = 1                        # Specify step size for sampling each dubins path
 
-
-plt.plot(x,y,'-ro',markersize=3)
-
-x = np.array([])
-y = np.array([])
-
 dubins_file = open("src/intermediate/dubins.json","w")
 dubins_data = {}
 dubins_data['dubins'] = []
@@ -176,17 +193,8 @@ for dpath in dpaths:
     dubins_points = {}
     dubins_points['points'] = []
     for point in points:
-        
-
-        x = np.append(x,point[0])
-        y = np.append(y,point[1])
-
         dubins_points['points'].append(f"{point[0],point[1],point[2]}")
-        #plt.plot(float(point[0]),float(point[1]),'-yo',markersize=2)
     dubins_data['dubins'].append(dubins_points)
 json.dump(dubins_data,dubins_file,indent=4)
 
 dubins_file.close()
-
-#plt.plot(x,y,'-yo',markersize=2)
-plt.show()

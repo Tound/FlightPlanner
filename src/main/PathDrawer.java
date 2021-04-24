@@ -133,10 +133,8 @@ public class PathDrawer{
     }
 
     public StackPane createPathDrawer(BorderPane bp){
-        System.out.println("Added Canvas");
         canvas.widthProperty().bind(stack.widthProperty());
         canvas.heightProperty().bind(stack.heightProperty());
-        System.out.println(stack.getPrefHeight());
         canvas.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -381,9 +379,7 @@ public class PathDrawer{
             }
             gc.setFill(textPaint);
             String num = Integer.toString(canvasPoints.size());
-            System.out.println(num.length());
             gc.fillText(num, x - num.length()*4, y - -4);
-            System.out.println("X: " + x + " Y: " + y);
         }
         else if(drawingNFZ){
             gc.setStroke(nfzMarkerPaint);

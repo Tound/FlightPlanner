@@ -125,8 +125,8 @@ def createPasses(area,polygon_edges,NFZs,config):
         coverage_height = (config.ground_sample_distance * camera.image_y)  # In meters
 
         uav_altitude = coverage_width *camera.focal_length/camera.sensor_x # In meters
-        max_uav_alt = (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
-        min_uav_alt = (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+        max_uav_alt = (camera.image_x * (config.ground_sample_distance + config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
+        min_uav_alt = (camera.image_x * (config.ground_sample_distance - config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
 
         config.altitude = uav_altitude
 
@@ -138,8 +138,8 @@ def createPasses(area,polygon_edges,NFZs,config):
 
         ground_sample_distance = uav_altitude*camera.sensor_x/(camera.focal_length * camera.image_x)
         config.ground_sample_distance = ground_sample_distance
-        max_uav_alt = (camera.image_x * (ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
-        min_uav_alt = (camera.image_x * (ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+        max_uav_alt = (camera.image_x * (ground_sample_distance + ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
+        min_uav_alt = (camera.image_x * (ground_sample_distance - ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
 
 
     elif config.altitude is not None and config.ground_sample_distance is not None:   # if both have been initialised
@@ -148,8 +148,8 @@ def createPasses(area,polygon_edges,NFZs,config):
 
         uav_altitude = config.altitude # In meters
         
-        max_uav_alt = (camera.image_x * (config.ground_sample_distance + 0.0015)) * camera.focal_length/camera.sensor_x # In meters
-        min_uav_alt = (camera.image_x * (config.ground_sample_distance - 0.0015)) * camera.focal_length/camera.sensor_x # In meters
+        max_uav_alt = (camera.image_x * (config.ground_sample_distance + config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
+        min_uav_alt = (camera.image_x * (config.ground_sample_distance - config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
 
     else:
         print("Requires atleast one value of altitude or gsd")
