@@ -23,7 +23,6 @@ public class FlightPlanner extends Application {
     private static FlightSettings flightSettings;
 
     public void start(Stage primaryStage) throws Exception{
-        //Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         stage = primaryStage;
         primaryStage.setTitle("FlightPlanner V1.0");        // Set the title
 

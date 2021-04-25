@@ -33,10 +33,10 @@ public class CreateCamera {
 
     private static Stage createStage;
     private static Scene createScene;
-    private static String path = "src/camera";
+    private static String path = "src/cameras";
     private static TextField name = new TextField();
-    private static TextField sensorX = new TextField();
-    private static TextField sensorY = new TextField();
+    private static TextField sensorWidth = new TextField();
+    private static TextField sensorHeight = new TextField();
     private static TextField focalLocal = new TextField();
     private static TextField resolution = new TextField();
     private static TextField aspectRatio = new TextField();
@@ -44,10 +44,18 @@ public class CreateCamera {
     private static Stage dialog = new Stage();
     private static Label dialogMessage = new Label("The filename "+ name.getText() +".uav already exists in "+path+".\n Would you like to overwrite?");
 
+    /**
+     * Create camera constructor
+     *
+     */
     public CreateCamera(){
         createStage = new Stage();
         createStage.setTitle("Camera Setup");
         createStage.initModality(Modality.APPLICATION_MODAL);
+        setupOverwriteDialog();      // Setup overwrite dialog box
+    }
+
+    private void setupOverwriteDialog(){
         // Setup dialog box
         dialog.setTitle("Overwrite File?");
         dialog.initModality(Modality.APPLICATION_MODAL);
@@ -62,7 +70,7 @@ public class CreateCamera {
         bp.setBottom(hb);
 
         Scene dialogScene = new Scene(bp,400,100, Color.web("rgb(42, 45, 48)"));
-        dialogScene.setUserAgentStylesheet("style/menus.css");
+        dialogScene.setUserAgentStylesheet("src/style/menus.css");
         dialog.setScene(dialogScene);
 
         yes.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -95,15 +103,15 @@ public class CreateCamera {
         gp.getStyleClass().add("grid");
 
         Label nameLabel = new Label("Name:");
-        Label sensorXLabel = new Label("Sensor Width (mm):");
-        Label sensorYLabel = new Label("Sensor height (mm):");
+        Label sensorWidthLabel = new Label("Sensor Width (mm):");
+        Label sensorHeightLabel = new Label("Sensor height (mm):");
         Label focalLengthLabel = new Label("Focal Length:");
         Label resolutionLabel = new Label("Resolution:");
         Label aspectRatioLabel = new Label("Aspect Ratio:");
 
         name.setPromptText("Name of Camera");
-        sensorX.setPromptText("Sensor Width (mm)");
-        sensorY.setPromptText("Sensor Height (mm)");
+        sensorWidth.setPromptText("Sensor Width (mm)");
+        sensorHeight.setPromptText("Sensor Height (mm)");
         focalLocal.setPromptText("Focal Length");
         resolution.setPromptText("Resolution (MP)");
         aspectRatio.setPromptText("Aspect Ratio");
@@ -115,16 +123,16 @@ public class CreateCamera {
         gp.add(title,0,0);
 
         gp.add(nameLabel,0,1);
-        gp.add(sensorXLabel,0,2);
-        gp.add(sensorYLabel,0,3);
+        gp.add(sensorWidthLabel,0,2);
+        gp.add(sensorHeightLabel,0,3);
         gp.add(focalLengthLabel,0,4);
         gp.add(resolutionLabel,0,5);
         gp.add(aspectRatioLabel,0,6);
 
 
         gp.add(name,1,1);
-        gp.add(sensorX,1,2);
-        gp.add(sensorY,1,3);
+        gp.add(sensorWidth,1,2);
+        gp.add(sensorHeight,1,3);
         gp.add(focalLocal,1,4);
         gp.add(resolution,1,5);
         gp.add(aspectRatio,1,6);
@@ -137,8 +145,6 @@ public class CreateCamera {
         gp.setVgap(20);
         gp.setAlignment(Pos.CENTER);
 
-        //gp.setStyle("-fx-background-color: rgb(42, 45, 48)");
-
         save.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -146,7 +152,7 @@ public class CreateCamera {
                 if(name.getText().isEmpty()){
                     System.out.println("Missing name for UAV");
                 }else {
-                    File file = new File("src/cameras/"+name.getText()+".cam");
+                    File file = new File(path+name.getText()+".cam");
                     if(file.exists()){
                         dialogMessage.setText("The filename "+ name.getText() + ".uav already exists in "+path+".\n Would you like to overwrite?");
                         dialog.show();
@@ -169,8 +175,8 @@ public class CreateCamera {
             @Override
             public void handle(MouseEvent event) {
                 name.clear();
-                sensorX.clear();
-                sensorY.clear();
+                sensorWidth.clear();
+                sensorHeight.clear();
                 focalLocal.clear();
                 resolution.clear();
                 aspectRatio.clear();
@@ -183,6 +189,9 @@ public class CreateCamera {
         createStage.show();
     }
 
+    /**
+     * Write camera settings in XML file
+     */
     public void writeCamera(){
         System.out.println("Writing new Camera");
         Document dom;
@@ -199,11 +208,11 @@ public class CreateCamera {
             rootElement.appendChild(e);
 
             e = dom.createElement("sensor_x");
-            e.appendChild(dom.createTextNode(sensorX.getText()));
+            e.appendChild(dom.createTextNode(sensorWidth.getText()));
             rootElement.appendChild(e);
 
             e = dom.createElement("sensor_y");
-            e.appendChild(dom.createTextNode(sensorY.getText()));
+            e.appendChild(dom.createTextNode(sensorHeight.getText()));
             rootElement.appendChild(e);
 
             e = dom.createElement("focal_length");
@@ -229,13 +238,9 @@ public class CreateCamera {
 
             tr.transform(new DOMSource(dom),new StreamResult(new FileOutputStream("src/cameras/"+name.getText()+".cam")));
 
-        }catch (IOException | ParserConfigurationException | TransformerConfigurationException ioe){
-            ioe.printStackTrace();
-        } catch (TransformerException transformerException) {
-            transformerException.printStackTrace();
+        }catch (IOException | ParserConfigurationException | TransformerException ioe){
+            Dialog.showDialog("Unable to write to write camera settings.\n\n" +
+                    "Ensure that " + path + " is visible by the application.","Unable to write settings");
         }
-    }
-    public String loadCamera(){
-        return "Camera";
     }
 }

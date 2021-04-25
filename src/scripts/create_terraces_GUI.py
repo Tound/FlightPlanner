@@ -1,7 +1,7 @@
 import requests
 import numpy as np
 from create_passes_GUI import convertCoords
-from Image_Classes_V2 import *
+from Image_Classes import *
 
 image_passes = []
 
@@ -47,7 +47,7 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
             while index < len(altitude_profile):
                 if index + lookahead > len(altitude_profile):
                     if current_altitude == -1:
-                        for alt in range(0,2):
+                        for alt in range(0,lookahead-1):
                             current_altitude += altitude_profile[index+alt]
                         current_altitude = current_altitude/3
 
@@ -128,8 +128,6 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
                             y = coords[0][1]
                             current_terrace.append([x,y,current_altitude])
                             current_terrace_length += sample_distance
-                            #current_max_altitude += max_alt_diff/2
-                            #current_min_altitude -+ max_alt_diff/2
 
                 index += 1
     else:
