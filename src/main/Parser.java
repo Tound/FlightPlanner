@@ -21,7 +21,6 @@ public class Parser {
         for(int i=0;i<nodeList.getLength();i++) {
             Node node = nodeList.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
-                System.out.println(node.getNodeName() + "," + node.getTextContent());
                 if (node.getNodeName() == "name") {
                     uavSettings.setName(node.getTextContent());
                 } else if (node.getNodeName() == "weight") {
@@ -39,7 +38,6 @@ public class Parser {
                 }
             }
         }
-        System.out.println(uavSettings);
         return uavSettings;
     }
 
@@ -48,7 +46,6 @@ public class Parser {
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
-                System.out.println(node.getNodeName() + "," + node.getTextContent());
                 if (node.getNodeName() == "name") {
                     camSettings.setName(node.getTextContent());
                 } else if (node.getNodeName() == "sensor_x") {
@@ -72,9 +69,7 @@ public class Parser {
         Settings flightSettings = new Settings();
         for(int i=0;i<nodeList.getLength();i++) {
             Node node = nodeList.item(i);
-            System.out.println(node.getNodeName());
             if (node.getNodeType() == Node.ELEMENT_NODE) {
-                System.out.println(node.getNodeName() + "," + node.getTextContent());
                 if (node.getNodeName() == "uav_speed") {
                     flightSettings.setUavSpeed(node.getTextContent());
                 } else if (node.getNodeName() == "wind_speed") {

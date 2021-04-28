@@ -36,18 +36,20 @@ class UAV:
     """
     UAV class holds all UAV settings for a specific flight
     """
-    def __init__(self,weight,velocity,min_turn,max_incline_grad,min_speed = None,max_speed = None):
+    def __init__(self,weight,velocity,max_velocity,min_turn,max_incline_grad,heading_angle):
         self.weight = weight
         self.velocity = velocity
         self.min_turn = min_turn
         self.max_incline_grad = max_incline_grad
+        self.max_velocity = max_velocity            # Maximum velocity of UAV in m/s
+        self.heading_angle = heading_angle          # Required heading angle of UAV
 
 class Configuration:
     """
     Configuration class holds the settings for an entire flight 
     including Camera object and UAV object
     """
-    def __init__(self,uav,camera,side_overlap,wind_angle,scale,altitude,ground_sample_distance):
+    def __init__(self,uav,camera,side_overlap,wind_angle,scale,altitude,ground_sample_distance,min_pass_length,max_pass_length):
         self.uav = uav
         self.camera = camera
         self.side_overlap = side_overlap
@@ -55,6 +57,8 @@ class Configuration:
         self.scale = scale
         self.altitude = altitude
         self.ground_sample_distance = ground_sample_distance
+        self.min_pass_length = min_pass_length
+        self.max_pass_length = max_pass_length
 
 
 
@@ -139,9 +143,12 @@ else:
 
         uav_mass = float(settings['uav_weight'])
         uav_speed = float(settings['uav_speed'])
+        uav_max_speed = float(settings['uav_max_speed'])
         min_turn = float(settings['uav_min_radius'])
         max_incline_angle = float(settings['uav_max_incline'])
         battery_capacity = float(settings['battery_capacity'])
+        min_pass_length = float(settings['min_terrace_length'])
+        max_pass_length = float(settings['max_pass_length'])
 
         sensor_x = float(settings['cam_sensor_x'])  *10**-3
         sensor_y= float(settings['cam_sensor_y'])   *10**-3
@@ -188,25 +195,24 @@ else:
 if scale == 0:
     scale = 1
 
-# Viablility checks
-if wind[0] > uav_speed:
-    print("Too windy for this flight")
-    exit(1)
-elif wind[0] > uav_speed/2:
-    print("Heading angle will be steep")
-
-# Calculate heading angle
-heading_angle = math.asin(wind[0]/uav_speed)
-print(math.degrees(wind[1]))
-print(f"Plane will fly with a heading angle of {round(math.degrees(heading_angle),2)} degrees towards the wind!")
+# Viablility checks to ensure constant ground speed
+speed_required = math.sqrt(wind[0]*wind[0] + uav_speed*uav_speed)
+if speed_required > uav_max_speed:
+    print("Too windy for this flight as the UAV would exceed maximum speed")
+    raise Exception("Too windy for this flight as the UAV would exceed maximum speed")
+else:
+    # Calculate heading angle
+    heading_angle = math.atan(wind[0]/uav_speed)
+    print(f"Plane will fly with a heading angle of {round(math.degrees(heading_angle),2)} degrees towards the wind!")
+    print(f"Required UAV speed: {round(speed_required,2)} m/s")
 
 # Create UAV, camera and configuration object and store all variables
-uav = UAV(uav_mass,uav_speed,min_turn,max_incline_angle)
+uav = UAV(uav_mass,uav_speed,uav_max_speed,min_turn,max_incline_angle,heading_angle)
 
 image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
 
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
-config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance)
+config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance,min_pass_length,max_pass_length)
 
 polygon_edges = []
 for i in range(0,len(polygon)):

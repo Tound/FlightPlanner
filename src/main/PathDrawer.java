@@ -133,10 +133,8 @@ public class PathDrawer{
     }
 
     public StackPane createPathDrawer(BorderPane bp){
-        System.out.println("Added Canvas");
         canvas.widthProperty().bind(stack.widthProperty());
         canvas.heightProperty().bind(stack.heightProperty());
-        System.out.println(stack.getPrefHeight());
         canvas.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -381,9 +379,7 @@ public class PathDrawer{
             }
             gc.setFill(textPaint);
             String num = Integer.toString(canvasPoints.size());
-            System.out.println(num.length());
             gc.fillText(num, x - num.length()*4, y - -4);
-            System.out.println("X: " + x + " Y: " + y);
         }
         else if(drawingNFZ){
             gc.setStroke(nfzMarkerPaint);
@@ -426,10 +422,24 @@ public class PathDrawer{
 
     public void drawDubins(JSONObject dubinsObject){
         JSONArray dubinsArray = (JSONArray) dubinsObject.get("dubins");
+        JSONArray spiralsArray = (JSONArray) dubinsObject.get("spirals");
         gc.setFill(Color.RED);
         for(int i = 0; i<dubinsArray.length();i++){
             JSONObject dubinsPoints = (JSONObject) dubinsArray.get(i);
             JSONArray pointArray = (JSONArray) dubinsPoints.get("points");
+            for(int j = 0;j<pointArray.length();j++){
+                String pointString = pointArray.get(j).toString();
+                pointString = pointString.replace("(","");
+                pointString = pointString.replace(")","");
+                String[] pointContents = pointString.split(",");
+                int x = (int) Double.parseDouble(pointContents[0].trim());
+                int y = (int)Double.parseDouble(pointContents[1].trim());
+                gc.fillOval(x,canvas.getHeight()-y,2,2);
+            }
+        }
+        for(int i = 0; i<spiralsArray.length();i++){
+            JSONObject spiralsPoints = (JSONObject) spiralsArray.get(i);
+            JSONArray pointArray = (JSONArray) spiralsPoints.get("points");
             for(int j = 0;j<pointArray.length();j++){
                 String pointString = pointArray.get(j).toString();
                 pointString = pointString.replace("(","");

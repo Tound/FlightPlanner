@@ -3,12 +3,11 @@
 from Passes_TSP_GUI import *
 from create_terraces_GUI import *
 from create_passes_GUI import convertCoords
-from Image_Classes_V2 import *
+from Image_Classes import *
 from dotenv import load_dotenv
 import json
 import os
 
-import matplotlib.pyplot as plt
 import shapely.geometry as sg
 
 PATH_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?path="
@@ -30,8 +29,18 @@ def getAltitudeProfile(real_length,loc_string,uav_altitude):
     """
     Obtain altitude data for entire pass across generated terrain
     """
-    samples = abs(int((real_length)/3))+1          # MAX OUT AT 512 SAMPLES
-    sample_distance = real_length/samples   # Find the distance between each sample
+    sample_distance = 2         # Required sample distance is 5m
+    samples = int(real_length/sample_distance)+1
+
+    if samples < 2:
+        samples = 2
+        sample_distance = real_length/samples 
+
+    if samples > 512:
+        sample_distance += 1
+        samples = int(real_length/sample_distance)+1
+
+
     altitude_profile = []
     request = requests.get(PATH_API_URL + loc_string + "&samples=" + f"{samples}" + "&key=" + API_KEY)
     request = request.json()["results"]
@@ -60,6 +69,9 @@ scale = float(settings['scale'])
 max_alt_diff = float(settings['max_alt_diff'])
 altitude =  float(settings['altitude'])
 min_terrace_len = float(settings['min_terrace_length'])/scale   # Covert min turn length into pixel values
+
+max_pass_length = float(settings['max_pass_length'])/scale
+
 uav_mass = float(settings['uav_weight'])
 uav_speed = float(settings['uav_speed'])
 min_turn = float(settings['uav_min_radius'])/scale              # Covert min turn radius to pixel values
@@ -69,12 +81,18 @@ start_loc_string = settings['start_loc']
 start_loc_gps = settings['start_loc_gps']
 start_loc_string = start_loc_string.split(",")
 start_loc = [float(start_loc_string[0]),float(start_loc_string[1]),round(start_loc_alt(start_loc_gps),2)]
+population_size = int(settings['population_size'])
+generations = int(settings['generations'])
+
+# Error prevention
+#max_pass_length = 2000
 
 glide_slope = 10
 NFZs = []
 NFZ_edges = []
 if 'nfzs' in settings:
     NFZ_coords = settings['nfzs']
+
     for NFZ_coord in NFZ_coords:
         NFZ_points = []
         for NFZ_point in NFZ_coord:
@@ -85,8 +103,9 @@ if 'nfzs' in settings:
     # Create NFZ edges
 
     for NFZ in NFZs:
-        for NFZ_points,index in enumerate(NFZ):
+        for index,NFZ_points in enumerate(NFZ):
             NFZ_edges.append(sg.LineString([(NFZ_points[0],NFZ_points[1]),(NFZ[index-1][0],NFZ[index-1][1])]))
+
 settings_data.close()           # Close settings file
 
 pass_coords = gps_data['gps']   # Get list of GPS coords
@@ -104,6 +123,8 @@ for index,coord in enumerate(pass_coords):
     pass_length = float(pass_data[index]['length']) # Length in px
     real_length = scale*pass_length                 # Calculate the length in metres
 
+    if real_length > max_pass_length:
+        raise Exception("Pass is too large")
     start_contents =  start.split(",")              # Split into x and y
     end_contents = end.split(",")                   # Split into x and y
 
@@ -122,29 +143,20 @@ for index,coord in enumerate(pass_coords):
     v = coords[0][1]
     loc_string = f"{start_gps}|{end_gps}"                                                   # Create a string with the gps coords for the 
     altitude_profile, sample_distance_m = getAltitudeProfile(real_length,loc_string,altitude) # Create the altitude profile
-
     sample_distance = sample_distance_m/scale # Sample distance in pixels
     # Create image passes
     image_passes = createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
 
-for image_pass in image_passes:
-    x = np.array([])
-    y = np.array([])
-    x = np.append(x,image_pass.start[0])
-    x = np.append(x,image_pass.end[0])
-    y = np.append(y,image_pass.start[1])
-    y = np.append(y,image_pass.end[1])
-    plt.plot(x,y,'-ro',markersize=2)
-
 
 start_time = time.clock()
-shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_incline_grad,glide_slope,start_loc,populationSize=50,generations=200,mutationRate=0.3)
+shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_incline_grad,glide_slope,start_loc,populationSize=population_size,generations=generations,mutationRate=0.3)
 
 end_time = time.clock() - start_time    # Calculate time taken to create passes and findest shortest route
 
 
 max_current_draw = 20   # Initialise the maximum current draw for the worst case scenario
 
+print("Flight path created successfully!\n")
 #Print flight stats
 print(f"Total time to solve: {round(end_time/60,2)}mins")
 print(f"Total length of route: {round(shortest_path.getLength(),2)}m")
@@ -158,35 +170,31 @@ if current_used > battery_capacity*10**-3:
 else:
     print("Current battery capacity will suffice")
 
+spirals =  shortest_path.get_spirals()
 dpaths = shortest_path.getDPaths()  # Get the Dubins paths that make up the shortest route
 
-stepSize = 1                        # Specify step size for sampling each dubins path
-
-
-plt.plot(x,y,'-ro',markersize=3)
-
-x = np.array([])
-y = np.array([])
+step_size = 1                        # Specify step size for sampling each dubins path
 
 dubins_file = open("src/intermediate/dubins.json","w")
 dubins_data = {}
 dubins_data['dubins'] = []
 for dpath in dpaths:
-    points = dubins_path_sample_many(dpath,stepSize)
+    points = dubins_path_sample_many(dpath,step_size)
     dubins_points = {}
     dubins_points['points'] = []
     for point in points:
-        
-
-        x = np.append(x,point[0])
-        y = np.append(y,point[1])
-
         dubins_points['points'].append(f"{point[0],point[1],point[2]}")
-        #plt.plot(float(point[0]),float(point[1]),'-yo',markersize=2)
     dubins_data['dubins'].append(dubins_points)
+
+dubins_data['spirals'] = []
+for spiral in spirals:  
+    points = sample_spiral(spiral,step_size)    # Sample the spiral paths and obtain the sampled points
+    spiral_points = {}
+    spiral_points['points'] = []
+    for point in points:
+        spiral_points['points'].append(f"{round(point[0],2),round(point[1],2),round(point[2],2)}")
+    dubins_data['spirals'].append(spiral_points)
+
 json.dump(dubins_data,dubins_file,indent=4)
 
 dubins_file.close()
-
-#plt.plot(x,y,'-yo',markersize=2)
-plt.show()

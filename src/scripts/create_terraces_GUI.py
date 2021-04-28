@@ -1,7 +1,7 @@
 import requests
 import numpy as np
 from create_passes_GUI import convertCoords
-from Image_Classes_V2 import *
+from Image_Classes import *
 
 image_passes = []
 
@@ -10,10 +10,14 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
     """
     Splits pass into terraces
     """
+    #print(f"Sample distance: {sample_distance}, Pass length: {pass_length}, Pixel distance: {sample_distance*len(altitude_profile)}")
+    #print("\n")
     # Create terraces from pass
+    lookahead = 3
     current_terrace = []        # Initilise current terrace points as empty
     average_alt = 0             # Store the average altitude
-    distance_covered = 0
+    current_terrace_length = 0  # Current length of the terrace in pixels
+
     if len(altitude_profile) > 0: # If there is some altitude data for this pass
         max_altitude = np.max(altitude_profile)
         min_altitude = np.min(altitude_profile)
@@ -36,17 +40,20 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
             # Calculate terraces
             index = 0
 
-            current_altitude = 0
-            current_min_altitude = 0
-            current_max_altitude = 0
+            current_altitude = -1
+            current_min_altitude = -1
+            current_max_altitude = -1
+
             while index < len(altitude_profile):
-                if index + 3 > len(altitude_profile):
-                    if current_altitude == 0:
-                        for alt in range(0,2):
+                if index + lookahead > len(altitude_profile):
+                    if current_altitude == -1:
+                        for alt in range(0,lookahead-1):
                             current_altitude += altitude_profile[index+alt]
                         current_altitude = current_altitude/3
-                    for val in range(0,3):
-                        current_terrace.append([x,y,current_altitude])
+
+                    for val in range(0,lookahead-1):
+                        coords = convertCoords([[u,v+(index+val)*sample_distance]],wind_angle,'xy')
+                        current_terrace.append([coords[0][0],coords[0][1],current_altitude])
                     # Add all to current pass
                     terrace_start = current_terrace[0]
                     terrace_end = current_terrace[len(current_terrace)-1]
@@ -59,7 +66,7 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
                     grad += altitude_profile[index+2] - altitude_profile[index]
                     #grad += altitude_profile[index+3] - altitude_profile[index]
                     grad = grad/2
-                    coords = convertCoords([[u,v+index]],wind_angle,'xy')
+                    coords = convertCoords([[u,v+index*sample_distance]],wind_angle,'xy')
                     x = coords[0][0]
                     y = coords[0][1]
                     if grad > 0:
@@ -72,57 +79,55 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
                         current_altitude = altitude_profile[index]
                         current_terrace.append([x,y,current_altitude])
 
-                    distance_covered += sample_distance
+                    current_terrace_length += sample_distance
                     current_min_altitude = current_altitude - max_alt_diff/2
                     current_max_altitude = current_altitude + max_alt_diff/2
 
                 else:
                     # Add to the terrace
                     if altitude_profile[index] > current_min_altitude and  altitude_profile[index] < current_max_altitude:
-                        coords = convertCoords([[u,v+index]],wind_angle,'xy')
+                        coords = convertCoords([[u,v+index*sample_distance]],wind_angle,'xy')
                         x = coords[0][0]
                         y = coords[0][1]
                         current_terrace.append([x,y,current_altitude])
-                        distance_covered += sample_distance
+                        current_terrace_length += sample_distance
                     elif altitude_profile[index+1] > current_min_altitude and altitude_profile[index+1] < current_max_altitude:
-                        coords = convertCoords([[u,v+index]],wind_angle,'xy')
+                        coords = convertCoords([[u,v+index*sample_distance]],wind_angle,'xy')
                         x = coords[0][0]
                         y = coords[0][1]
                         current_terrace.append([x,y,current_altitude])
                         index += 1
-                        coords = convertCoords([[u,v+index]],wind_angle,'xy')
+                        coords = convertCoords([[u,v+index*sample_distance]],wind_angle,'xy')
                         x = coords[0][0]
                         y = coords[0][1]
                         current_terrace.append([x,y,current_altitude])
-                        distance_covered += 2*sample_distance
+                        current_terrace_length += 2*sample_distance
                     elif altitude_profile[index+2] > current_min_altitude and altitude_profile[index+2] < current_max_altitude:
                         for val in range(0,2):
-                            coords = convertCoords([[u,v+index+val]],wind_angle,'xy')
+                            coords = convertCoords([[u,v+(index+val)*sample_distance]],wind_angle,'xy')
                             x = coords[0][0]
                             y = coords[0][1]
                             current_terrace.append([x,y,current_altitude])
                             index += 1
-                        distance_covered += 3*sample_distance
+                        current_terrace_length += lookahead*sample_distance
                         index -= 1
                     else:
-                        if distance_covered > min_terrace_len:
+                        if current_terrace_length > min_terrace_len:
                             # Create new terrace
                             terrace_start = current_terrace[0]
                             terrace_end = current_terrace[len(current_terrace)-1]
                             image_passes.append(Image_Pass(terrace_start,terrace_end,current_altitude,wind_angle))
                             current_terrace = []
-                            current_altitude = 0
-                            distance_covered = 0
+                            current_altitude = -1
+                            current_terrace_length = 0
                         else:
                             # Requires more image locations
                             print("Not long enough")
-                            coords = convertCoords([[u,v+index]],wind_angle,'xy')
+                            coords = convertCoords([[u,v+index*sample_distance]],wind_angle,'xy')
                             x = coords[0][0]
                             y = coords[0][1]
                             current_terrace.append([x,y,current_altitude])
-                            distance_covered += 1
-                            #current_max_altitude += max_alt_diff/2
-                            #current_min_altitude -+ max_alt_diff/2
+                            current_terrace_length += sample_distance
 
                 index += 1
     else:

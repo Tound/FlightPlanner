@@ -6,12 +6,10 @@ def getAltitude(focal_length,coverage_x,sensor_x):
     return altitude
 
 def imageDimensions(resolution, aspect_ratio):
-    #aspect_ratio = aspect_ratio.split(':')
     width_ratio = aspect_ratio[0]
     height_ratio = aspect_ratio[1]
     ratio = width_ratio/height_ratio
     imageWidth = math.sqrt(resolution*10**6 * ratio)
-
     imageHeight = imageWidth/ratio
     return imageWidth, imageHeight
 
