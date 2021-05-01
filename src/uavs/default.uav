@@ -1,10 +1,9 @@
-{
-    "uav":{
-        "name":"Fixed Wing UAV",
-        "weight":"20",
-        "turn_rad":"20",
-        "max_incline":"30",
-        "battery":"LiPo",
-        "battery_capacity":"2200"
-    }
-}
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<UAV>
+    <name>Default</name>
+    <weight>2.6</weight>
+    <turn_radius>10</turn_radius>
+    <max_incline>30</max_incline>
+    <battery>LiPo</battery>
+    <battery_capacity>10000</battery_capacity>
+</UAV>

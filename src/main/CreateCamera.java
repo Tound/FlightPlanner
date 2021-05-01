@@ -69,8 +69,8 @@ public class CreateCamera {
         BorderPane.setAlignment(hb, Pos.CENTER);
         bp.setBottom(hb);
 
-        Scene dialogScene = new Scene(bp,400,100, Color.web("rgb(42, 45, 48)"));
-        dialogScene.setUserAgentStylesheet("src/style/menus.css");
+        Scene dialogScene = new Scene(bp,400,100);
+        dialogScene.setUserAgentStylesheet("style/menus.css");
         dialog.setScene(dialogScene);
 
         yes.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -154,7 +154,7 @@ public class CreateCamera {
                 }else {
                     File file = new File(path+name.getText()+".cam");
                     if(file.exists()){
-                        dialogMessage.setText("The filename "+ name.getText() + ".uav already exists in "+path+".\n Would you like to overwrite?");
+                        dialogMessage.setText("The filename "+ name.getText() + ".cam already exists in "+path+".\n Would you like to overwrite?");
                         dialog.show();
                     }else {
                         writeCamera();
@@ -183,7 +183,7 @@ public class CreateCamera {
             }
         });
 
-        createScene = new Scene(gp,500,700, Color.GRAY);
+        createScene = new Scene(gp,500,700);
         createScene.setUserAgentStylesheet("style/menus.css");
         createStage.setScene(createScene);
         createStage.show();

@@ -129,7 +129,7 @@ def createPasses(area,polygon_edges,NFZs,config):
     camera = config.camera
     wind_angle = config.wind[1]
 
-    # IF WINDLESS
+    # In case of a windless environment
     if config.wind[0] == 0:
         # Find the largest edge
         length = 0
@@ -150,8 +150,10 @@ def createPasses(area,polygon_edges,NFZs,config):
         print(f"New wind angle: {wind_angle}")
 
 
-    # Update coordinate system
+    # Create new ROI coords for the updated coordinate system
     new_area_coords = convertCoords(area,wind_angle,'uv')
+
+    # Create new NFZ coords for the updated coordinate system
     new_NFZs = []
     for NFZ in NFZs:
         new_NFZ_coords = convertCoords(NFZ,wind_angle,'uv')
@@ -166,41 +168,39 @@ def createPasses(area,polygon_edges,NFZs,config):
     # Find camera footprint size
     # If GSD is available
     if config.altitude is None and config.ground_sample_distance is not None:
-        coverage_width = config.ground_sample_distance * camera.image_x
-        coverage_height = config.ground_sample_distance * camera.image_y
+        coverage_width, coverage_height = camera.get_coverage_size_gsd(config.ground_sample_distance)   # In metres
+        uav_altitude = camera.get_altitude(coverage_width)
 
-        uav_altitude = coverage_width *camera.focal_length/camera.sensor_x
-        max_uav_alt = (camera.image_x * (config.ground_sample_distance + config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x
-        min_uav_alt = (camera.image_x * (config.ground_sample_distance - config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x
+        max_uav_alt = camera.get_altitude_from_gsd(config.ground_sample_distance + config.ground_sample_distance/10)
+        min_uav_alt = camera.get_altitude_from_gsd(config.ground_sample_distance - config.ground_sample_distance/10)
 
         config.altitude = uav_altitude
 
     # If altitude is available
     elif config.altitude is not None and config.ground_sample_distance is None:
-        coverage_width = (camera.sensor_x*config.altitude/camera.focal_length)  # In meters
-        coverage_height = (camera.sensor_y*config.altitude/camera.focal_length) # In meters
+        coverage_width, coverage_height = camera.get_coverage_size_alt(config.altitude) # In meters
 
         uav_altitude = config.altitude
 
-        ground_sample_distance = uav_altitude*camera.sensor_x/(camera.focal_length * camera.image_x)    # Coverage width / image width
+        ground_sample_distance = camera.get_gsd_from_alt(uav_altitude)    # Get GSD
         config.ground_sample_distance = ground_sample_distance
-        max_uav_alt = (camera.image_x * (ground_sample_distance + config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
-        min_uav_alt = (camera.image_x * (ground_sample_distance - config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
+
+        max_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance + config.ground_sample_distance/10)
+        min_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance - config.ground_sample_distance/10)
 
     # If both have been initialised
     elif config.altitude is not None and config.ground_sample_distance is not None:     
-        coverage_width = (camera.sensor_x*config.altitude/camera.focal_length)          # In meters
-        coverage_height = (camera.sensor_y*config.altitude/camera.focal_length)         # In meters
+        coverage_width, coverage_height = camera.get_coverage_size_alt(config.altitude)        # In meters
 
         # Look for conflicts
         uav_altitude = config.altitude                                                  # In meters
-        ground_sample_distance = uav_altitude*camera.sensor_x/(camera.focal_length * camera.image_x)
+        ground_sample_distance = camera.get_gsd_from_alt(uav_altitude)
         if ground_sample_distance != config.ground_sample_distance:
             print(f"Conflict with GSD, taking altitude as true. New GSD: {ground_sample_distance}")
             config.ground_sample_distance = ground_sample_distance  # Sd
-        
-        max_uav_alt = (camera.image_x * (config.ground_sample_distance + config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
-        min_uav_alt = (camera.image_x * (config.ground_sample_distance - config.ground_sample_distance/10)) * camera.focal_length/camera.sensor_x # In meters
+            
+        max_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance + config.ground_sample_distance/10)
+        min_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance - config.ground_sample_distance/10)
 
     else:
         print("Requires atleast one value of altitude or gsd")
@@ -269,9 +269,6 @@ def createPasses(area,polygon_edges,NFZs,config):
     json.dump(settings,data,indent=4)
     data.close()
 
-    pass_file = open("src/intermediate/passes.txt",'w')
-    pass_file.write(f"ALTITUDE\t{uav_altitude}\t{max_alt_diff}\n")
-    pass_file.write(f"GSD\t{config.ground_sample_distance}\n")
 
     passes_data =  open("src/intermediate/passes.json","w")
     data = {}
@@ -319,14 +316,15 @@ def createPasses(area,polygon_edges,NFZs,config):
             if pass_length <= config.min_pass_length:               # Check to see if pass is to size
                 print("Pass length is too small")                   # If pass is too small, continue
                 continue
+            elif pass_length > config.max_pass_length:
+                print("Pass length is too large, aborting")
+                exit(1)
 
             v = start[1] + coverage_height/(2 * config.scale)  # Shift pass up by half the size of an image height
 
             start = convertCoords([[u,v]],wind_angle,'xy')
-            pass_file.write(f"{start[0][0]},{start[0][1]}\n")
 
             end = convertCoords([[u,v+pass_length]],wind_angle,'xy')
-            pass_file.write(f"{end[0][0]},{end[0][1]}\n")
 
             data['passes'].append({
                 'start':f'{start[0][0]},{start[0][1]}',
@@ -335,8 +333,6 @@ def createPasses(area,polygon_edges,NFZs,config):
             })
 
         u += distance_between_photos_width/config.scale          # Increase U value on each loop
-
-    pass_file.close()
     
     json.dump(data,passes_data,indent=4)
     passes_data.close()

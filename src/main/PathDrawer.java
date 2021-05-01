@@ -1,5 +1,7 @@
 package main;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvBuilder;
 import javafx.embed.swing.SwingNode;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -19,9 +21,11 @@ import java.awt.*;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
-import java.io.IOException;
+import java.io.*;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 import javafx.scene.text.TextAlignment;
@@ -69,7 +73,7 @@ public class PathDrawer{
     private Paint startMarkerPaint = Color.BLUE;
     private Paint textPaint = Color.WHITE;
     private Paint passPaint = Color.BLUE;
-    private Font markerFont = Font.font("Arial",FontPosture.ITALIC,15);//new Font("Arial", 16);
+    private Font markerFont = Font.font("Arial",FontPosture.ITALIC,15);
 
     private Button drawROI = new Button("Draw ROI");
     private Button drawNFZ = new Button("Draw NFZ");
@@ -80,6 +84,10 @@ public class PathDrawer{
     private GridPane buttonGridPane = new GridPane();
     private JXMapViewer mapViewer;
     private SwingNode sn;
+
+    DotenvBuilder dotenvBuilder = Dotenv.configure().directory("src/scripts").filename(".env");
+    Dotenv dotenv = dotenvBuilder.load();
+    private String API_KEY = dotenv.get("API_KEY");
 
     private String geocodeAPI = "https://maps.googleapis.com/maps/api/geocode/json?address=";
 
@@ -130,6 +138,7 @@ public class PathDrawer{
         buttonGridPane.getColumnConstraints().addAll(col15,col15,col15,col25,col25,col5);
         stack.setBackground(new Background(new BackgroundFill(Color.WHITE,CornerRadii.EMPTY,Insets.EMPTY)));
         gc.setFont(markerFont);
+
     }
 
     public StackPane createPathDrawer(BorderPane bp){
@@ -254,22 +263,39 @@ public class PathDrawer{
             @Override
             public void handle(MouseEvent event) {
                 if(!chooseLocation.getText().isEmpty()){
-                    String geocodeString = geocodeAPI;
                     try {
-                        URL url = new URL(geocodeAPI);
-                        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                        /*connection.setRequestMethod("GET");
-                        DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
-                        List<NameValuePair> urlParameters = new ArrayList<>();
-                        urlParameters.add(new BasicNameValuePair());
-                        dataOutputStream.writeBytes(urlParameters);
-                        InputStream inputStream = connection.getInputStream();
-                        BufferedReader bufferedReader =  new BufferedReader();*/
+                        // https://stackoverflow.com/questions/1359689/how-to-send-http-request-in-java
+                        // https://github.com/cdimascio/dotenv-java
+                        // https://jar-download.com/artifact-search/java-dotenv
+
+                        String locationString = chooseLocation.getText().replace(" ","+");
+                        URL url = new URL(geocodeAPI + locationString+"&key="+ API_KEY);
+                        URLConnection urlConnection = url.openConnection();
+                        InputStream inputStream =  urlConnection.getInputStream();
+                        BufferedReader bufferedReader =  new BufferedReader(new InputStreamReader(inputStream));
+                        String input;
+                        String geoCodeString = "";
+                        while((input = bufferedReader.readLine())!= null){ geoCodeString += input; }
+
+                        JSONObject geoData = new JSONObject(geoCodeString);
+                        JSONArray results = (JSONArray) geoData.get("results");
+                        JSONObject result = (JSONObject) results.get(0);
+                        JSONObject geometry = (JSONObject) result.get("geometry");
+                        JSONObject location = (JSONObject) geometry.get("location");
+
+                        BigDecimal lat = (BigDecimal) location.get("lat");
+                        BigDecimal lng = (BigDecimal) location.get("lng");
+
+                        Double latitude = lat.doubleValue();
+                        Double longitude = lng.doubleValue();
+
+                        GeoPosition position = new GeoPosition(latitude,longitude);
+                        mapViewer.setAddressLocation(position);
+                        mapViewer.setZoom(5);
+
                     } catch (IOException ioe) {
                         ioe.printStackTrace();
                     }
-                    //GeoPosition position = new GeoPosition();
-                    //mapViewer.setAddressLocation();
                 }
             }
         });

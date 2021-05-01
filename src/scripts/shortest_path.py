@@ -1,5 +1,8 @@
 # Shortest path
-# Use TSP to find shortest route
+"""
+Find the shortest path for the settings in the GUI
+Last Updated 1/5/21
+"""
 from Passes_TSP_GUI import *
 from create_terraces_GUI import *
 from create_passes_GUI import convertCoords
@@ -198,3 +201,7 @@ for spiral in spirals:
 json.dump(dubins_data,dubins_file,indent=4)
 
 dubins_file.close()
+
+with open("src/flight plan/output.txt",'w') as output:
+    output.write(repr(shortest_path))
+output.close()

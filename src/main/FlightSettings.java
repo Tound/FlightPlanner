@@ -94,9 +94,8 @@ public class FlightSettings {
 
     private static Stage dialog = new Stage();
     private static Label dialogMessage = new Label();
-    private Double scale;
     private Double minTerraceLength = 5.0;
-    private Double maxTerraceLength = 2500.0;
+    private Double maxTerraceLength = 5000.0;
 
     private Double uavMaxSpeed = 25.0;
 
@@ -269,7 +268,6 @@ public class FlightSettings {
         run.setAlignment(Pos.CENTER);
         run.setMaxWidth(Double.MAX_VALUE);
 
-        gp.setMaxWidth(Double.MAX_VALUE);
         GridPane.setColumnSpan(run,3);
         GridPane.setHalignment(run,HPos.CENTER);
         run.setId("run-button");
@@ -607,6 +605,7 @@ public class FlightSettings {
 
 
         gp.setPadding(new Insets(5,5,5,5));
+        gp.setMaxWidth(Double.MAX_VALUE);
         sp = new ScrollPane(gp);
         sp.setFitToWidth(true);
         sp.setMaxWidth(Double.MAX_VALUE);
@@ -746,7 +745,6 @@ public class FlightSettings {
         }catch (IOException | ParserConfigurationException | TransformerException ioe){
             ioe.printStackTrace();
         }
-
     }
 
     /**
@@ -777,7 +775,6 @@ public class FlightSettings {
 
         System.out.println("Distance = " + d);
         scale = d/pixelDistance;    // M/PX -> PX* SCALE = M
-        this.scale = scale;
         return scale;
     }
 

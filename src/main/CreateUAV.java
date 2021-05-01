@@ -65,8 +65,8 @@ public class CreateUAV {
         BorderPane.setAlignment(hb, Pos.CENTER);
         bp.setBottom(hb);
 
-        Scene dialogScene = new Scene(bp,400,100, Color.web("rgb(42, 45, 48)"));
-        dialogScene.setUserAgentStylesheet("src/style/menus.css");
+        Scene dialogScene = new Scene(bp,400,100);
+        dialogScene.setUserAgentStylesheet("style/menus.css");
         dialog.setScene(dialogScene);
 
         yes.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -104,7 +104,7 @@ public class CreateUAV {
         Label nameLabel =  new Label("Name:");
         Label weightLabel =  new Label("Weight (g):");
         Label turnRadiusLabel =  new Label("Turn Radius (m):");
-        Label maxInclineLabel =  new Label("Max incline/decline angle (deg):");
+        Label maxInclineLabel =  new Label("Max incline angle (deg):");
         Label batteryLabel =  new Label("Battery Type:");
         Label batteryCapacityLabel =  new Label("Battery Capacity (mAh):");
 
@@ -181,7 +181,7 @@ public class CreateUAV {
             }
         });
 
-        createScene = new Scene(gp,500,700, Color.GRAY);
+        createScene = new Scene(gp,500,700);
         createScene.setUserAgentStylesheet("style/menus.css");
         createStage.setScene(createScene);
         createStage.show();
