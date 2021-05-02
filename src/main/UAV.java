@@ -1,12 +1,18 @@
 package main;
 
+/**
+ * UAV class used to store properties for a specific
+ * UAV after parsing.
+ */
+
 public class UAV {
     private String name;
-    private String weight;
-    private String turnRad;
-    private String maxIncline;
-    private String battery;
-    private String capacity;
+    private String weight;          // Weight of the UAV in Kg
+    private String turnRad;         // Minimum turn radius of the UAV in metres
+    private String maxIncline;      // Max incline angle of the UAV in degrees
+    private String battery;         // Type of battery
+    private String capacity;        // Battery capacity in mAh
+
 
     public UAV(){
         this.name = "";

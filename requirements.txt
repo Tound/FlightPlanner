@@ -1,0 +1,6 @@
+matplotlib
+opensimplex
+scipy
+numpy
+shapely
+python-dotenv

@@ -1,15 +1,20 @@
 package main;
 
+/**
+ * Coordinate class used to store pixel coordinate values
+ * and relative GPS coordinates
+ */
 public class Coordinate {
     public double x;
     public double y;
     public double long_;
     public  double lat;
-    public Coordinate(double x,double y){//,double long_,double lat){
+    // If only the pixel coordinates are supplied
+    public Coordinate(double x,double y){
         this.x = x;
         this.y = y;
     }
-
+    // If pixel coordinates and GPS coordinates are supplied
     public Coordinate(double x, double y, double long_, double lat){
         this.x = x;
         this.y = y;

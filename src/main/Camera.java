@@ -1,12 +1,16 @@
 package main;
 
+/**
+ * Camera class used to store properties for a specific
+ * camera after parsing.
+ */
 public class Camera {
     private String name;
-    private String sensorX;
-    private String sensorY;
-    private String focalLength;
-    private String resolution;
-    private String aspectRatio;
+    private String sensorX;             // Sensor width in mm
+    private String sensorY;             // Sensor height in mm
+    private String focalLength;         // Camera focal length in mm
+    private String resolution;          // Camera resolution in Megapixels
+    private String aspectRatio;         // Camera aspect ratio (X:Y)
 
     public Camera(){
         this.name = "";

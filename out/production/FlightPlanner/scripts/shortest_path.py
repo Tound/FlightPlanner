@@ -151,10 +151,10 @@ for index,coord in enumerate(pass_coords):
     image_passes = createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
 
 
-start_time = time.clock()
+start_time = time.perf_counter()
 shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_incline_grad,glide_slope,start_loc,populationSize=population_size,generations=generations,mutationRate=0.3)
 
-end_time = time.clock() - start_time    # Calculate time taken to create passes and findest shortest route
+end_time = time.perf_counter() - start_time    # Calculate time taken to create passes and findest shortest route
 
 
 max_current_draw = 20   # Initialise the maximum current draw for the worst case scenario
