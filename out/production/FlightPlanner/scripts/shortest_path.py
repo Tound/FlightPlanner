@@ -1,5 +1,8 @@
 # Shortest path
-# Use TSP to find shortest route
+"""
+Find the shortest path for the settings in the GUI
+Last Updated 1/5/21
+"""
 from Passes_TSP_GUI import *
 from create_terraces_GUI import *
 from create_passes_GUI import convertCoords
@@ -148,10 +151,10 @@ for index,coord in enumerate(pass_coords):
     image_passes = createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
 
 
-start_time = time.clock()
+start_time = time.perf_counter()
 shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_incline_grad,glide_slope,start_loc,populationSize=population_size,generations=generations,mutationRate=0.3)
 
-end_time = time.clock() - start_time    # Calculate time taken to create passes and findest shortest route
+end_time = time.perf_counter() - start_time    # Calculate time taken to create passes and findest shortest route
 
 
 max_current_draw = 20   # Initialise the maximum current draw for the worst case scenario
@@ -198,3 +201,7 @@ for spiral in spirals:
 json.dump(dubins_data,dubins_file,indent=4)
 
 dubins_file.close()
+
+with open("src/flight plan/output.txt",'w') as output:
+    output.write(repr(shortest_path))
+output.close()

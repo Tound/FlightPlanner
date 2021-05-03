@@ -3,9 +3,13 @@
     <output-path>$PROJECT_DIR$/out/artifacts/FlightPlanner_jar</output-path>
     <root id="archive" name="FlightPlanner.jar">
       <element id="module-output" name="FlightPlanner" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/json-20210307.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/jxmapviewer2-2.7-SNAPSHOT.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/commons-logging-1.2/commons-logging-1.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/jxmapviewer2-2.7-SNAPSHOT.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/java-dotenv/annotations-13.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/java-dotenv/java-dotenv-5.2.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/java-dotenv/kotlin-stdlib-1.4.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/java-dotenv/kotlin-stdlib-common-1.4.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/assets/json-20210307.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

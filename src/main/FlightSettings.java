@@ -24,6 +24,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.jxmapviewer.JXMapViewer;
@@ -49,7 +50,7 @@ import java.util.Scanner;
 public class FlightSettings {
     private ScrollPane sp;
 
-    public final String uav_path = "src/UAVs";                  // Directory to save uav settings
+    public final String uav_path = "src/uavs";                  // Directory to save uav settings
     public final String cam_path = "src/cameras";               // Directory to save camera settings
     public final String settings_path = "src/flight_settings";  // Directory to save flight settings
     public final String project_path = "src/projects";          // To be implemented in V2
@@ -94,9 +95,8 @@ public class FlightSettings {
 
     private static Stage dialog = new Stage();
     private static Label dialogMessage = new Label();
-    private Double scale;
     private Double minTerraceLength = 5.0;
-    private Double maxTerraceLength = 2500.0;
+    private Double maxTerraceLength = 5000.0;
 
     private Double uavMaxSpeed = 25.0;
 
@@ -269,7 +269,6 @@ public class FlightSettings {
         run.setAlignment(Pos.CENTER);
         run.setMaxWidth(Double.MAX_VALUE);
 
-        gp.setMaxWidth(Double.MAX_VALUE);
         GridPane.setColumnSpan(run,3);
         GridPane.setHalignment(run,HPos.CENTER);
         run.setId("run-button");
@@ -581,7 +580,10 @@ public class FlightSettings {
                             altitudeWriter.close();
                             pathDrawer.drawPasses();
 
-                        }catch (IOException ioe){
+                        }catch (IOException | JSONException ioe){
+                            Dialog.showDialog("Error when reading intermediate files.\n\n" +
+                                            "Ensure that the src/intermediate/ directory is visible to the application.",
+                                    "Intermediate file error");
                             ioe.printStackTrace();
                         }
 
@@ -595,11 +597,17 @@ public class FlightSettings {
                                 pathDrawer.drawDubins(dubinsObject);
                                 dubins.close();
                             } catch (FileNotFoundException e) {
+                                Dialog.showDialog("Error with dubins.json.\n\n" +
+                                                "Ensure that the src/intermediate/dubins.json is visible to the application.",
+                                        "Read file error");
                                 e.printStackTrace();
                             }
                         }
                     }
                 }else{
+                    Dialog.showDialog("Unable to create a route.\n\n" +
+                                    "Ensure that all settings are correct and all directories are visible to the application.",
+                            "Cannot create a flight route");
                     System.out.println("Cannot create route");
                 }
             }
@@ -607,6 +615,7 @@ public class FlightSettings {
 
 
         gp.setPadding(new Insets(5,5,5,5));
+        gp.setMaxWidth(Double.MAX_VALUE);
         sp = new ScrollPane(gp);
         sp.setFitToWidth(true);
         sp.setMaxWidth(Double.MAX_VALUE);
@@ -665,6 +674,7 @@ public class FlightSettings {
         try {
             Runtime rt = Runtime.getRuntime();
             Process pr = rt.exec("python src/scripts/" + scriptName + ".py");
+            //Process pr = rt.exec("python src/scripts/" + scriptName + ".py");
             BufferedReader bf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
             BufferedReader stdError = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
             String line = "";
@@ -690,6 +700,9 @@ public class FlightSettings {
             return true;
         }catch (IOException ioe){
             System.out.println("Script error");
+            Dialog.showDialog("Unable to run src/scripts/" + scriptName + ".py.\n\n" +
+                            "Ensure that the src/scripts/ directory is visible to the application and the script exists.",
+                    "Script Error");
             return false;
         }
     }
@@ -744,9 +757,11 @@ public class FlightSettings {
             tr.transform(new DOMSource(dom),new StreamResult(new FileOutputStream("src/flight_settings/"+settingsName.getText()+".fsettings")));
 
         }catch (IOException | ParserConfigurationException | TransformerException ioe){
+            Dialog.showDialog("Unable to write to file and save settings.\n\n" +
+                            "Ensure that the src/flight_settings/ directory is visible to the application.",
+                    "Write settings error");
             ioe.printStackTrace();
         }
-
     }
 
     /**
@@ -777,7 +792,6 @@ public class FlightSettings {
 
         System.out.println("Distance = " + d);
         scale = d/pixelDistance;    // M/PX -> PX* SCALE = M
-        this.scale = scale;
         return scale;
     }
 

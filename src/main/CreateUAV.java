@@ -8,11 +8,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
@@ -28,8 +26,11 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 
+/**
+ * Class used to write UAV settings in an XML file
+ */
 public class CreateUAV {
-    private static Stage createStage = new Stage();
+    private static Stage createStage;
     private static Scene createScene;
     private static String path = "src/uavs";
     private static TextField name = new TextField();
@@ -40,24 +41,32 @@ public class CreateUAV {
     private static TextField batteryCapacity = new TextField();
 
     private static Stage dialog = new Stage();
-    private static Label dialogMessage = new Label("The filename "+ name.getText() +".uav already exists in "+path+".\n Would you like to overwrite?");
+    private static Label dialogMessage = new Label("The filename "+ name.getText() +
+            ".uav already exists in "+path+".\n Would you like to overwrite?");
 
     /**
      *  CreateUAV constructor
+     *  Class is used to write and save settings for the UAVs
      */
     public CreateUAV(){
+        createStage = new Stage();
         createStage.setTitle("UAV Setup");
         createStage.initModality(Modality.APPLICATION_MODAL);
         setupOverwriteDialog();
     }
 
+    /**
+     * Create a dialog box for file overwrites
+     */
     private void setupOverwriteDialog(){
         // Setup dialog box
         dialog.setTitle("Overwrite File?");
         dialog.initModality(Modality.APPLICATION_MODAL);
 
+        // Setup buttons
         Button yes = new Button("Yes");
         Button no = new Button("No");
+
         BorderPane bp = new BorderPane();
         bp.setCenter(dialogMessage);
         HBox hb = new HBox(yes, no);
@@ -65,19 +74,22 @@ public class CreateUAV {
         BorderPane.setAlignment(hb, Pos.CENTER);
         bp.setBottom(hb);
 
-        Scene dialogScene = new Scene(bp,400,100, Color.web("rgb(42, 45, 48)"));
-        dialogScene.setUserAgentStylesheet("src/style/menus.css");
+        Scene dialogScene = new Scene(bp,400,100);      // Create the scene for the dialog box
+        dialogScene.setUserAgentStylesheet("style/menus.css");      // Set the style for the dialog scene
         dialog.setScene(dialogScene);
 
+        // If overwrite is selected
         yes.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 System.out.println("Set overwrite to true");
-                writeUAV();
+                writeUAV();             // Write the settings
                 dialog.close();
-                createStage.close();
+                createStage.close();    // Close the dialog box
             }
         });
+
+        // If overwrite is not selected
         no.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -94,17 +106,18 @@ public class CreateUAV {
         GridPane gp = new GridPane();
         Text title =  new Text("Create a UAV:\nUAV Settings");
         title.setTextAlignment(TextAlignment.CENTER);
-        title.setId("title");
+        title.setId("title");           // Set CSS style for the title
         GridPane.setColumnSpan(title,3);
         GridPane.setHalignment(title, HPos.CENTER);
 
-        gp.setId("gridpane");
+        gp.setId("gridpane");           // Set CSS style ID for the gridpane
         gp.getStyleClass().add("grid");
 
+        // Create the labels for the menu
         Label nameLabel =  new Label("Name:");
         Label weightLabel =  new Label("Weight (g):");
         Label turnRadiusLabel =  new Label("Turn Radius (m):");
-        Label maxInclineLabel =  new Label("Max incline/decline angle (deg):");
+        Label maxInclineLabel =  new Label("Max incline angle (deg):");
         Label batteryLabel =  new Label("Battery Type:");
         Label batteryCapacityLabel =  new Label("Battery Capacity (mAh):");
 
@@ -115,19 +128,15 @@ public class CreateUAV {
         battery.setPromptText("Battery used in craft (Lipo, NiMH, Li-ion...)");
         batteryCapacity.setPromptText("Battery capacity in mAh");
 
+        // Create the buttons for the menu
         Button save = new Button("Save");
         Button cancel = new Button("Cancel");
         Button clear = new Button("Clear");
 
+        // Add all elements to the menu gridpane
         gp.add(title,0,0);
-        //title.setFont(Font.font("Arial", FontPosture.ITALIC, 24));
-        gp.add(name,1,1);
-        gp.add(weight,1,2);
-        gp.add(turnRadius,1,3);
-        gp.add(maxIncline,1,4);
-        gp.add(battery,1,5);
-        gp.add(batteryCapacity,1,6);
 
+        // Add the components to the menu gridpane
         gp.add(nameLabel,0,1);
         gp.add(weightLabel,0,2);
         gp.add(turnRadiusLabel,0,3);
@@ -135,6 +144,14 @@ public class CreateUAV {
         gp.add(batteryLabel,0,5);
         gp.add(batteryCapacityLabel,0,6);
 
+        gp.add(name,1,1);
+        gp.add(weight,1,2);
+        gp.add(turnRadius,1,3);
+        gp.add(maxIncline,1,4);
+        gp.add(battery,1,5);
+        gp.add(batteryCapacity,1,6);
+
+        // Add the buttons to the menu
         gp.add(save,0,7);
         gp.add(cancel,2,7);
         gp.add(clear,1,7);
@@ -143,25 +160,28 @@ public class CreateUAV {
         gp.setVgap(20);
         gp.setAlignment(Pos.CENTER);
 
+        // If the save button is pressed
         save.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-
+                // If a name has not been set
                 if(name.getText().isEmpty()){
                     System.out.println("Missing name for UAV");
                 }else {
                     File file = new File("src/uavs/"+name.getText()+".uav");
                     if(file.exists()){
-                        dialogMessage.setText("The filename "+ name.getText() + ".uav already exists in "+path+".\n Would you like to overwrite?");
+                        dialogMessage.setText("The filename "+ name.getText() +
+                                ".uav already exists in "+path+".\n Would you like to overwrite?");
                         dialog.show();
                     }else {
-                        writeUAV();
+                        writeUAV();      // Write the UAV settings
                         createStage.close();
                     }
                 }
             }
         });
 
+        // Close the menu
         cancel.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -169,6 +189,7 @@ public class CreateUAV {
             }
         });
 
+        // Clear all text fields
         clear.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -181,12 +202,15 @@ public class CreateUAV {
             }
         });
 
-        createScene = new Scene(gp,500,700, Color.GRAY);
-        createScene.setUserAgentStylesheet("style/menus.css");
+        createScene = new Scene(gp,500,700);
+        createScene.setUserAgentStylesheet("style/menus.css");  // Set the style of the menu
         createStage.setScene(createScene);
         createStage.show();
     }
 
+    /**
+     * Write UAV settings in an XML file
+     */
     public static void writeUAV(){
         System.out.println("Writing new UAV");
         Document dom;
@@ -198,32 +222,39 @@ public class CreateUAV {
             dom = documentBuilder.newDocument();
             Element rootElement = dom.createElement("UAV");
 
+            // Create the name tag and write the name data
             e = dom.createElement("name");
             e.appendChild(dom.createTextNode(name.getText()));
             rootElement.appendChild(e);
 
+            // Create the weight tag and write the weight data
             e = dom.createElement("weight");
             e.appendChild(dom.createTextNode(weight.getText()));
             rootElement.appendChild(e);
 
+            // Create the turn radius tag and write the turn radius data
             e = dom.createElement("turn_radius");
             e.appendChild(dom.createTextNode(turnRadius.getText()));
             rootElement.appendChild(e);
 
+            // Create the max incline angle tag and write the max incline angle data
             e = dom.createElement("max_incline");
             e.appendChild(dom.createTextNode(maxIncline.getText()));
             rootElement.appendChild(e);
 
+            // Create the battery type tag and write the battery type data
             e = dom.createElement("battery");
             e.appendChild(dom.createTextNode(battery.getText()));
             rootElement.appendChild(e);
 
+            // Create the battery capacity tag and write the battery capacity data
             e = dom.createElement("battery_capacity");
             e.appendChild(dom.createTextNode(batteryCapacity.getText()));
             rootElement.appendChild(e);
 
             dom.appendChild(rootElement);
 
+            // Set the transforms to make the XML document
             Transformer tr = TransformerFactory.newInstance().newTransformer();
             tr.setOutputProperty(OutputKeys.INDENT,"yes");
             tr.setOutputProperty(OutputKeys.METHOD,"xml");
@@ -231,12 +262,16 @@ public class CreateUAV {
             //tr.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,"uav.dtd");
             tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount","4");
 
-            tr.transform(new DOMSource(dom),new StreamResult(new FileOutputStream("src/uavs/"+name.getText()+".uav")));
+            // Write the data to the file
+            tr.transform(new DOMSource(dom),new StreamResult(
+                    new FileOutputStream("src/uavs/"+name.getText()+".uav")));
 
-        }catch (IOException | ParserConfigurationException | TransformerConfigurationException ioe){
+        }catch (IOException | ParserConfigurationException | TransformerException ioe){
             ioe.printStackTrace();
-        } catch (TransformerException transformerException) {
-            transformerException.printStackTrace();
+            // If error, show dialog box with the error message
+            // If error, show dialog box with the error message
+            Dialog.showDialog("Unable to write to write camera settings.\n\n" +
+                    "Ensure that " + path + " is visible by the application.","Unable to write settings");
         }
     }
 

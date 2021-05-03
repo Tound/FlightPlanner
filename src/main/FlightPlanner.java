@@ -36,7 +36,8 @@ public class FlightPlanner extends Application {
 
         title.setId("title");                               // Set the CSS style for the title
 
-        topGp.setMaxWidth(Double.MAX_VALUE);
+        topGp.setMaxWidth(Double.MAX_VALUE);                // Set width of gridpane to maximum
+        // Set wdith of buttons to maximum
         exportFlight.setMaxWidth(Double.MAX_VALUE);
         saveFlight.setMaxWidth(Double.MAX_VALUE);
         loadFlight.setMaxWidth(Double.MAX_VALUE);
@@ -52,7 +53,7 @@ public class FlightPlanner extends Application {
         // Add all elements to border pane
         bp.setTop(topGp);                                   // Add the gridpane to the top of the screen
         bp.setLeft(flightSettings.setupFlight());           // Add flight settings object to the left of the screen
-        bp.setCenter(pathDrawer.createPathDrawer(bp));      // Add the path drawer object to the center of the screen
+        bp.setCenter(pathDrawer.createPathDrawer());        // Add the path drawer object to the center of the screen
         // Add the about label to the bottom of the screen
         bp.setBottom(new Label("Created by Thomas Pound for the MEng Project Autopilot for Aerial Photography"));
 

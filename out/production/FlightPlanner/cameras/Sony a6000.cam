@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<camera>
+    <name>Sony a6000</name>
+    <sensor_x>23.5</sensor_x>
+    <sensor_y>15.6</sensor_y>
+    <focal_length>20</focal_length>
+    <resolution>24</resolution>
+    <aspect_ratio>3:2</aspect_ratio>
+</camera>

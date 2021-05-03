@@ -2,15 +2,16 @@
 """
 Main file to be called to create an efficient flight path for a polygon
 and corresponding NFZs for a given terrain
+Last updated 30/4/21
 """
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 from opensimplex import OpenSimplex
+from camera_calculations import *
 
 from create_passes_GUI import *
 from Passes_TSP_GUI import *
-from camera_calculations import *
 
 import time
 import sys
@@ -18,30 +19,16 @@ import traceback
 
 import json
 
-class Camera:
-    """
-    Camera class holds all camera settings for a specific flight
-    """
-    def __init__(self,sensor_x,sensor_y,focal_length,resolution,aspect_ratio,image_x=None,image_y=None,fov=None):
-        self.sensor_x = sensor_x
-        self.sensor_y = sensor_y
-        self.focal_length = focal_length
-        self.resolution = resolution
-        self.aspect_ratio = aspect_ratio
-        self.image_x = image_x
-        self.image_y = image_y
-        self.fov = fov
-
 class UAV:
     """
     UAV class holds all UAV settings for a specific flight
     """
     def __init__(self,weight,velocity,max_velocity,min_turn,max_incline_grad,heading_angle):
-        self.weight = weight
-        self.velocity = velocity
-        self.min_turn = min_turn
-        self.max_incline_grad = max_incline_grad
+        self.weight = weight                        # Weight of UAV in kg
+        self.velocity = velocity                    # Constant velocity of UAV in m/s
         self.max_velocity = max_velocity            # Maximum velocity of UAV in m/s
+        self.min_turn = min_turn                    # Minimum turn radius of the UAV in m
+        self.max_incline_grad = max_incline_grad    # Maximum incline gradient of the UAV
         self.heading_angle = heading_angle          # Required heading angle of UAV
 
 class Configuration:
@@ -50,15 +37,15 @@ class Configuration:
     including Camera object and UAV object
     """
     def __init__(self,uav,camera,side_overlap,wind_angle,scale,altitude,ground_sample_distance,min_pass_length,max_pass_length):
-        self.uav = uav
-        self.camera = camera
-        self.side_overlap = side_overlap
-        self.wind = wind
-        self.scale = scale
-        self.altitude = altitude
-        self.ground_sample_distance = ground_sample_distance
-        self.min_pass_length = min_pass_length
-        self.max_pass_length = max_pass_length
+        self.uav = uav                                              # UAV object used in the flight
+        self.camera = camera                                        # Camera object used in the flight
+        self.side_overlap = side_overlap                            # Side overlap of the images as a decimal
+        self.wind = wind                                            # Wind properties in the form (velocity (m/s), direction (radians))
+        self.scale = scale                                          # Scaling factor for pixels to metres
+        self.altitude = altitude                                    # Desired UAV altitude above the ground
+        self.ground_sample_distance = ground_sample_distance        # The desired ground sample distance in m/px
+        self.min_pass_length = min_pass_length                      # Minimum pass length in metres
+        self.max_pass_length = max_pass_length                      # Maximum pass length in metres
 
 
 
@@ -129,7 +116,6 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
     start_loc = [400,730,terrain[730][400]]
 
 else:
-    #print("Reading text file")
     # Read intermediate file
     try:
         data = open("src/intermediate/settings.json","r")
@@ -192,9 +178,6 @@ else:
         sys.stderr.write("Cannot find settings.json")
         exit(1)
 
-if scale == 0:
-    scale = 1
-
 # Viablility checks to ensure constant ground speed
 speed_required = math.sqrt(wind[0]*wind[0] + uav_speed*uav_speed)
 if speed_required > uav_max_speed:
@@ -208,6 +191,7 @@ else:
 
 # Create UAV, camera and configuration object and store all variables
 uav = UAV(uav_mass,uav_speed,uav_max_speed,min_turn,max_incline_angle,heading_angle)
+<<<<<<< HEAD
 
 image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
 
@@ -219,6 +203,9 @@ config = Configuration(uav,camera,side_overlap,forward_overlap,wind,scale,altitu
 config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance)
 >>>>>>> c54494fe9d43761faf2c10e40cd826be044028db
 =======
+=======
+camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio)
+>>>>>>> f6fa0659536e439757d2e6ac0d750dd80d0110b5
 config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance,min_pass_length,max_pass_length)
 >>>>>>> 44310f026a08c8e3c4d5706010ad54797d336d3a
 

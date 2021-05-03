@@ -1,11 +1,9 @@
-{
-    "settings":{
-        "uav_speed":"10",
-        "wind_speed": "5",
-        "wind_direction":"045",
-        "altitude":"120",
-        "forward_overlap":"20",
-        "side_overlap":"80",
-        "coverage_resolution":"0.02"
-    }
-}
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flight_settings>
+    <uav_speed>20</uav_speed>
+    <wind_speed>10</wind_speed>
+    <wind_direction>135</wind_direction>
+    <side_overlap>20</side_overlap>
+    <gsd>0.02</gsd>
+    <alititude/>
+</flight_settings>

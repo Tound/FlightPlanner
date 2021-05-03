@@ -16,6 +16,11 @@ import java.util.ArrayList;
 public class Parser {
     private static Object output;
 
+    /**
+     * Parse a UAV file
+     * @param nodeList
+     * @return
+     */
     public static UAV parseUAV(NodeList nodeList){
         UAV uavSettings = new UAV();
         for(int i=0;i<nodeList.getLength();i++) {
@@ -41,6 +46,11 @@ public class Parser {
         return uavSettings;
     }
 
+    /**
+     * Parse a camera file
+     * @param nodeList
+     * @return
+     */
     public static Camera parseCam(NodeList nodeList) {
         Camera camSettings = new Camera();
         for (int i = 0; i < nodeList.getLength(); i++) {
@@ -65,6 +75,12 @@ public class Parser {
         }
         return camSettings;
     }
+
+    /**
+     * Parse a settings file
+     * @param nodeList
+     * @return
+     */
     public static Settings parseSettings(NodeList nodeList){
         Settings flightSettings = new Settings();
         for(int i=0;i<nodeList.getLength();i++) {
@@ -90,60 +106,34 @@ public class Parser {
         return flightSettings;
     }
 
-    public static ArrayList<String> parseProject(NodeList nodeList){
-        ArrayList<String> projectSettings = new ArrayList<String>();
-        for(int i=0;i<nodeList.getLength();i++) {
-            Node node = nodeList.item(i);
-            System.out.println(node.getNodeName());
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                System.out.println(node.getNodeName() + "," + node.getTextContent());
-                /*if (node.getNodeName() == "name") {
-                    name = node.getTextContent();
-                } else if (node.getNodeName() == "weight") {
-                    weight = node.getTextContent();
-                } else if (node.getTextContent() == "turn_radius") {
-                    turnRad = node.getTextContent();
-                } else if () {
-
-                } else if () {
-
-                } else if () {
-
-                } else {
-                    System.out.println("");
-                }*/
-            }
-        }
-        return projectSettings;
-    }
-
+    /**
+     * Parse a file
+     * @param file
+     * @return
+     */
     public static Object parseFile(File file){
         try{
+            // Create an XML document parser
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(file);
             doc.normalize();
             doc.getDocumentElement().normalize();
             Element root = doc.getDocumentElement();
-            String rootName = root.getNodeName();
-            NodeList nodeList = root.getChildNodes();
-            if(rootName == "UAV"){
-                System.out.println("Parsing UAVs");
+            String rootName = root.getNodeName();       // Get name of the root
+            NodeList nodeList = root.getChildNodes();   // Get list of nodes
+
+            if(rootName == "UAV"){                      // If the root name matches from
                 output = parseUAV(nodeList);
             }else if(rootName == "camera"){
-                System.out.println("Parsing Camera");
                 output = parseCam(nodeList);
             }else if(rootName == "flight_settings"){
-                System.out.println("Parsing flight settings");
                 output = parseSettings(nodeList);
-            }else if(rootName == "project"){
-                System.out.println("Parsing project");
-                output = parseProject(nodeList);
             } else{
                 System.out.println("Unknown tag");
             }
         }catch (IOException | SAXException | ParserConfigurationException ioe){
-
+            ioe.printStackTrace();
         }
         return output;
     }
