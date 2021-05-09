@@ -72,6 +72,7 @@ public class CreateCamera {
 
         BorderPane bp = new BorderPane();
         bp.setCenter(dialogMessage);
+        bp.setId("border");         // Set CSS style ID
         HBox hb = new HBox(yes, no);
 
         BorderPane.setAlignment(hb, Pos.CENTER);
@@ -169,9 +170,9 @@ public class CreateCamera {
             public void handle(MouseEvent event) {
                 // If a name has not been set
                 if(name.getText().isEmpty()){
-                    System.out.println("Missing name for UAV");
+                    System.out.println("Missing name for Camera");
                 }else {
-                    File file = new File(path+name.getText()+".cam");
+                    File file = new File("src/cameras/"+name.getText()+".cam");
                     if(file.exists()){      // Show overwrite dialog if file name already exists
                         dialogMessage.setText("The filename "+ name.getText() +
                                 ".cam already exists in "+path+".\n Would you like to overwrite?");

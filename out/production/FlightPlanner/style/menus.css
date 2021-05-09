@@ -4,11 +4,6 @@
     -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 10, 0.0 , 0 , 5 );
 }
 
-/*.text{
-    -fx-font: italic 16px "Arial";
-    -fx-fill: white;
-}*/
-
 .button{
     -fx-background-color: black;
     -fx-font: 16px "Arial";
@@ -46,12 +41,4 @@
     -fx-background-radius: 0 ;
     -fx-font: italic 16px "Arial";
     -fx-text-fill: white;
-    //-fx-background-color: transparent;
-    //-fx-text-box-border:
-
-}
-.text-field:focused{
-    //-fx-pref-height: 1;
-    //-fx-background-color:black;
-    //-fx-scale: 250%;
 }

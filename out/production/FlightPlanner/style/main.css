@@ -21,12 +21,6 @@
     //-fx-background-color: radial-gradient(focus-distance 0% , center 50% 50% , radius 55% ,#2b2b2b, #1c1c1c);
 }
 
-//only does button text
-/*.text{
-    -fx-font: italic 16px "Arial";
-    -fx-fill: white;
-}*/
-
 .label{
     -fx-font: bold 12px "Arial";
     -fx-text-fill: white;
@@ -66,10 +60,8 @@
     -fx-padding: 10;
     -fx-text-fill: white;
     -fx-font: 32 "Arial";
-    //-fx-text-alignment: center;
     -fx-background-radius: 10px;
     -fx-font-style: italic;
-    //-fx-pref-width:50;
 }
 #run-button:hover{
     -fx-background-color: white;

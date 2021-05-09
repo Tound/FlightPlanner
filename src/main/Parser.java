@@ -11,15 +11,18 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
+/**
+ * XML parser for parsing UAV, camera and flight settings
+ */
 public class Parser {
-    private static Object output;
+
+    private static Object output;   // Parser output
 
     /**
      * Parse a UAV file
-     * @param nodeList
-     * @return
+     * @param nodeList - XML nodelist from user chosen file
+     * @return uavSettings - Parsed UAV settings
      */
     public static UAV parseUAV(NodeList nodeList){
         UAV uavSettings = new UAV();
@@ -48,8 +51,8 @@ public class Parser {
 
     /**
      * Parse a camera file
-     * @param nodeList
-     * @return
+     * @param nodeList - XML nodelist from user chosen file
+     * @return camSettings - Parsed camera settings
      */
     public static Camera parseCam(NodeList nodeList) {
         Camera camSettings = new Camera();
@@ -78,8 +81,8 @@ public class Parser {
 
     /**
      * Parse a settings file
-     * @param nodeList
-     * @return
+     * @param nodeList - XML nodelist from user chosen file
+     * @return flightSettings - Parsed flight settings
      */
     public static Settings parseSettings(NodeList nodeList){
         Settings flightSettings = new Settings();
@@ -108,8 +111,8 @@ public class Parser {
 
     /**
      * Parse a file
-     * @param file
-     * @return
+     * @param file - User chosen file to parse
+     * @return output - Either a UAV, camera or settings object depending on the file being parsed
      */
     public static Object parseFile(File file){
         try{
@@ -119,15 +122,16 @@ public class Parser {
             Document doc = dBuilder.parse(file);
             doc.normalize();
             doc.getDocumentElement().normalize();
+
             Element root = doc.getDocumentElement();
             String rootName = root.getNodeName();       // Get name of the root
             NodeList nodeList = root.getChildNodes();   // Get list of nodes
 
-            if(rootName == "UAV"){                      // If the root name matches from
+            if(rootName == "UAV"){                      // If the root name matches UAV
                 output = parseUAV(nodeList);
-            }else if(rootName == "camera"){
+            }else if(rootName == "camera"){             // If the root name matches camera
                 output = parseCam(nodeList);
-            }else if(rootName == "flight_settings"){
+            }else if(rootName == "flight_settings"){    // If the root name matches flight settings
                 output = parseSettings(nodeList);
             } else{
                 System.out.println("Unknown tag");
@@ -137,5 +141,4 @@ public class Parser {
         }
         return output;
     }
-
 }

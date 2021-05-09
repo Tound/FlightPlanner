@@ -55,6 +55,7 @@ public class FlightSettings {
     public final String settings_path = "src/flight_settings";  // Directory to save flight settings
     public final String project_path = "src/projects";          // To be implemented in V2
 
+    // Create all text fields
     private TextField uavName = new TextField();
     private TextField uavWeight = new TextField();
     private TextField uavMinRadius = new TextField();
@@ -138,15 +139,18 @@ public class FlightSettings {
         setupOverwriteDialog();
     }
 
+    /**
+     * Create save menu for the flight settings
+     */
     private void createSaveMenu(){
         GridPane gp = new GridPane();
         Text title =  new Text("Name the settings");
         title.setTextAlignment(TextAlignment.CENTER);
-        title.setId("title");
+        title.setId("title");               // Set CSS style ID
         GridPane.setColumnSpan(title,3);
         GridPane.setHalignment(title, HPos.CENTER);
 
-        gp.setId("gridpane");
+        gp.setId("gridpane");               // Set CSS style ID
         gp.getStyleClass().add("grid");
 
         Label nameLabel =  new Label("Name:");
@@ -155,6 +159,7 @@ public class FlightSettings {
         Button saveSettings = new Button("Save");       // Create save settings button
         Button cancel = new Button("Cancel");           // Create cancel button
 
+        // Add elements to gridpane
         gp.add(title,0,0);
         gp.add(settingsName,1,1);
 
@@ -163,6 +168,7 @@ public class FlightSettings {
         gp.add(saveSettings,0,2);
         gp.add(cancel,2,2);
 
+        // Set gridpane properties
         gp.setHgap(10);
         gp.setVgap(5);
         gp.setAlignment(Pos.CENTER);
@@ -173,12 +179,15 @@ public class FlightSettings {
             public void handle(MouseEvent event) {
                 if(settingsName.getText().isEmpty()){
                     System.out.println("Missing name for settings");
-                }else {
+                }
+                else {
                     File file = new File("src/flight_settings/" + settingsName.getText() + ".fsettings");
-                    if(file.exists()){
-                        dialogMessage.setText("The filename "+ settingsName.getText() + ".fsettings already exists in " + settings_path + ".\n Would you like to overwrite?");
-                        dialog.show();
-                    }else {
+                    if(file.exists()){          // Check if file already exists
+                        dialogMessage.setText("The filename "+ settingsName.getText() + ".fsettings already exists in "
+                                + settings_path + ".\n Would you like to overwrite?");
+                        dialog.show();      // Show overwrite dialog box
+                    }
+                    else {
                         saveSettings();
                         createStage.close();
                     }
@@ -194,7 +203,7 @@ public class FlightSettings {
         });
 
         createScene = new Scene(gp,400,100);
-        createScene.setUserAgentStylesheet("style/menus.css");
+        createScene.setUserAgentStylesheet("style/menus.css"); // Set the style of the menu
         createStage.setScene(createScene);
     }
 
@@ -206,6 +215,7 @@ public class FlightSettings {
         dialog.setTitle("Overwrite File?");
         dialog.initModality(Modality.APPLICATION_MODAL);
 
+        // Create buttons
         Button yes = new Button("Yes");
         Button no = new Button("No");
         BorderPane bp = new BorderPane();
@@ -215,8 +225,8 @@ public class FlightSettings {
         BorderPane.setAlignment(hb, Pos.CENTER);
         bp.setBottom(hb);
 
-        Scene dialogScene = new Scene(bp,400,100, Color.web("rgb(42, 45, 48)"));
-        dialogScene.setUserAgentStylesheet("style/menus.css");
+        Scene dialogScene = new Scene(bp,400,100);
+        dialogScene.setUserAgentStylesheet("style/menus.css"); // Setup the style
         dialog.setScene(dialogScene);
 
         yes.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -250,14 +260,15 @@ public class FlightSettings {
         CreateCamera createCamera = new CreateCamera();
 
         GridPane gp = new GridPane();
-        //Titles
+        // Titles
         Text flightSettingsTitle = new Text("Flight Setup");
-        flightSettingsTitle.setId("subtitle");
         Text uavSettings = new Text("UAV Setup");
         Text cameraSettings = new Text("Camera Setup");
         Text flightSettings = new Text("Flight Settings");
         Text gaSettings = new Text("GA Settings");
 
+        // Setup styling for all subtitles
+        flightSettingsTitle.setId("subtitle");
         uavSettings.setId("subsubtitle");
         cameraSettings.setId("subsubtitle");
         flightSettings.setId("subsubtitle");
@@ -269,9 +280,10 @@ public class FlightSettings {
         run.setAlignment(Pos.CENTER);
         run.setMaxWidth(Double.MAX_VALUE);
 
+        // Rub button properties
         GridPane.setColumnSpan(run,3);
         GridPane.setHalignment(run,HPos.CENTER);
-        run.setId("run-button");
+        run.setId("run-button");            // Set run button styling
 
         // Set up column span for all elements
         GridPane.setColumnSpan(uavName,2);
@@ -429,15 +441,16 @@ public class FlightSettings {
         gp.add(generationsLabel,0,27);
         gp.add(generations,1,27);
 
-
         gp.add(run,0,28);
 
+        // When create UAV button is pressed
         newUAV.setOnMouseClicked(new EventHandler<MouseEvent>(){
             @Override
             public void handle(MouseEvent event) {
                 createUAV.newUAV();
             }
         });
+        // When create camera button is pressed
         newCam.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -445,16 +458,19 @@ public class FlightSettings {
             }
         });
 
+        // When load UAV button is pressed
         loadUAV.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                fileChooser.setInitialDirectory(new File(uav_path));
-                FileChooser.ExtensionFilter uavFilter = new FileChooser.ExtensionFilter("UAV Files (*.uav)","*.uav");
+                fileChooser.setInitialDirectory(new File(uav_path));    // Create a file chooser window
+                FileChooser.ExtensionFilter uavFilter = new FileChooser.ExtensionFilter(
+                        "UAV Files (*.uav)","*.uav");
                 fileChooser.getExtensionFilters().add(uavFilter);
                 fileChooser.setSelectedExtensionFilter(uavFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
                 if(file != null) {
-                    UAV uav = (UAV) Parser.parseFile(file);
+                    UAV uav = (UAV) Parser.parseFile(file);     // Parse the UAV file
+                    // Get all settings
                     uavName.setText(uav.getName());
                     uavWeight.setText(uav.getWeight());
                     uavMinRadius.setText(uav.getTurnRad());
@@ -465,16 +481,19 @@ public class FlightSettings {
             }
         });
 
+        // When load Camera button is pressed
         loadCam.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                fileChooser.setInitialDirectory(new File(cam_path));
-                FileChooser.ExtensionFilter camFilter = new FileChooser.ExtensionFilter("Camera Files (*.cam)","*.cam");
+                fileChooser.setInitialDirectory(new File(cam_path));     // Create a file chooser window
+                FileChooser.ExtensionFilter camFilter = new FileChooser.ExtensionFilter(
+                        "Camera Files (*.cam)","*.cam");
                 fileChooser.getExtensionFilters().add(camFilter);
                 fileChooser.setSelectedExtensionFilter(camFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
                 if(file != null) {
-                    Camera camera = (Camera) Parser.parseFile(file);
+                    Camera camera = (Camera) Parser.parseFile(file);      // Parse the cam file
+                    // Get all settings
                     camName.setText(camera.getName());
                     camSensorX.setText(camera.getSensorX());
                     camSensorY.setText(camera.getSensorY());
@@ -492,6 +511,7 @@ public class FlightSettings {
             }
         });
 
+        // Apply defaults
         defaultSettings.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -505,13 +525,15 @@ public class FlightSettings {
         loadFlightSettings.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                fileChooser.setInitialDirectory(new File(settings_path));
-                FileChooser.ExtensionFilter settingsFilter = new FileChooser.ExtensionFilter("Settings Files (*.fsettings)","*.fsettings");
+                fileChooser.setInitialDirectory(new File(settings_path));      // Create a file chooser window
+                FileChooser.ExtensionFilter settingsFilter = new FileChooser.ExtensionFilter(
+                        "Settings Files (*.fsettings)","*.fsettings");
                 fileChooser.getExtensionFilters().add(settingsFilter);
                 fileChooser.setSelectedExtensionFilter(settingsFilter);
                 File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
                 if(file != null) {
-                    Settings settings = (Settings) Parser.parseFile(file);
+                    Settings settings = (Settings) Parser.parseFile(file);       // Parse the settings file
+                    // Save the settings
                     uavSpeed.setText(settings.getUavSpeed());
                     windSpeed.setText(settings.getWindSpeed());
                     windDirection.setText(settings.getWindDirection());
@@ -526,8 +548,9 @@ public class FlightSettings {
             @Override
             public void handle(MouseEvent event) {
                 if(writeSettings()) { // If settings were written successfully
-                    // Screenshot
+                    // Screenshot used for visualiser in V2 of software
                     try {
+                        // Save image and write to intermediate file
                         File file = new File("src/intermediate/map.png");   // Screenshot for 3D representation in V2
                         WritableImage writableImage = pathDrawer.getMapNode().snapshot(new SnapshotParameters(), null);
                         RenderedImage renderedImage = SwingFXUtils.fromFXImage(writableImage, null);
@@ -546,57 +569,71 @@ public class FlightSettings {
 
                             String passesContent = "";
                             String settingsContent = "";
+                            // Read contents of JSON files to a JSON string
                             while(passes.hasNextLine()){ passesContent += passes.nextLine(); }
                             while(settings.hasNextLine()){ settingsContent += settings.nextLine(); }
 
+                            // Obtain JSON objects from the JSON strings
                             JSONObject passesJSON = new JSONObject(passesContent);
                             JSONObject settingsJSON =  new JSONObject(settingsContent);
                             JSONArray passesArray = (JSONArray) passesJSON.get("passes");
 
-                            groundSampleDistance.setText(settingsJSON.get("gsd").toString());  // Round to 2 decimal places
+                            // Get GSD and altitude from JSON settings files
+                            groundSampleDistance.setText(settingsJSON.get("gsd").toString());
                             altitude.setText(settingsJSON.get("altitude").toString());
 
                             JSONObject altitudeGPS = new JSONObject();
                             JSONArray altitudeArray = new JSONArray();
 
+                            // Cycle through all passes
                             for(int i = 0; i<passesArray.length();i++) {
                                 JSONObject pass = (JSONObject) passesArray.get(i);
                                 String start = pass.get("start").toString();
                                 String end = pass.get("end").toString();
 
+                                // Get start and end coords of passes
                                 String[] startValues = start.split(",");
                                 String[] endValues = end.split(",");
 
+                                // Flip the coords to get the canvas relative points
                                 Coordinate coord1 = flipCoords(Double.parseDouble(startValues[0]), Double.parseDouble(startValues[1]));
                                 Coordinate coord2 = flipCoords(Double.parseDouble(endValues[0]), Double.parseDouble(endValues[1]));
                                 pathDrawer.addPassCoords(coord1, coord2);
+
+                                // Get altitude coords for the start and end of the passes
                                 altitudeArray = createAltitudeCoords(altitudeArray, coord1, coord2);
                             }
                             passes.close();
                             settings.close();
 
                             altitudeGPS.put("gps",altitudeArray);
-                            altitudeWriter.write(altitudeGPS.toString());
+                            altitudeWriter.write(altitudeGPS.toString());       // Write altitude data to JSON file
                             altitudeWriter.close();
-                            pathDrawer.drawPasses();
+                            pathDrawer.drawPasses();                            // Draw the passes on the canvas
 
                         }catch (IOException | JSONException ioe){
+                            // If there is an error, show dialog box
                             Dialog.showDialog("Error when reading intermediate files.\n\n" +
                                             "Ensure that the src/intermediate/ directory is visible to the application.",
                                     "Intermediate file error");
                             ioe.printStackTrace();
                         }
 
+                        // Run the script to find the shortest route
                         if(runScript("shortest_path")) {
                             System.out.println("Drawn passes");
                             try {
+                                // Read dubins JSON file
                                 Scanner dubins = new Scanner(new File("src/intermediate/dubins.json"));
                                 String dubinsContent = "";
+                                // Read the JSON file and create string of contents
                                 while(dubins.hasNextLine()){ dubinsContent += dubins.nextLine(); }
+
                                 JSONObject dubinsObject = new JSONObject(dubinsContent);
-                                pathDrawer.drawDubins(dubinsObject);
+                                pathDrawer.drawDubins(dubinsObject);    // Draw the dubins paths
                                 dubins.close();
                             } catch (FileNotFoundException e) {
+                                // If there is an error, show dialog box
                                 Dialog.showDialog("Error with dubins.json.\n\n" +
                                                 "Ensure that the src/intermediate/dubins.json is visible to the application.",
                                         "Read file error");
@@ -605,6 +642,7 @@ public class FlightSettings {
                         }
                     }
                 }else{
+                    // If there is an error, show dialog box
                     Dialog.showDialog("Unable to create a route.\n\n" +
                                     "Ensure that all settings are correct and all directories are visible to the application.",
                             "Cannot create a flight route");
@@ -613,9 +651,11 @@ public class FlightSettings {
             }
         });
 
-
+        // Set the properties of the gridpane
         gp.setPadding(new Insets(5,5,5,5));
         gp.setMaxWidth(Double.MAX_VALUE);
+
+        // Add gridpane of settings to the scrollpane
         sp = new ScrollPane(gp);
         sp.setFitToWidth(true);
         sp.setMaxWidth(Double.MAX_VALUE);
@@ -637,11 +677,12 @@ public class FlightSettings {
         JXMapViewer mapViewer = pathDrawer.getMap();
         JSONObject jsonObject = new JSONObject();
 
-        Point2D point = new Point((int)coord1.getX(),(int)coord1.getY()); // This takes the closest pixel which loses accuracy
+        Point2D point = new Point((int)coord1.getX(),(int)coord1.getY());   // This takes the closest pixel which loses accuracy
         GeoPosition position = mapViewer.convertPointToGeoPosition(point);
-        Point2D point2 = new Point((int)coord2.getX(),(int)coord2.getY()); // This takes the closest pixel which loses accuracy
+        Point2D point2 = new Point((int)coord2.getX(),(int)coord2.getY());  // This takes the closest pixel which loses accuracy
         GeoPosition position2 = mapViewer.convertPointToGeoPosition(point2);
 
+        // Add GPS data to JSON file
         jsonObject.put("lat1",position.getLatitude());
         jsonObject.put("long1", position.getLongitude());
         jsonObject.put("lat2", position2.getLatitude());
@@ -659,7 +700,7 @@ public class FlightSettings {
      */
     public Coordinate flipCoords(Double coord1,Double coord2){
         Double flippedY = this.pathDrawer.getCanvas().getHeight() - coord2; // Remove the Y coordinate from the canvas height
-        Coordinate coordinate = new Coordinate(coord1,flippedY);    // Create new coordinate with updated coordinates
+        Coordinate coordinate = new Coordinate(coord1,flippedY);            // Create new coordinate with updated coordinates
         return coordinate;
     }
 
@@ -674,32 +715,44 @@ public class FlightSettings {
         try {
             Runtime rt = Runtime.getRuntime();
             Process pr = rt.exec("python src/scripts/" + scriptName + ".py");
-            //Process pr = rt.exec("python src/scripts/" + scriptName + ".py");
+
+            // Uncomment for python3 command
+            //Process pr = rt.exec("python3 src/scripts/" + scriptName + ".py");
+
             BufferedReader bf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
             BufferedReader stdError = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
             String line = "";
             String dialogMessage = "";
+
+            // Get the output of the script
             while ((line = bf.readLine()) != null) {
                 System.out.println(line);
                 dialogMessage = dialogMessage + line + "\n";
             }
+            // If there is an error in the scripts
             if(stdError.ready()) {
                 String errorMessage = "";
+                // Get error message
                 while ((line = stdError.readLine()) != null) {
                     errorMessage = errorMessage + line + "\n";
                 }
+
+                // Print error in dialog box
                 if(errorMessage != null) {
                     errorMessage = "Script error in " + scriptName + ":\n" + errorMessage;
                     Dialog.showDialog(errorMessage,"Script error");
                     return false;
                 }
             }
+            // If the shortest path script has been ran, print the flight stats
             if(scriptName == "shortest_path") {
                 Dialog.showDialog(dialogMessage, "Script output");
             }
             return true;
-        }catch (IOException ioe){
+        }
+        catch (IOException ioe){
             System.out.println("Script error");
+            // If error, show dialog box with error
             Dialog.showDialog("Unable to run src/scripts/" + scriptName + ".py.\n\n" +
                             "Ensure that the src/scripts/ directory is visible to the application and the script exists.",
                     "Script Error");
@@ -717,7 +770,9 @@ public class FlightSettings {
         Element e = null;
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+
         try {
+            // Populate the XML file
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
             dom = documentBuilder.newDocument();
             Element rootElement = dom.createElement("flight_settings");
@@ -754,9 +809,12 @@ public class FlightSettings {
             tr.setOutputProperty(OutputKeys.ENCODING,"UTF-8");
             tr.setOutputProperty("{http://xml.apache.org/xslt}indent-amount","4");
 
-            tr.transform(new DOMSource(dom),new StreamResult(new FileOutputStream("src/flight_settings/"+settingsName.getText()+".fsettings")));
+            // Write XML data to file
+            tr.transform(new DOMSource(dom),new StreamResult(new FileOutputStream(
+                    "src/flight_settings/"+settingsName.getText()+".fsettings")));
 
         }catch (IOException | ParserConfigurationException | TransformerException ioe){
+            // If error, show dialog with error message
             Dialog.showDialog("Unable to write to file and save settings.\n\n" +
                             "Ensure that the src/flight_settings/ directory is visible to the application.",
                     "Write settings error");
@@ -783,15 +841,16 @@ public class FlightSettings {
         Double dy = coordinates.get(1).getY() - coordinates.get(0).getY();
         Double pixelDistance = Math.sqrt(dx*dx + dy*dy);
 
+        // Get difference in GPS coords
         Double dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
         Double dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
         Double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                         Math.sin(dLon/2) * Math.sin(dLon/2);
         Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        Double d = radiusEarth * c * 1000;
+        Double d = radiusEarth * c * 1000;      // Convert to metres
 
         System.out.println("Distance = " + d);
-        scale = d/pixelDistance;    // M/PX -> PX* SCALE = M
+        scale = d/pixelDistance;    // Calculate scaling factor
         return scale;
     }
 
@@ -809,7 +868,10 @@ public class FlightSettings {
         if(altitude.getText().isEmpty() && groundSampleDistance.getText().isEmpty()){
             errorString = errorString + "Altitude or Coverage Resolution,";
         }
+
+        // Check all settings for value
         if(windSpeed.getText().isEmpty()){
+            // If wind is not set, set to 0
             windSpeed.setText("0");
             windDirection.setText("0");
         }
@@ -859,7 +921,6 @@ public class FlightSettings {
             errorString = errorString + "Area of Interest,";
         }
 
-
         // If errors were caught
         if(errorString != ""){
             errorString = errorString.substring(0,errorString.length()-1);  // Remove final comma from string
@@ -876,6 +937,7 @@ public class FlightSettings {
 
                 JSONObject jsonObject = new JSONObject();
 
+                // Add all settings to JSON file
                 jsonObject.put("scale",scale);
                 jsonObject.put("uav_weight",uavWeight.getText());
                 jsonObject.put("uav_min_radius",uavMinRadius.getText());
@@ -898,10 +960,8 @@ public class FlightSettings {
                 jsonObject.put("generations",generations.getText());
                 jsonObject.put("uav_max_speed",uavMaxSpeed);
 
-
                 Coordinate startLoc = pathDrawer.getRealStartPoint();
                 jsonObject.put("start_loc",startLoc.getX() +","+startLoc.getY());
-
 
                 Coordinate startPoint = pathDrawer.getStartPoint();
                 Point start = new Point((int)startPoint.getX(),(int)startPoint.getY());
@@ -910,20 +970,24 @@ public class FlightSettings {
                 // Add start location gps points to JSON data
                 jsonObject.put("start_loc_gps",position.getLatitude() + "," + position.getLongitude());
 
-
                 JSONArray pointsArray = new JSONArray();
+
+                // Cycle through each point of the ROI
                 for(int i=0;i<points.size();i++){
-                    pointsArray.put(points.get(i).getX() + "," + points.get(i).getY());
+                    pointsArray.put(points.get(i).getX() + "," + points.get(i).getY()); // Add points to JSON file
                 }
                 jsonObject.put("points",pointsArray);
 
                 // If there are NFZs
                 if (allNFZPoints.size() > 0) {
                     JSONArray nfzArray = new JSONArray();
+                    // Cycle through NFZs
                     for (int i = 0; i < allNFZPoints.size(); i++) {
                         JSONArray nfzPointsJSON = new JSONArray();
                         ArrayList<Coordinate> nfzPoint = allNFZPoints.get(i);
+                        // Cycle through each point on NFZ
                         for (int j = 0; j < nfzPoint.size(); j++) {
+                            // Add each point to the JSON file
                             nfzPointsJSON.put(nfzPoint.get(j).x + "," + nfzPoint.get(j).y);
                         }
                         nfzArray.put(nfzPointsJSON);
@@ -937,6 +1001,7 @@ public class FlightSettings {
                 writer.close();
 
             } catch (IOException ioe) { // Catch error if file cannot be written to
+                // If errors were found, write error message in dialog box
                 Dialog.showDialog("Unable to write to file and save settings.\n\n" +
                         "Ensure that the src/intermediate/ directory is visible to the application.",
                         "Write settings error");
@@ -945,6 +1010,4 @@ public class FlightSettings {
         }
         return true;    // Return true if no errors were found and settings were written to the file
     }
-
-
 }

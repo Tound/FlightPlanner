@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<camera>
+    <name>test</name>
+    <sensor_x>2</sensor_x>
+    <sensor_y>2</sensor_y>
+    <focal_length>2</focal_length>
+    <resolution>2</resolution>
+    <aspect_ratio>2</aspect_ratio>
+</camera>

@@ -50,13 +50,13 @@ public class PathDrawer{
     private Canvas canvas;
     private StackPane stack;
     private GraphicsContext gc;
-    private ArrayList<Coordinate> canvasPoints = new ArrayList<Coordinate>();               // Arraylist of ROI points
-    private ArrayList<Coordinate> realPoints = new ArrayList<Coordinate>();                 // Arraylist of ROI points for scripts
-    private ArrayList<Coordinate> nfzPoints = new ArrayList<Coordinate>();                  // Arraylist of NFZ points
-    private ArrayList<Coordinate> realNfzPoints = new ArrayList<Coordinate>();              // Arraylist of NFZ points for scripts
-    private ArrayList<ArrayList<Coordinate>> allNFZPoints = new ArrayList<ArrayList<Coordinate>>();    // Arraylist of points for all NFZs
-    private ArrayList<ArrayList<Coordinate>> allRealNFZPoints = new ArrayList<ArrayList<Coordinate>>();// For scripts
-    private ArrayList<ArrayList<Coordinate>> passCoords = new ArrayList<ArrayList<Coordinate>>();      // List of the coordinates of passes
+    private ArrayList<Coordinate> canvasPoints = new ArrayList<Coordinate>();                           // Arraylist of ROI points
+    private ArrayList<Coordinate> realPoints = new ArrayList<Coordinate>();                             // Arraylist of ROI points for scripts
+    private ArrayList<Coordinate> nfzPoints = new ArrayList<Coordinate>();                              // Arraylist of NFZ points
+    private ArrayList<Coordinate> realNfzPoints = new ArrayList<Coordinate>();                          // Arraylist of NFZ points for scripts
+    private ArrayList<ArrayList<Coordinate>> allNFZPoints = new ArrayList<ArrayList<Coordinate>>();     // Arraylist of points for all NFZs
+    private ArrayList<ArrayList<Coordinate>> allRealNFZPoints = new ArrayList<ArrayList<Coordinate>>(); // For scripts
+    private ArrayList<ArrayList<Coordinate>> passCoords = new ArrayList<ArrayList<Coordinate>>();       // List of the coordinates of passes
     private Coordinate startPoint = null;           // Coordinate of takeoff and land point
     private Coordinate realStartPoint = null;       // Coordinate of takeoff relative to the scripts
 
@@ -87,7 +87,7 @@ public class PathDrawer{
     private Button findButton = new Button("Find");
 
     private TextField chooseLocation = new TextField(); // Textfield for the user to choose location
-    private GridPane buttonGridPane = new GridPane();   // New gridpan for the buttons
+    private GridPane buttonGridPane = new GridPane();   // New gridpane for the buttons
     private JXMapViewer mapViewer;                      // Interactive map
     private SwingNode sn;                               // Swing node to hold the map
 
@@ -112,10 +112,10 @@ public class PathDrawer{
 
         canvas.setFocusTraversable(true);
 
-        sn = addMap();
-        sn.setPickOnBounds(false);
-        stack.getChildren().addAll(sn,buttonGridPane);
-        buttonGridPane.setPickOnBounds(false);
+        sn = addMap();                                  // Get interactive map
+        sn.setPickOnBounds(false);                      // Allow areas to be pressed outside of the map bounds
+        stack.getChildren().addAll(sn,buttonGridPane);  // Add the map and the button bar
+        buttonGridPane.setPickOnBounds(false);          // Allow areas to be accessed outside of button bar
 
         // Add elements to the button gridpane
         buttonGridPane.add(drawROI,0,0);
@@ -167,7 +167,7 @@ public class PathDrawer{
             public void handle(MouseEvent event) {
                 MouseButton button = event.getButton();
                 if(button.equals(MouseButton.PRIMARY)){ // If left mouse button
-                    placePoint(event);                  // Add point of mouse click
+                    placePoint(event);                  // Add point at mouse click
                 }
             }
         });
@@ -183,24 +183,28 @@ public class PathDrawer{
                         stack.getChildren().remove(buttonGridPane);         // Shuffle the order by removing the buttons
                         stack.getChildren().addAll(canvas, buttonGridPane); // Add canvas and buttons to stack
                     }
-                    drawROI.setText("Done");    // Change text
-                    drawingROI = true;          // Set drawing ROI as true
+                    drawROI.setText("Done");                                // Change text
+                    drawingROI = true;                                      // Set drawing ROI as true
                     complete = false;
-                    if(canvasPoints.size()>0) { // Clear current ROI points
+
+                    if(canvasPoints.size()>0) {                             // Clear current ROI points
                         canvasPoints.clear();
                         gc.clearRect(0,0,stack.getWidth(),stack.getHeight());   // Clear the canvas
 
                         // Draw NFZ points
                         for(int i=0;i<nfzPoints.size();i++) {
+                            // Draw the NFZ markers
                             gc.strokeOval(nfzPoints.get(i).getX() - nfzMarkerRadius / 2, nfzPoints.get(i).getY() -
                                     nfzMarkerRadius / 2, nfzMarkerRadius, nfzMarkerRadius);
                             if (i > 0) {
+                                // Draw the line to join the markers
                                 gc.strokeLine(nfzPoints.get(i).getX(), nfzPoints.get(i).getY(),
                                         nfzPoints.get(i - 1).getX(), nfzPoints.get(i - 1).getY());
                             }
                         }
                     }
                 }
+
                 // If an NFZ is not being drawn and ROI is being drawn
                 else if(!drawingNFZ){
                     drawROI.setText("Draw ROI");    // Change text
@@ -222,29 +226,35 @@ public class PathDrawer{
         drawNFZ.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(!drawingNFZ && !drawingROI){         //If not drawing the NFZ and not drawing the ROI
-                     drawNFZ.setText("Done");
+                if(!drawingNFZ && !drawingROI){         // If not drawing the NFZ and not drawing the ROI
+                    drawNFZ.setText("Done");            // Update button text
                     drawingNFZ = true;
 
-                }else if(!drawingROI){ //If not drawing the ROI
+                }else if(!drawingROI){                  // If not drawing the ROI
+                    // If the canvas has not been added, add and shuffle order
                     if(!stack.getChildren().contains(canvas)) {
                         stack.getChildren().remove(buttonGridPane);
                         stack.getChildren().addAll(canvas, buttonGridPane);
                     }
-                    drawNFZ.setText("Draw NFZ");
+                    drawNFZ.setText("Draw NFZ");        // Update button text
                     drawingNFZ = false;
+
                     if(nfzPoints.size()>0) {
+                        // Draw line to join up NFZ
                         gc.strokeLine(nfzPoints.get(nfzPoints.size() - 1).getX(), nfzPoints.get(nfzPoints.size() - 1).getY(), nfzPoints.get(0).getX(), nfzPoints.get(0).getY());
                     }
+
                     if(nfzPoints.size()>2){ // If enough points have been added to the NFZ
+                        // Save points of NFZ
                         ArrayList<Coordinate> points = new ArrayList<>(nfzPoints);
                         ArrayList<Coordinate> realPoints = new ArrayList<>(realNfzPoints);
                         allNFZPoints.add(points);
                         allRealNFZPoints.add(realPoints);
-                        nfzPoints.clear();
-                        realNfzPoints.clear();
+                        nfzPoints.clear();          // Clear temporary array list of points
+                        realNfzPoints.clear();      // Clear temporary array list of real NFZ points for scripts
                     }
                 }else{
+                    // If ROI is being drawn
                     System.out.println("You must finish drawing the ROI first");
                 }
             }
@@ -265,9 +275,11 @@ public class PathDrawer{
                 passCoords.clear();
                 startPoint = null;
                 realStartPoint = null;
+                // Reset flags
                 complete = false;
                 drawingNFZ = false;
                 drawingROI = false;
+                // Reset button text
                 drawROI.setText("Draw ROI");
                 drawNFZ.setText("Draw NFZ");
                 gc.clearRect(0,0,stack.getWidth(),stack.getHeight());   // Clear canvas
@@ -278,14 +290,15 @@ public class PathDrawer{
         setStartLoc.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
+                // If the start location is being drawn
                 if(drawingStart){
-                    setStartLoc.setText("Mark Takeoff and Landing");
+                    setStartLoc.setText("Mark Takeoff and Landing");    // Reset button text
                     drawingStart = !drawingStart;
                 }else {
                     drawingStart = true;
                     drawingROI = false;
                     drawingNFZ = false;
-                    setStartLoc.setText("Click start location");
+                    setStartLoc.setText("Click start location");    // Update button text
                 }
             }
         });
@@ -300,6 +313,7 @@ public class PathDrawer{
                         // https://github.com/cdimascio/dotenv-java
                         // https://jar-download.com/artifact-search/java-dotenv
 
+                        // Create API string
                         String locationString = chooseLocation.getText().replace(" ","+");
                         URL url = new URL(geocodeAPI + locationString+"&key="+ API_KEY);
                         URLConnection urlConnection = url.openConnection();
@@ -307,22 +321,28 @@ public class PathDrawer{
                         BufferedReader bufferedReader =  new BufferedReader(new InputStreamReader(inputStream));
                         String input;
                         String geoCodeString = "";
+
+                        // Convert API return to JSON string
                         while((input = bufferedReader.readLine())!= null){ geoCodeString += input; }
+
 
                         JSONObject geoData = new JSONObject(geoCodeString);
                         JSONArray results = (JSONArray) geoData.get("results");
-                        JSONObject result = (JSONObject) results.get(0);
+                        JSONObject result = (JSONObject) results.get(0);                    // Get top result
                         JSONObject geometry = (JSONObject) result.get("geometry");
                         JSONObject location = (JSONObject) geometry.get("location");
 
+                        // Save Latitude and Longitude of top result
                         BigDecimal lat = (BigDecimal) location.get("lat");
                         BigDecimal lng = (BigDecimal) location.get("lng");
 
+                        // Convert values to Doubles
                         Double latitude = lat.doubleValue();
                         Double longitude = lng.doubleValue();
 
+                        // Turn location into Geoposition for the map
                         GeoPosition position = new GeoPosition(latitude,longitude);
-                        mapViewer.setAddressLocation(position);
+                        mapViewer.setAddressLocation(position); // Set centre of the map to the chosen location
                         mapViewer.setZoom(5);
 
                     } catch (IOException ioe) {
@@ -331,7 +351,7 @@ public class PathDrawer{
                 }
             }
         });
-        return stack;
+        return stack;   // Return the populated path drawer stackpane
     }
 
     /**
@@ -340,65 +360,29 @@ public class PathDrawer{
      */
     public SwingNode addMap(){
         // Map setup
-        mapViewer = new JXMapViewer();
-        JXMapKit mapKit = new JXMapKit();
-        JToolTip toolTip = new JToolTip();
-        toolTip.setComponent(mapKit.getMainMap());
+        mapViewer = new JXMapViewer(); // Create new map viewer using JXMapViewer2
 
+        // Create tile factory for the map
         TileFactoryInfo info = new OSMTileFactoryInfo();
         DefaultTileFactory tileFactory = new DefaultTileFactory(info);
         mapViewer.setTileFactory(tileFactory);
         tileFactory.setThreadPoolSize(8);
 
+        // Add mouse listener to the map
         MouseInputListener mia = new PanMouseInputListener(mapViewer);
         mapViewer.addMouseListener(mia);
         mapViewer.addMouseMotionListener(mia);
         mapViewer.addMouseListener(new CenterMapListener(mapViewer));
-        mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCenter(mapViewer));
-        mapViewer.addKeyListener(new PanKeyListener(mapViewer));
+        mapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCenter(mapViewer));   // Zoom with mouse wheel
+        mapViewer.addKeyListener(new PanKeyListener(mapViewer));                        // Pan with drag
 
         // Set the start location
         GeoPosition whitby = new GeoPosition(54.48860179430841, -0.6231669702867165);
         mapViewer.setZoom(8);
-        mapViewer.setAddressLocation(whitby);
-
-        mapKit.setTileFactory(tileFactory);
-        mapKit.getMainMap().addMouseMotionListener(new MouseMotionListener() {
-            @Override
-            public void mouseDragged(java.awt.event.MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseMoved(java.awt.event.MouseEvent e) {
-
-                JXMapViewer map = mapKit.getMainMap();
-
-                // convert to world bitmap
-                Point2D worldPos = map.getTileFactory().geoToPixel(whitby, map.getZoom());
-
-                // convert to screen
-                Rectangle rect = map.getViewportBounds();
-                int sx = (int) worldPos.getX() - rect.x;
-                int sy = (int) worldPos.getY() - rect.y;
-                Point screenPos = new Point(sx, sy);
-
-                // check if near the mouse
-                if (screenPos.distance(e.getPoint()) < 20)
-                {
-                    screenPos.x -= toolTip.getWidth() / 2;
-                    toolTip.setLocation(screenPos);
-                    toolTip.setVisible(true);
-                }
-                else
-                {
-                    toolTip.setVisible(false);
-                }
-            }
-        });
+        mapViewer.setAddressLocation(whitby);   // Set centre of map to chosen location
 
         SwingNode sn = new SwingNode();
-        sn.setContent(mapViewer);
+        sn.setContent(mapViewer);           // Add map to a swing node for the GUI
         return sn;
     }
 
@@ -407,42 +391,64 @@ public class PathDrawer{
      * @param event - The event interacting with the canvas
      */
     public void placePoint(MouseEvent event){
+        // Get coordinates of mouse click
         Double x =  event.getX();
         Double y = event.getY();
+
+        // If planning is incomplete and user is currently drawing the ROI
         if(!complete && drawingROI) {
             gc.setStroke(markerPaint);
             gc.setFill(markerPaint);
             gc.setLineWidth(2);
+            // Draw marker at mouse point
             gc.fillOval(x - markerRadius / 2, y - markerRadius / 2, markerRadius, markerRadius);
             Point2D point2D = new Point((int)Math.round(x),(int)Math.round(y));
+            // Obtain GPS coords of mouse location
             GeoPosition geoPosition = mapViewer.convertPointToGeoPosition(point2D);
 
+            // Create new coordinate for mouse location
             canvasPoints.add(new Coordinate(x, y,geoPosition.getLongitude(),geoPosition.getLatitude()));
             realPoints.add(new Coordinate(x,this.canvas.getHeight()-y,geoPosition.getLongitude(),geoPosition.getLatitude()));
+
             if(canvasPoints.size()>1){
-                gc.strokeLine(canvasPoints.get(canvasPoints.size()-1).getX(),canvasPoints.get(canvasPoints.size()-1).getY(), canvasPoints.get(canvasPoints.size()-2).getX(), canvasPoints.get(canvasPoints.size()-2).getY());
+                // Draw line between markers
+                gc.strokeLine(canvasPoints.get(canvasPoints.size()-1).getX(),canvasPoints.get(canvasPoints.size()-1).getY(),
+                        canvasPoints.get(canvasPoints.size()-2).getX(), canvasPoints.get(canvasPoints.size()-2).getY());
             }
             gc.setFill(textPaint);
+            // Number the marker
             String num = Integer.toString(canvasPoints.size());
             gc.fillText(num, x - num.length()*4, y - -4);
         }
+
+        // If an NFZ is being drawn
         else if(drawingNFZ){
             gc.setStroke(nfzMarkerPaint);
             gc.setFill(nfzMarkerPaint);
             gc.setLineWidth(2);
+            // Create NFZ marker at mouse point
             gc.fillOval(x - nfzMarkerRadius/2, y - nfzMarkerRadius/2, nfzMarkerRadius, nfzMarkerRadius);
+            // Create coordinate for NFZ points
             nfzPoints.add(new Coordinate(x,y));
-            realNfzPoints.add(new Coordinate(x,this.canvas.getHeight()-y));
-            //gc.fillText(Integer.toString(nfzPoints.size()), x, y);
+            realNfzPoints.add(new Coordinate(x,this.canvas.getHeight()-y)); // Flip y coord for script coord system
+            // Draw line between NFZ points
             if(nfzPoints.size()>1){
-                gc.strokeLine(nfzPoints.get(nfzPoints.size()-1).getX(),nfzPoints.get(nfzPoints.size()-1).getY(), nfzPoints.get(nfzPoints.size()-2).getX(), nfzPoints.get(nfzPoints.size()-2).getY());
+                gc.strokeLine(nfzPoints.get(nfzPoints.size()-1).getX(),nfzPoints.get(nfzPoints.size()-1).getY(),
+                        nfzPoints.get(nfzPoints.size()-2).getX(), nfzPoints.get(nfzPoints.size()-2).getY());
             }
-        }else if(drawingStart){
+        }
+        // If the user is drawing the start location
+        else if(drawingStart){
+            // Save start point
             startPoint = new Coordinate(x,y);
             realStartPoint = new Coordinate(x,this.canvas.getHeight()-y);
             gc.setFill(startMarkerPaint);
+
+            // Mark location on canvas
             gc.fillOval(x-startMarkerRadius/2,y-startMarkerRadius/2,startMarkerRadius,startMarkerRadius);
             gc.setFill(textPaint);
+
+            // Add text to marker
             gc.fillText("S/L",x-10,y+4);
             setStartLoc.setText("Mark Takeoff and Landing");
             drawingStart = false;
@@ -453,59 +459,76 @@ public class PathDrawer{
     }
 
     /**
-     *
-     * @param coord1
-     * @param coord2
+     * Add coordinates to a set of pass coordinates
+     * @param coord1 - First coordinate
+     * @param coord2 - Second coordinate
      */
     public void addPassCoords(Coordinate coord1, Coordinate coord2){
-        ArrayList<Coordinate> pass = new ArrayList<Coordinate>();
+        ArrayList<Coordinate> pass = new ArrayList<Coordinate>(); // Create new pass
+        // Add both coords to pass
         pass.add(coord1);
         pass.add(coord2);
         this.passCoords.add(pass);
     }
 
     /**
-     *
+     * Draw all passes on the canvas
      */
     public void drawPasses(){
         gc.setStroke(passPaint);
+        // Cycle through each pass
         for(int i=0;i<passCoords.size();i++) {
-            ArrayList<Coordinate> coords = passCoords.get(i);
-            gc.strokeLine(coords.get(0).x,coords.get(0).y,coords.get(1).x,coords.get(1).y);
+            ArrayList<Coordinate> coords = passCoords.get(i);                               // Get pass coords
+            gc.strokeLine(coords.get(0).x,coords.get(0).y,coords.get(1).x,coords.get(1).y); // Draw pass line
         }
     }
 
     /**
-     *
-     * @param dubinsObject
+     * Draw the dubins curves of teh flight path
+     * @param dubinsObject - Dubins object from JSON file
      */
     public void drawDubins(JSONObject dubinsObject){
-        JSONArray dubinsArray = (JSONArray) dubinsObject.get("dubins");
-        JSONArray spiralsArray = (JSONArray) dubinsObject.get("spirals");
+        JSONArray dubinsArray = (JSONArray) dubinsObject.get("dubins");     // Get the dubins points from the JSON file
+        JSONArray spiralsArray = (JSONArray) dubinsObject.get("spirals");   // Get the spiral points from the JSON File
         gc.setFill(Color.RED);
+
+        // Cycle through dubins curves
         for(int i = 0; i<dubinsArray.length();i++){
             JSONObject dubinsPoints = (JSONObject) dubinsArray.get(i);
-            JSONArray pointArray = (JSONArray) dubinsPoints.get("points");
+            JSONArray pointArray = (JSONArray) dubinsPoints.get("points"); // Get the list of points on dubins curve
+
+            // Cycle through points on dubins curves
             for(int j = 0;j<pointArray.length();j++){
                 String pointString = pointArray.get(j).toString();
+                // Remove symbols from string
                 pointString = pointString.replace("(","");
                 pointString = pointString.replace(")","");
-                String[] pointContents = pointString.split(",");
+                String[] pointContents = pointString.split(",");    // Split string to get points
+
+                // Parse the string for the coordinates
                 int x = (int) Double.parseDouble(pointContents[0].trim());
                 int y = (int)Double.parseDouble(pointContents[1].trim());
+                // Draw point
                 gc.fillOval(x,canvas.getHeight()-y,2,2);
             }
         }
+        // If any spirals are required
+        // Cycle through the spirals
         for(int i = 0; i<spiralsArray.length();i++){
             JSONObject spiralsPoints = (JSONObject) spiralsArray.get(i);
             JSONArray pointArray = (JSONArray) spiralsPoints.get("points");
+            // Cycle through points on spiral
             for(int j = 0;j<pointArray.length();j++){
                 String pointString = pointArray.get(j).toString();
+                // Remove symbols from string
                 pointString = pointString.replace("(","");
                 pointString = pointString.replace(")","");
-                String[] pointContents = pointString.split(",");
+                String[] pointContents = pointString.split(",");    // Split string to get points
+
+                // Parse the string for the coordinates
                 int x = (int) Double.parseDouble(pointContents[0].trim());
                 int y = (int)Double.parseDouble(pointContents[1].trim());
+                // Draw point
                 gc.fillOval(x,canvas.getHeight()-y,2,2);
             }
         }

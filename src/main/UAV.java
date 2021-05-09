@@ -6,7 +6,7 @@ package main;
  */
 
 public class UAV {
-    private String name;
+    private String name;            // Name of the UAV
     private String weight;          // Weight of the UAV in Kg
     private String turnRad;         // Minimum turn radius of the UAV in metres
     private String maxIncline;      // Max incline angle of the UAV in degrees
@@ -15,6 +15,7 @@ public class UAV {
 
 
     public UAV(){
+        // Initialise strings
         this.name = "";
         this.weight = "";
         this.turnRad = "";
