@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <UAV>
     <name>test</name>
-    <weight>20</weight>
-    <turn_radius>10</turn_radius>
-    <max_incline>30</max_incline>
-    <battery>LiPo</battery>
-    <battery_capacity>10000</battery_capacity>
+    <weight>1</weight>
+    <turn_radius>2</turn_radius>
+    <max_incline>2</max_incline>
+    <battery>2</battery>
+    <battery_capacity>2</battery_capacity>
 </UAV>

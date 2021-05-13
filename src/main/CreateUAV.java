@@ -69,6 +69,7 @@ public class CreateUAV {
 
         BorderPane bp = new BorderPane();
         bp.setCenter(dialogMessage);
+        bp.setId("border");             // Set CSS style ID
         HBox hb = new HBox(yes, no);
 
         BorderPane.setAlignment(hb, Pos.CENTER);

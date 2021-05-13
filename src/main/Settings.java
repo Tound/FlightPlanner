@@ -1,13 +1,18 @@
 package main;
 
+/**
+ * Settings class used to store properties for the flight settings
+ */
 public class Settings {
-    private String uavSpeed;
-    private String windSpeed;
-    private String windDirection;
-    private String sideOverlap;
-    private String gsd;
-    private String altitude;
+    private String uavSpeed;            // UAV speed in m/s
+    private String windSpeed;           // Wind speed in m/s
+    private String windDirection;       // Wind direction in radians
+    private String sideOverlap;         // Side overlap as a percentage
+    private String gsd;                 // Ground sample distance in cm/px
+    private String altitude;            // Altitude above ground
+
     public Settings(){
+        // Initialise strings
         this.uavSpeed = "";
         this.windSpeed = "";
         this.windSpeed = "";
