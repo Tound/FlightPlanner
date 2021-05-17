@@ -1045,7 +1045,7 @@ public class FlightSettings {
 
             // Write the start location GPS coords and altitude to the output file
             writer.write("Start location: [" + position.getLatitude() + "," + position.getLongitude() +
-                    "], altitude:" + startLocation.get("Altitude").toString() + " m\n");
+                    "], altitude:" + startLocation.get("altitude").toString() + " m\n");
 
             // Get location and altitude for the passes
             JSONArray passes = output.getJSONArray("passes");

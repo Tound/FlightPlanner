@@ -5,7 +5,7 @@
     "min_terrace_length": 5,
     "uav_weight": "2.6",
     "generations": "200",
-    "scale": 0.7028935282121251,
+    "scale": 1.3875093327195063,
     "wind_direction": "135",
     "cam_aspect_ratio": "3:2",
     "max_pass_length": 5000,
@@ -13,20 +13,20 @@
     "cam_focal_length": "20",
     "uav_speed": "20",
     "points": [
-        "196.0,867.0",
-        "1114.0,758.0",
-        "1264.0,152.0",
-        "270.0,118.0"
+        "510.0,693.0",
+        "319.0,272.0",
+        "975.0,171.0",
+        "1094.0,540.0"
     ],
     "cam_resolution": "24",
     "side_overlap": "20",
     "uav_max_speed": 25,
     "gsd": "0.02",
-    "start_loc": "119.0,584.0",
+    "start_loc": "361.0,600.0",
     "wind_speed": "10",
     "battery_capacity": "10000",
     "cam_sensor_y": "15.6",
     "cam_sensor_x": "23.5",
-    "start_loc_gps": "53.94607206558191,-1.0613393783569336",
+    "start_loc_gps": "54.489410887081355,-0.6276154518127441",
     "max_alt_diff": 20.425531914893625
 }
