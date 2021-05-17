@@ -191,23 +191,8 @@ else:
 
 # Create UAV, camera and configuration object and store all variables
 uav = UAV(uav_mass,uav_speed,uav_max_speed,min_turn,max_incline_angle,heading_angle)
-<<<<<<< HEAD
-
-image_x,image_y = imageDimensions(cam_resolution,aspect_ratio)
-
-camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio,image_x,image_y)
-<<<<<<< HEAD
-<<<<<<< HEAD
-config = Configuration(uav,camera,side_overlap,forward_overlap,wind,scale,altitude,ground_sample_distance)
-=======
-config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance)
->>>>>>> c54494fe9d43761faf2c10e40cd826be044028db
-=======
-=======
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio)
->>>>>>> f6fa0659536e439757d2e6ac0d750dd80d0110b5
 config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance,min_pass_length,max_pass_length)
->>>>>>> 44310f026a08c8e3c4d5706010ad54797d336d3a
 
 polygon_edges = []
 for i in range(0,len(polygon)):

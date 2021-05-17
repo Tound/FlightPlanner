@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import requests
 import numpy as np
 from create_passes_GUI import convertCoords
@@ -7,7 +5,6 @@ from Image_Classes import *
 
 image_passes = []
 
->>>>>>> c54494fe9d43761faf2c10e40cd826be044028db
 # Create Terraces
 def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len):
     """
@@ -136,14 +133,3 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
     else:
         pass
     return image_passes
-<<<<<<< HEAD
-
-# Make terraces
-
-# Get altitude data
-gpsCoords = open()
-altitude_profile = getAltitudeProfile(pass_length,terrain,uav_altitude,u,start_v,wind_angle)
-
-createTerraces()
-=======
->>>>>>> c54494fe9d43761faf2c10e40cd826be044028db
