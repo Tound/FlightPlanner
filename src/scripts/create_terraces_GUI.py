@@ -10,8 +10,6 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
     """
     Splits pass into terraces
     """
-    #print(f"Sample distance: {sample_distance}, Pass length: {pass_length}, Pixel distance: {sample_distance*len(altitude_profile)}")
-    #print("\n")
     # Create terraces from pass
     lookahead = 3
     current_terrace = []        # Initilise current terrace points as empty
@@ -64,7 +62,6 @@ def createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,i
                     # Look ahead to find gradient
                     grad = altitude_profile[index+1] - altitude_profile[index]
                     grad += altitude_profile[index+2] - altitude_profile[index]
-                    #grad += altitude_profile[index+3] - altitude_profile[index]
                     grad = grad/2
                     coords = convertCoords([[u,v+index*sample_distance]],wind_angle,'xy')
                     x = coords[0][0]

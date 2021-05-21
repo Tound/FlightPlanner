@@ -1,4 +1,8 @@
-# Create Passes
+"""
+Creates passes and terraces for a photogrammetry flight path
+Created by Thomas Pound
+Last updated 21/5/21
+"""
 import math
 import numpy as np
 import shapely.geometry as sg
@@ -11,7 +15,7 @@ import json
 
 import time
 
-G = 9.81
+G = 9.81		# Acceleration due to gravity
 
 class Edge:
     """
@@ -52,16 +56,15 @@ def convertCoords(vertices,angle,coord_system):
     Using   [u] = [ cos(theta) + sin(theta)][x]
             [v]   [-sin(theta) + cos(theta)][y]
     """
-    theta = angle
-    new_coords = []
-    # Matrix multiplication?
-    if coord_system == 'uv':
+    theta = angle		# Store the angle
+    new_coords = []		# Initialise an empty array to store the new coordinates
+    if coord_system == 'uv':    # If the requested coordinate system is uv
         for vertex in vertices:
             u = vertex[0]*math.cos(theta) + vertex[1]*math.sin(theta)
             v = -vertex[0]*math.sin(theta) + vertex[1]*math.cos(theta)
             new_coord = [u,v]
             new_coords.append(new_coord)
-    elif coord_system == 'xy':
+    elif coord_system == 'xy':  # If the requested coordinate system is xy
         scaler = 1/(math.cos(theta) * math.cos(theta) + math.sin(theta) * math.sin(theta))
         for vertex in vertices:
             x = scaler*(vertex[0]*math.cos(theta) - vertex[1]*math.sin(theta))
@@ -109,7 +112,6 @@ def coverage_check(heading_angle,start_u,pass_shift,coverage_width,coverage_heig
 
     # If coverage is complete
     # Get vertices
-    # Sutherland-Hodgman for zero overlap
     u,v = intersection_points.exterior.xy
     sorted_points = sorted(u)
     if sorted_points[0] > start_u:
