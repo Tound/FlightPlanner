@@ -1,40 +1,32 @@
 {
-    "altitude": "102.12765957446808",
-    "nfzs": [
-        [
-            "767.0,416.0",
-            "757.0,486.0",
-            "886.0,487.0",
-            "892.0,419.0"
-        ]
-    ],
-    "min_terrace_length": 5,
-    "generations": "2000",
-    "scale": 0.6937557766210569,
-    "uav_min_radius": "10",
-    "points": [
-        "443.0,165.0",
-        "417.0,652.0",
-        "1209.0,649.0",
-        "1248.0,123.0"
-    ],
-    "cam_resolution": "24",
-    "side_overlap": "40",
-    "wind_speed": "10",
-    "cam_sensor_y": "15.6",
-    "cam_sensor_x": "23.5",
     "uav_max_incline": "30",
+    "altitude": "102.12765957446808",
     "population_size": "30",
+    "min_terrace_length": 5,
     "uav_weight": "2.6",
-    "wind_direction": "160",
+    "generations": "200",
+    "scale": 1.4058290912315705,
+    "wind_direction": "135",
     "cam_aspect_ratio": "3:2",
     "max_pass_length": 5000,
+    "uav_min_radius": "10",
     "cam_focal_length": "20",
     "uav_speed": "20",
+    "points": [
+        "331.0,165.0",
+        "335.0,766.0",
+        "1117.0,790.0",
+        "1043.0,144.0"
+    ],
+    "cam_resolution": "24",
+    "side_overlap": "20",
     "uav_max_speed": 25,
     "gsd": "0.02",
-    "start_loc": "244.0,720.0",
+    "start_loc": "234.0,563.0",
+    "wind_speed": "10",
     "battery_capacity": "10000",
-    "start_loc_gps": "54.489822189156676,-0.6193006038665771",
+    "cam_sensor_y": "15.6",
+    "cam_sensor_x": "23.5",
+    "start_loc_gps": "53.947499099734166,-1.063227653503418",
     "max_alt_diff": 20.425531914893625
 }

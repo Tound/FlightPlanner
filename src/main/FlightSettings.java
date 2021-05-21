@@ -855,8 +855,8 @@ public class FlightSettings {
         // Get difference in GPS coords
         Double dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
         Double dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
-        Double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                        Math.sin(dLon/2) * Math.sin(dLon/2);
+        Double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) *
+                Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
         Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         Double d = radiusEarth * c * 1000;      // Convert to metres
 

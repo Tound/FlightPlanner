@@ -241,7 +241,8 @@ public class PathDrawer{
 
                     if(nfzPoints.size()>0) {
                         // Draw line to join up NFZ
-                        gc.strokeLine(nfzPoints.get(nfzPoints.size() - 1).getX(), nfzPoints.get(nfzPoints.size() - 1).getY(), nfzPoints.get(0).getX(), nfzPoints.get(0).getY());
+                        gc.strokeLine(nfzPoints.get(nfzPoints.size() - 1).getX(), nfzPoints.get(nfzPoints.size() -
+                                1).getY(), nfzPoints.get(0).getX(), nfzPoints.get(0).getY());
                     }
 
                     if(nfzPoints.size()>2){ // If enough points have been added to the NFZ
@@ -309,9 +310,8 @@ public class PathDrawer{
             public void handle(MouseEvent event) {
                 if(!chooseLocation.getText().isEmpty()){
                     try {
+                        // HTTP request code from
                         // https://stackoverflow.com/questions/1359689/how-to-send-http-request-in-java
-                        // https://github.com/cdimascio/dotenv-java
-                        // https://jar-download.com/artifact-search/java-dotenv
 
                         // Create API string
                         String locationString = chooseLocation.getText().replace(" ","+");
@@ -408,12 +408,15 @@ public class PathDrawer{
 
             // Create new coordinate for mouse location
             canvasPoints.add(new Coordinate(x, y,geoPosition.getLongitude(),geoPosition.getLatitude()));
-            realPoints.add(new Coordinate(x,this.canvas.getHeight()-y,geoPosition.getLongitude(),geoPosition.getLatitude()));
+            realPoints.add(new Coordinate(x,this.canvas.getHeight()-y,
+                    geoPosition.getLongitude(),geoPosition.getLatitude()));
 
             if(canvasPoints.size()>1){
                 // Draw line between markers
-                gc.strokeLine(canvasPoints.get(canvasPoints.size()-1).getX(),canvasPoints.get(canvasPoints.size()-1).getY(),
-                        canvasPoints.get(canvasPoints.size()-2).getX(), canvasPoints.get(canvasPoints.size()-2).getY());
+                gc.strokeLine(canvasPoints.get(canvasPoints.size()-1).getX(),
+                        canvasPoints.get(canvasPoints.size()-1).getY(),
+                        canvasPoints.get(canvasPoints.size()-2).getX(),
+                        canvasPoints.get(canvasPoints.size()-2).getY());
             }
             gc.setFill(textPaint);
             // Number the marker
