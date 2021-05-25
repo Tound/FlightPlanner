@@ -1,7 +1,7 @@
 """
 Creates passes and terraces for a photogrammetry flight path
 Created by Thomas Pound
-Last updated 21/5/21
+Last updated 25/5/21
 """
 import math
 import numpy as np
@@ -12,8 +12,6 @@ from scipy.interpolate import griddata
 from Image_Classes import *
 
 import json
-
-import time
 
 G = 9.81		# Acceleration due to gravity
 
@@ -110,11 +108,10 @@ def coverage_check(heading_angle,start_u,pass_shift,coverage_width,coverage_heig
     # Get intersect of footprints
     intersection_points = rotated_footprint1.intersection(rotated_footprint2)
 
-    # If coverage is complete
     # Get vertices
     u,v = intersection_points.exterior.xy
-    sorted_points = sorted(u)
-    if sorted_points[0] > start_u:
+    sorted_points = sorted(u)       # Sort all vertices from left to right
+    if sorted_points[0] > start_u:  # If the left most point is to the right side of the ROI boundary
         complete_coverage = False
 
     return complete_coverage
@@ -136,15 +133,16 @@ def createPasses(area,polygon_edges,NFZs,config):
         # Find the largest edge
         length = 0
         largest_edge = None
-        for edge in polygon_edges:
+        for edge in polygon_edges:  # Cycle through all edges
             edge_length = edge.getEdge().length
-            if edge_length > length:
-                length = edge_length
-                largest_edge = edge.getEdge()
+            if edge_length > length:            # If the edge length is larger than the current largest edge length
+                length = edge_length            # Store the length
+                largest_edge = edge.getEdge()   # Store the edge
         coords = largest_edge.coords
         dx = coords[1][0] - coords[0][0]
         dy = coords[1][1] - coords[0][1]
-        wind_angle = math.atan2(dy,dx) + math.pi/2
+        wind_angle = math.atan2(dy,dx) + math.pi/2  # Set the wind angle to the angle of the largest edge
+        # Ensure that the wind angle is between the range
         if wind_angle >= 2*math.pi:
             wind_angle -= 2*math.pi
         elif wind_angle < 0:
@@ -153,26 +151,31 @@ def createPasses(area,polygon_edges,NFZs,config):
 
 
     # Create new ROI coords for the updated coordinate system
-    new_area_coords = convertCoords(area,wind_angle,'uv')
+    new_area_coords = convertCoords(area,wind_angle,'uv')   # Convert xy coordinates to uv system
 
     # Create new NFZ coords for the updated coordinate system
     new_NFZs = []
     for NFZ in NFZs:
-        new_NFZ_coords = convertCoords(NFZ,wind_angle,'uv')
+        new_NFZ_coords = convertCoords(NFZ,wind_angle,'uv') # Convert xy coordinates to uv system
         new_NFZs.append(new_NFZ_coords)
 
+    # Open settings json file for reading
     data = open("src/intermediate/settings.json",'r')
     settings = json.load(data)
     data.close()
 
+    # Open settings json file for writing
     data = open("src/intermediate/settings.json",'w')
 
     # Find camera footprint size
     # If GSD is available
     if config.altitude is None and config.ground_sample_distance is not None:
+
+        # Get the coverage dimensions from the GSD
         coverage_width, coverage_height = camera.get_coverage_size_gsd(config.ground_sample_distance)   # In metres
         uav_altitude = camera.get_altitude(coverage_width)
 
+        # Get the max and min uav altitudes
         max_uav_alt = camera.get_altitude_from_gsd(config.ground_sample_distance + config.ground_sample_distance/10)
         min_uav_alt = camera.get_altitude_from_gsd(config.ground_sample_distance - config.ground_sample_distance/10)
 
@@ -180,6 +183,8 @@ def createPasses(area,polygon_edges,NFZs,config):
 
     # If altitude is available
     elif config.altitude is not None and config.ground_sample_distance is None:
+
+        # Get the coverage dimensions from the altitude
         coverage_width, coverage_height = camera.get_coverage_size_alt(config.altitude) # In meters
 
         uav_altitude = config.altitude
@@ -187,29 +192,34 @@ def createPasses(area,polygon_edges,NFZs,config):
         ground_sample_distance = camera.get_gsd_from_alt(uav_altitude)    # Get GSD
         config.ground_sample_distance = ground_sample_distance
 
+        # Get the max and min uav altitudes
         max_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance + config.ground_sample_distance/10)
         min_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance - config.ground_sample_distance/10)
 
     # If both have been initialised
-    elif config.altitude is not None and config.ground_sample_distance is not None:     
+    elif config.altitude is not None and config.ground_sample_distance is not None:
+        # Get the coverage dimensions from the altitude   
         coverage_width, coverage_height = camera.get_coverage_size_alt(config.altitude)        # In meters
 
         # Look for conflicts
         uav_altitude = config.altitude                                                  # In meters
         ground_sample_distance = camera.get_gsd_from_alt(uav_altitude)
-        if ground_sample_distance != config.ground_sample_distance:
+        if ground_sample_distance != config.ground_sample_distance: # If the values have conflicts
             print(f"Conflict with GSD, taking altitude as true. New GSD: {ground_sample_distance}")
-            config.ground_sample_distance = ground_sample_distance  # Sd
-            
+            config.ground_sample_distance = ground_sample_distance
+
+        # Get the max and min uav altitudes    
         max_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance + config.ground_sample_distance/10)
         min_uav_alt = camera.get_altitude_from_gsd(ground_sample_distance - config.ground_sample_distance/10)
 
     else:
+        # If altitude and GSD are not available
         print("Requires atleast one value of altitude or gsd")
 
-    settings['altitude'] = f"{config.altitude}" # Update altitude in settings json file
-    settings['gsd'] = f"{config.ground_sample_distance}" # Update gsd in settings json file
+    settings['altitude'] = f"{config.altitude}"             # Update altitude in settings json file
+    settings['gsd'] = f"{config.ground_sample_distance}"    # Update gsd in settings json file
 
+    # Calculate the distance between adjacent photos using the side overlap
     distance_between_photos_width = coverage_width - coverage_width*config.side_overlap
 
     # Check if UAV is likely to enter an NFZ
@@ -219,16 +229,15 @@ def createPasses(area,polygon_edges,NFZs,config):
         " and the NFZ boundary. Consider increasing altitude or the ground sample_resolution.")
 
     # Obtain properties about the area
-    sorted_vertices = sorted(new_area_coords, key=lambda u:u[0])
-    length_of_area = config.scale * abs(sorted_vertices[len(sorted_vertices)-1][0] - sorted_vertices[0][0]) # In meters
+    sorted_vertices = sorted(new_area_coords, key=lambda u:u[0])    # Sort the new vertices by u value
+    length_of_area = config.scale * abs(sorted_vertices[len(sorted_vertices)-1][0] - sorted_vertices[0][0]) # Obtain the width of the area in metres
 
-    np_area = np.array(new_area_coords)
-    max_height = np.max(np_area[:,1])           # Store highest V value
-    min_height = np.min(np_area[:,1])           # Store lowest V value
-    start_u = np.min(np_area[:,0])
+    np_area = np.array(new_area_coords)         # Convert the new coords to a numpy array for easier work
+    max_height = np.max(np_area[:,1])           # Store highest v value of the entire area
+    min_height = np.min(np_area[:,1])           # Store lowest v value of the entire area
+    start_u = np.min(np_area[:,0])              # Save the smallest u value for the start of the area
     
-    # Need scaling for calculations and drawing need pixels in meters by using scale
-
+    # Calculate the number of passes that will cover the area
     number_of_passes = (length_of_area-config.side_overlap*coverage_width)/distance_between_photos_width    # All in meters
 
     # If the number of passes required is not an integer, add another to ensure coverage
@@ -247,7 +256,7 @@ def createPasses(area,polygon_edges,NFZs,config):
     if config.wind[0] > 0:
         if not coverage_check(config.uav.heading_angle,start_u,pass_shift,coverage_width,coverage_height):   # Check if coverage is still complete
             print("Coverage is no longer complete, adding another pass")
-            # Check if another one is required
+            # Check if another pass is required
             # If another pass is required, add another then recenter the passes
             number_of_passes += 1
             remainder = length_of_area - (number_of_passes * coverage_width - (number_of_passes-1)*config.side_overlap*coverage_width) 
@@ -267,11 +276,12 @@ def createPasses(area,polygon_edges,NFZs,config):
     # Set maximum altitude difference
     max_alt_diff = max_uav_alt - min_uav_alt
 
+    # Update json settings file and save
     settings['max_alt_diff'] = max_alt_diff
     json.dump(settings,data,indent=4)
     data.close()
 
-
+    # Open json file to save data of passes
     passes_data =  open("src/intermediate/passes.json","w")
     data = {}
     data['passes'] = []
@@ -308,15 +318,14 @@ def createPasses(area,polygon_edges,NFZs,config):
                     intersection_points.append([point[0],point[1]])
 
         points_on_pass = sorted(intersection_points,key=lambda point:point[1])   # List vertically
-        subpasses = len(points_on_pass)/2
+        subpasses = len(points_on_pass)/2   # Calculate the number of subpasses
 
         for j in range(0,int(subpasses)):   # Split full length passes into sub passes if obstacles are found
             start = points_on_pass[j*2]
             end = points_on_pass[j*2 + 1]
-            pass_length = getDistance(start,end)-coverage_height/config.scale   # Pixel values
-
-            if pass_length <= config.min_pass_length:               # Check to see if pass is to size
-                print("Pass length is too small")                   # If pass is too small, continue
+            pass_length = getDistance(start,end)-coverage_height/config.scale   # Calculate the pass length and remove the height of the camera footprint
+            if pass_length <= config.min_pass_length:                           # Check to see if pass is to size
+                print("Pass length is too small")                               # If pass is too small, continue
                 continue
             elif pass_length > config.max_pass_length:
                 print("Pass length is too large, aborting")
@@ -328,6 +337,7 @@ def createPasses(area,polygon_edges,NFZs,config):
 
             end = convertCoords([[u,v+pass_length]],wind_angle,'xy')
 
+            # Add pass data to json file
             data['passes'].append({
                 'start':f'{start[0][0]},{start[0][1]}',
                 'end':f'{end[0][0]},{end[0][1]}',
@@ -336,9 +346,10 @@ def createPasses(area,polygon_edges,NFZs,config):
 
         u += distance_between_photos_width/config.scale          # Increase U value on each loop
     
-    json.dump(data,passes_data,indent=4)
+    json.dump(data,passes_data,indent=4)    # Save json data of passes to file
     passes_data.close()
 
+    # Print stats
     print(f"length = {length_of_area}, px length = {length_of_area/config.scale}")
     print(f"Footprint of image: {coverage_width}x{coverage_height}")
     print(f"Distance between passes: {round(distance_between_photos_width,2)} m")

@@ -1,7 +1,7 @@
-# Shortest path
+#!/usr/bin/env python
 """
 Find the shortest path for the settings in the GUI
-Last Updated 1/5/21
+Last Updated 25/5/21
 """
 from Passes_TSP_GUI import *
 from create_terraces_GUI import *
@@ -13,37 +13,33 @@ import os
 
 import shapely.geometry as sg
 
+# Initialise the APIs
 PATH_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?path="
 LOCATION_API_URL = "https://maps.googleapis.com/maps/api/elevation/json?locations="
 load_dotenv()
-API_KEY = os.getenv('API_KEY')
+API_KEY = os.getenv('API_KEY')  # Get the API key
 
 
 def start_loc_alt(gps_coords):
-    """
-    Find the altitude of the start location
-    """
+    # Find the altitude of the start location
     data = requests.get(LOCATION_API_URL + gps_coords + "&key=" + API_KEY)
-    data = data.json()
-    alt = float(data['results'][0]['elevation'])
-
+    data = data.json()                              # Convert results to json format
+    alt = float(data['results'][0]['elevation'])    # Format result to get the altitude data
     return alt
 
 def getAltitudeProfile(real_length,loc_string,uav_altitude):
-    """
-    Obtain altitude data for entire pass across generated terrain
-    """
-    sample_distance = 2         # Required sample distance is 5m
+    # Obtain altitude data for entire pass across generated terrain
+
+    sample_distance = 2
     samples = int(real_length/sample_distance)+1
 
     if samples < 2:
         samples = 2
         sample_distance = real_length/samples 
 
-    if samples > 512:
+    if samples > 512:   # If samples is above the max amount of samples for the API
         sample_distance += 1
         samples = int(real_length/sample_distance)+1
-
 
     altitude_profile = []
     request = requests.get(PATH_API_URL + loc_string + "&samples=" + f"{samples}" + "&key=" + API_KEY)
@@ -55,15 +51,16 @@ def getAltitudeProfile(real_length,loc_string,uav_altitude):
     return altitude_profile, sample_distance
 
 image_passes = []
-# Make terraces
-# Get altitude data
 
+# Load settings file
 settings_data = open("src/intermediate/settings.json")
 settings = json.load(settings_data)
 
+# Load in the GPS coords for the altitude profile
 gps_coords = open("src/intermediate/altitude_profile.json")
 gps_data = json.load(gps_coords)
 
+# Load in passes data
 passes_data = open("src/intermediate/passes.json")
 passes = json.load(passes_data)
 
@@ -88,15 +85,14 @@ start_loc = [float(start_loc_string[0]),float(start_loc_string[1]),round(start_l
 population_size = int(settings['population_size'])
 generations = int(settings['generations'])
 
-# Error prevention
-#max_pass_length = 2000
 
 glide_slope = 10
 NFZs = []
 NFZ_edges = []
-if 'nfzs' in settings:
+if 'nfzs' in settings:  # If NFZs are available in the settings
     NFZ_coords = settings['nfzs']
 
+    # Cycle through and store NFZ coords in an array
     for NFZ_coord in NFZ_coords:
         NFZ_points = []
         for NFZ_point in NFZ_coord:
@@ -105,7 +101,6 @@ if 'nfzs' in settings:
         NFZs.append(NFZ_points)
 
     # Create NFZ edges
-
     for NFZ in NFZs:
         for index,NFZ_points in enumerate(NFZ):
             NFZ_edges.append(sg.LineString([(NFZ_points[0],NFZ_points[1]),(NFZ[index-1][0],NFZ[index-1][1])]))
@@ -123,7 +118,6 @@ for index,coord in enumerate(pass_coords):
     start = pass_data[index]['start']               # Get pass start coord in px
     end = pass_data[index]['end']                   # Get pass end coord in px
 
-
     pass_length = float(pass_data[index]['length']) # Length in px
     real_length = scale*pass_length                 # Calculate the length in metres
 
@@ -133,35 +127,34 @@ for index,coord in enumerate(pass_coords):
     end_contents = end.split(",")                   # Split into x and y
 
     # Convert the xy pass coords to uv coords
-
-
-    x = np.array([float(start_contents[0]),float(end_contents[0])])
-    y = np.array([float(start_contents[1]),float(end_contents[1])])
-    plt.plot(x,y,'-bo',markersize=2)
-
     coords = convertCoords([[float(start_contents[0]),float(start_contents[1])],
                             [float(end_contents[0]),float(end_contents[1])]],
                             wind_angle,'uv')
     
     u = coords[0][0]
     v = coords[0][1]
-    loc_string = f"{start_gps}|{end_gps}"                                                   # Create a string with the gps coords for the 
-    altitude_profile, sample_distance_m = getAltitudeProfile(real_length,loc_string,altitude) # Create the altitude profile
+    loc_string = f"{start_gps}|{end_gps}"                                                       # Create a string with the gps coords for the API
+    altitude_profile, sample_distance_m = getAltitudeProfile(real_length,loc_string,altitude)   # Create the altitude profile
     sample_distance = sample_distance_m/scale # Sample distance in pixels
-    # Create image passes
-    image_passes = createTerraces(u,v,altitude_profile,sample_distance,wind_angle,pass_length,image_passes,max_alt_diff,min_terrace_len)
+    
+    # Create terraces
+    image_passes = createTerraces(u,v,altitude_profile,sample_distance,wind_angle,
+                                    pass_length,image_passes,max_alt_diff,min_terrace_len)
 
 
-start_time = time.perf_counter()
-shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_incline_grad,glide_slope,start_loc,populationSize=population_size,generations=generations,mutationRate=0.3)
+start_time = time.perf_counter()                # Store time before TSP
 
-end_time = time.perf_counter() - start_time    # Calculate time taken to create passes and findest shortest route
+shortest_path = TSP(image_passes,wind_angle,min_turn,uav_mass,NFZs,NFZ_edges,max_incline_grad,
+                    glide_slope,start_loc,populationSize=population_size,generations=generations,mutationRate=0.3)
 
+end_time = time.perf_counter() - start_time     # Calculate time taken to create passes and find shortest route
 
+# To be implemented properly in other version
 max_current_draw = 20   # Initialise the maximum current draw for the worst case scenario
 
 print("Flight path created successfully!\n")
-#Print flight stats
+
+# Print flight stats
 print(f"Total time to solve: {round(end_time/60,2)}mins")
 print(f"Total length of route: {round(shortest_path.getLength(),2)}m")
 
@@ -174,35 +167,45 @@ if current_used > battery_capacity*10**-3:
 else:
     print("Current battery capacity will suffice")
 
-spirals =  shortest_path.get_spirals()
-dpaths = shortest_path.getDPaths()  # Get the Dubins paths that make up the shortest route
+spirals =  shortest_path.get_spirals()  # Get the Dubins paths that make up the shortest route
+dpaths = shortest_path.getDPaths()      # Get the Dubins paths that make up the shortest route
 
-step_size = 1                        # Specify step size for sampling each dubins path
+step_size = 1                           # Specify step size for sampling each dubins path
 
+# Open Dubins json file
 dubins_file = open("src/intermediate/dubins.json","w")
 dubins_data = {}
 dubins_data['dubins'] = []
+
+# Sample any Dubins paths and save in json format
 for dpath in dpaths:
+    # Sample each Dubins path
     points = dubins_path_sample_many(dpath,step_size)
     dubins_points = {}
-    dubins_points['points'] = []
+    dubins_points['points'] = []    # Initialise Dubins points array
     for point in points:
+        # Store sampled point
         dubins_points['points'].append(f"{point[0],point[1],point[2]}")
-    dubins_data['dubins'].append(dubins_points)
+    dubins_data['dubins'].append(dubins_points) # Store all points
 
+
+# Sample any spiral paths required in the flight path
 dubins_data['spirals'] = []
 for spiral in spirals:  
     points = sample_spiral(spiral,step_size)    # Sample the spiral paths and obtain the sampled points
     spiral_points = {}
-    spiral_points['points'] = []
+    spiral_points['points'] = []    # Initialise spirals points array
     for point in points:
+        # Store sampled point
         spiral_points['points'].append(f"{round(point[0],2),round(point[1],2),round(point[2],2)}")
-    dubins_data['spirals'].append(spiral_points)
+    dubins_data['spirals'].append(spiral_points) # Store all points
 
+# Save dubins and spirals data to json file
 json.dump(dubins_data,dubins_file,indent=4)
 
 dubins_file.close()
 
+# Write output flight path data
 with open("src/intermediate/output.json",'w') as output:
     gene_string = shortest_path.getOutput()
     json.dump(gene_string,output,indent=4)
