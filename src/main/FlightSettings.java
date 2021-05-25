@@ -462,12 +462,12 @@ public class FlightSettings {
         loadUAV.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                fileChooser.setInitialDirectory(new File(uav_path));    // Create a file chooser window
+                fileChooser.setInitialDirectory(new File(uav_path));    // Set file chooser directory
                 FileChooser.ExtensionFilter uavFilter = new FileChooser.ExtensionFilter(
                         "UAV Files (*.uav)","*.uav");
                 fileChooser.getExtensionFilters().add(uavFilter);
                 fileChooser.setSelectedExtensionFilter(uavFilter);
-                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
+                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());     // Create a file chooser window
                 if(file != null) {
                     UAV uav = (UAV) Parser.parseFile(file);     // Parse the UAV file
                     // Get all settings
@@ -485,14 +485,14 @@ public class FlightSettings {
         loadCam.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                fileChooser.setInitialDirectory(new File(cam_path));     // Create a file chooser window
+                fileChooser.setInitialDirectory(new File(cam_path));                // Set file chooser directory
                 FileChooser.ExtensionFilter camFilter = new FileChooser.ExtensionFilter(
                         "Camera Files (*.cam)","*.cam");
                 fileChooser.getExtensionFilters().add(camFilter);
                 fileChooser.setSelectedExtensionFilter(camFilter);
-                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
+                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());   // Create a file chooser window
                 if(file != null) {
-                    Camera camera = (Camera) Parser.parseFile(file);      // Parse the cam file
+                    Camera camera = (Camera) Parser.parseFile(file);                // Parse the cam file
                     // Get all settings
                     camName.setText(camera.getName());
                     camSensorX.setText(camera.getSensorX());
@@ -525,14 +525,14 @@ public class FlightSettings {
         loadFlightSettings.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                fileChooser.setInitialDirectory(new File(settings_path));      // Create a file chooser window
+                fileChooser.setInitialDirectory(new File(settings_path));           // Set file chooser directory
                 FileChooser.ExtensionFilter settingsFilter = new FileChooser.ExtensionFilter(
                         "Settings Files (*.fsettings)","*.fsettings");
                 fileChooser.getExtensionFilters().add(settingsFilter);
                 fileChooser.setSelectedExtensionFilter(settingsFilter);
-                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());
+                File file = fileChooser.showOpenDialog(FlightPlanner.getStage());   // Create a file chooser window
                 if(file != null) {
-                    Settings settings = (Settings) Parser.parseFile(file);       // Parse the settings file
+                    Settings settings = (Settings) Parser.parseFile(file);          // Parse the settings file
                     // Save the settings
                     uavSpeed.setText(settings.getUavSpeed());
                     windSpeed.setText(settings.getWindSpeed());

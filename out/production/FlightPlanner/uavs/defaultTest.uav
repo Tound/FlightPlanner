@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<uav>
-    <name>Fixed Wing UAV</name>
-    <weight>Fixed Wing UAV</weight>
-    <turn_rad>Fixed Wing UAV</turn_rad>
-    <max_incline>Fixed Wing UAV</max_incline>
-    <battery>Fixed Wing UAV</battery>
-    <battery_capacity>Fixed Wing UAV</battery_capacity>
-</uav>

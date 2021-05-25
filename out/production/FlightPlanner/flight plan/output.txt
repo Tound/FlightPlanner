@@ -1,4 +1,10 @@
-Start location: [229.0, 431.0], Altitude: 14.27 m
-1. Start: [443.18, 294.18], End: [565.02, 416.02], Altitude: 122.43 m
-2. Start: [667.14, 324.94], End: [593.61, 251.41], Altitude: 120.19 m
-3. Start: [399.25, 443.46], End: [301.86, 346.07], Altitude: 121.17 m
+Start location: [230.0, 485.0], Altitude: 15.8 m
+1. Start: [485.13, 547.37], End: [254.21, 316.45], Altitude: 117.76 m
+2. Start: [294.78, 453.6], End: [394.6, 553.42], Altitude: 119.73 m
+3. Start: [666.19, 535.27], End: [280.62, 149.7], Altitude: 116.42 m
+4. Start: [213.64, 179.3], End: [575.66, 541.32], Altitude: 116.56 m
+5. Start: [780.35, 166.53], End: [821.67, 207.85], Altitude: 117.42 m
+6. Start: [798.07, 280.83], End: [680.4, 163.16], Altitude: 117.7 m
+7. Start: [580.45, 159.79], End: [774.47, 353.8], Altitude: 116.1 m
+8. Start: [750.86, 426.78], End: [480.51, 156.43], Altitude: 115.61 m
+9. Start: [380.56, 153.06], End: [727.26, 499.76], Altitude: 116.18 m

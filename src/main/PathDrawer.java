@@ -309,10 +309,6 @@ public class PathDrawer{
             public void handle(MouseEvent event) {
                 if(!chooseLocation.getText().isEmpty()){
                     try {
-                        // https://stackoverflow.com/questions/1359689/how-to-send-http-request-in-java
-                        // https://github.com/cdimascio/dotenv-java
-                        // https://jar-download.com/artifact-search/java-dotenv
-
                         // Create API string
                         String locationString = chooseLocation.getText().replace(" ","+");
                         URL url = new URL(geocodeAPI + locationString+"&key="+ API_KEY);
@@ -324,7 +320,6 @@ public class PathDrawer{
 
                         // Convert API return to JSON string
                         while((input = bufferedReader.readLine())!= null){ geoCodeString += input; }
-
 
                         JSONObject geoData = new JSONObject(geoCodeString);
                         JSONArray results = (JSONArray) geoData.get("results");
