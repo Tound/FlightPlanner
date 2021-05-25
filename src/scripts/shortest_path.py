@@ -26,6 +26,7 @@ def start_loc_alt(gps_coords):
     data = requests.get(LOCATION_API_URL + gps_coords + "&key=" + API_KEY)
     data = data.json()
     alt = float(data['results'][0]['elevation'])
+
     return alt
 
 def getAltitudeProfile(real_length,loc_string,uav_altitude):
@@ -202,6 +203,7 @@ json.dump(dubins_data,dubins_file,indent=4)
 
 dubins_file.close()
 
-with open("src/flight plan/output.txt",'w') as output:
-    output.write(repr(shortest_path))
+with open("src/intermediate/output.json",'w') as output:
+    gene_string = shortest_path.getOutput()
+    json.dump(gene_string,output,indent=4)
 output.close()

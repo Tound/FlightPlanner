@@ -95,6 +95,22 @@ class Route:
                                     f"Altitude: {round(image_pass.altitude,2)} m\n"
         return gene_string[:len(gene_string)-1]
 
+    def getOutput(self):
+        start_loc,pass_config = self.getImagePass(0)
+        gene_string = {}
+        gene_string['start'] = {'coords': f'{[round(coord,2) for coord in start_loc.getStart(pass_config)[:2]]}',
+                                'altitude':f'{round(start_loc.altitude,2)}'
+                                }
+
+        gene_string['passes'] = []
+        for i in range(1, self.routeSize()):
+            image_pass,pass_config = self.getImagePass(i)
+            gene_string['passes'].append({'start':f"{[round(coord,2) for coord in image_pass.getStart(pass_config)[:2]]}",
+                                    'end':f"{[round(coord,2) for coord in image_pass.getEnd(pass_config)[:2]]}",
+                                    'altitude':f"{round(image_pass.altitude,2)}"})
+
+        return gene_string
+
     def getRoute(self):
         return self.route
 

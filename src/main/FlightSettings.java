@@ -1,5 +1,6 @@
 package main;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
@@ -629,12 +630,22 @@ public class FlightSettings {
                                 // Read the JSON file and create string of contents
                                 while(dubins.hasNextLine()){ dubinsContent += dubins.nextLine(); }
 
-                                JSONObject dubinsObject = new JSONObject(dubinsContent);
+                                JSONObject dubinsObject = new JSONObject(dubinsContent); // Convert to JSON object
                                 pathDrawer.drawDubins(dubinsObject);    // Draw the dubins paths
                                 dubins.close();
+
+                                // Read output JSON file
+                                Scanner output = new Scanner(new File("src/intermediate/output.json"));
+                                String outputContent = "";
+                                // Read the JSON file and create string of contents
+                                while(output.hasNextLine()){ outputContent += output.nextLine(); }
+
+                                JSONObject outputObject = new JSONObject(outputContent); // Convert to JSON object
+                                exportFlight(outputObject);    // Export the flight path
+                                output.close();
                             } catch (FileNotFoundException e) {
                                 // If there is an error, show dialog box
-                                Dialog.showDialog("Error with dubins.json.\n\n" +
+                                Dialog.showDialog("Error with output.json.\n\n" +
                                                 "Ensure that the src/intermediate/dubins.json is visible to the application.",
                                         "Read file error");
                                 e.printStackTrace();
@@ -844,8 +855,8 @@ public class FlightSettings {
         // Get difference in GPS coords
         Double dLat = lat2 * Math.PI / 180 - lat1 * Math.PI / 180;
         Double dLon = lon2 * Math.PI / 180 - lon1 * Math.PI / 180;
-        Double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                        Math.sin(dLon/2) * Math.sin(dLon/2);
+        Double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) *
+                Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
         Double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         Double d = radiusEarth * c * 1000;      // Convert to metres
 
@@ -1009,5 +1020,81 @@ public class FlightSettings {
             }
         }
         return true;    // Return true if no errors were found and settings were written to the file
+    }
+
+    /**
+     * Export the flight path with GPS coordinates
+     * @param output - The JSON object containing all passes in order in px values
+     */
+    public void exportFlight(JSONObject output){
+        try{
+            FileWriter writer = new FileWriter("src/flight plan/output.txt");   // Open the output file
+            JSONObject startLocation = (JSONObject) output.get("start");                // Find the start location
+            String startLocationCoords = startLocation.get("coords").toString();
+
+            // Remove the square brackets and split into 2 coords
+            startLocationCoords = startLocationCoords.replace("[","");
+            startLocationCoords = startLocationCoords.replace("]","");
+            String[] startLocCoordsContents = startLocationCoords.split(",");
+
+            // Create 2D point and flip Y coord
+            Point start = new Point((int)Double.parseDouble(startLocCoordsContents[0]),
+                    (int)(pathDrawer.getCanvas().getHeight() - Double.parseDouble(startLocCoordsContents[1])));
+            // Convert start location to GPS location
+            GeoPosition position = pathDrawer.getMap().convertPointToGeoPosition(start);
+
+            // Write the start location GPS coords and altitude to the output file
+            writer.write("Start location: [" + position.getLatitude() + "," + position.getLongitude() +
+                    "], altitude:" + startLocation.get("altitude").toString() + " m\n");
+
+            // Get location and altitude for the passes
+            JSONArray passes = output.getJSONArray("passes");
+            String startPoint = "";
+            String endPoint = "";
+            String passAltitude = "";
+
+            // Loop through each pass
+            for(int i=0;i<passes.length();i++){
+                JSONObject pass = (JSONObject) passes.get(i);   // Get the pass JSON object
+                startPoint = pass.get("start").toString();      // Get the start location
+                endPoint = pass.get("end").toString();          // Get the end location
+                passAltitude = pass.get("altitude").toString(); // Get the altitude of the terrace
+
+                // Remove the square brackets and split into 2 coords
+                startPoint = startPoint.replace("[","");
+                startPoint = startPoint.replace("]","");
+                String[] startPointContents = startPoint.split(",");
+
+                // Create 2D point and flip Y coord
+                Point passStart = new Point((int)Double.parseDouble(startPointContents[0]),
+                        (int)(pathDrawer.getCanvas().getHeight() - Double.parseDouble(startPointContents[1])));
+                // Convert start location of pass to GPS location
+                GeoPosition passStartGPS = pathDrawer.getMap().convertPointToGeoPosition(passStart);
+
+                // Remove the square brackets and split into 2 coords
+                endPoint = endPoint.replace("[","");
+                endPoint = endPoint.replace("]","");
+                String[] endPointContents = endPoint.split(",");
+
+                // Create 2D point and flip Y coord
+                Point passEnd = new Point((int)Double.parseDouble(endPointContents[0]),
+                        (int)(pathDrawer.getCanvas().getHeight() - Double.parseDouble(endPointContents[1])));
+
+                // Convert end location of pass to GPS location
+                GeoPosition passEndGPS = pathDrawer.getMap().convertPointToGeoPosition(passEnd);
+
+                // Write GPS coords and altitude to file
+                writer.write(i+1 + ". " + "Start: [" + passStartGPS.getLatitude() + ", " + passStartGPS.getLongitude() +
+                        "], End: [" + passEndGPS.getLatitude() + ", " + passEndGPS.getLongitude() +
+                        "], Altitude: " + passAltitude + " m\n");
+            }
+            writer.close();
+        }
+        catch (IOException ioe){
+            // If an error is found, show the dialog box with the error message
+            Dialog.showDialog("Unable to export flight plan.\n\n" +
+                            "Ensure that the src/intermediate/ directory is visible to the application.",
+                        "Write flight plan error");
+        }
     }
 }

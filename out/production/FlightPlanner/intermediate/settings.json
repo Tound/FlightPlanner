@@ -1,18 +1,28 @@
 {
-    "uav_max_incline": "30",
     "altitude": "102.12765957446808",
-    "population_size": "30",
+    "nfzs": [
+        [
+            "767.0,416.0",
+            "757.0,486.0",
+            "886.0,487.0",
+            "892.0,419.0"
+        ]
+    ],
     "min_terrace_length": 5,
+<<<<<<< HEAD
     "uav_weight": "2.6",
     "generations": "1000",
     "scale": 1.4057177836375685,
     "wind_direction": "135",
     "cam_aspect_ratio": "3:2",
     "max_pass_length": 5000,
+=======
+    "generations": "2000",
+    "scale": 0.6937557766210569,
+>>>>>>> 5185d6435a8648c628a95d5c088496b4257a2004
     "uav_min_radius": "10",
-    "cam_focal_length": "20",
-    "uav_speed": "20",
     "points": [
+<<<<<<< HEAD
         "318.0,580.0",
         "737.0,552.0",
         "867.0,150.0",
@@ -23,10 +33,34 @@
     "uav_max_speed": 25,
     "gsd": "0.02",
     "start_loc": "230.0,485.0",
+=======
+        "443.0,165.0",
+        "417.0,652.0",
+        "1209.0,649.0",
+        "1248.0,123.0"
+    ],
+    "cam_resolution": "24",
+    "side_overlap": "40",
+>>>>>>> 5185d6435a8648c628a95d5c088496b4257a2004
     "wind_speed": "10",
-    "battery_capacity": "10000",
     "cam_sensor_y": "15.6",
     "cam_sensor_x": "23.5",
+<<<<<<< HEAD
     "start_loc_gps": "53.94854724416043,-1.06093168258667",
+=======
+    "uav_max_incline": "30",
+    "population_size": "30",
+    "uav_weight": "2.6",
+    "wind_direction": "160",
+    "cam_aspect_ratio": "3:2",
+    "max_pass_length": 5000,
+    "cam_focal_length": "20",
+    "uav_speed": "20",
+    "uav_max_speed": 25,
+    "gsd": "0.02",
+    "start_loc": "244.0,720.0",
+    "battery_capacity": "10000",
+    "start_loc_gps": "54.489822189156676,-0.6193006038665771",
+>>>>>>> 5185d6435a8648c628a95d5c088496b4257a2004
     "max_alt_diff": 20.425531914893625
 }

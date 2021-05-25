@@ -16,6 +16,13 @@ Java version must be version 8 (Built-in JavaFX is required)
 Both Python3 and Java 8 must be installed and on the PATH
 A valid Google Maps API key must be found in a .env file as the API_KEY variable in the scripts directory
 
+The assets file must contain a variety of .jars:
+json-java - Working with JSON files - https://github.com/stleary/JSON-java
+java-dotenv - Loading in data from .env files -	https://github.com/cdimascio/dotenv-java
+              					https://jar-download.com/artifact-search/java-dotenv
+jxmapviewer2 - Embedding an interactive map - https://github.com/msteiger/jxmapviewer2
+
+
 -- Install the required Python packages --
 Before being able to use the software the following python packages must be installed.
 In the terminal or cmd, the command:
