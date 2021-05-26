@@ -310,12 +310,9 @@ public class PathDrawer{
             public void handle(MouseEvent event) {
                 if(!chooseLocation.getText().isEmpty()){
                     try {
-<<<<<<< HEAD
-=======
                         // HTTP request code from
                         // https://stackoverflow.com/questions/1359689/how-to-send-http-request-in-java
 
->>>>>>> 5185d6435a8648c628a95d5c088496b4257a2004
                         // Create API string
                         String locationString = chooseLocation.getText().replace(" ","+");
                         URL url = new URL(geocodeAPI + locationString+"&key="+ API_KEY);

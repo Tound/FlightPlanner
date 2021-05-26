@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 import json
 import os
 
+import requests
+import time
+
 import shapely.geometry as sg
 
 # Initialise the APIs

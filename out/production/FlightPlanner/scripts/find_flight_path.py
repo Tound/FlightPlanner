@@ -1,8 +1,8 @@
-# Efficient flight path
+#!/usr/bin/env python
 """
 Main file to be called to create an efficient flight path for a polygon
 and corresponding NFZs for a given terrain
-Last updated 30/4/21
+Last updated 25/5/21
 """
 import math
 import numpy as np
@@ -13,7 +13,6 @@ from camera_calculations import *
 from create_passes_GUI import *
 from Passes_TSP_GUI import *
 
-import time
 import sys
 import traceback
 
@@ -47,8 +46,6 @@ class Configuration:
         self.min_pass_length = min_pass_length                      # Minimum pass length in metres
         self.max_pass_length = max_pass_length                      # Maximum pass length in metres
 
-
-
 polygon = []
 NFZs = []
 wind = [None,None]
@@ -58,9 +55,9 @@ For testing purposes only, a set of predefined settings
 for a test case are present here
 """
 if len(sys.argv) == 2 and sys.argv[1] == 'test':
-    ########################
-    # CREATE TERRAIN
-    ########################
+
+    # Create terrain
+
     height = 750        # 750m
     width = 750         # 750m
     freq = 5            # Hz
@@ -79,9 +76,8 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
             elevation = multiplier*noise(freq*nx, freq*ny)
             terrain[y][x] =  multiplier*math.pow(elevation,0.5)
 
-    ######################
+
     # Setup
-    ######################
     # UAV settings
     min_turn = 20 #m
     max_incline_angle = 31 #degs
@@ -91,7 +87,7 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
 
     # Camera settings
     side_overlap = 0.2          # Percentage
-    forward_overlap = 0.50       # Percentage
+    forward_overlap = 0.50      # Percentage
     sensor_x = 5.62    *10**-3  # mm
     sensor_y = 7.4     *10**-3  # mm
     focal_length = 3.6 *10**-3  # mm
@@ -116,7 +112,7 @@ if len(sys.argv) == 2 and sys.argv[1] == 'test':
     start_loc = [400,730,terrain[730][400]]
 
 else:
-    # Read intermediate file
+    # Read intermediate settigns file
     try:
         data = open("src/intermediate/settings.json","r")
         settings = json.load(data)
@@ -194,14 +190,18 @@ uav = UAV(uav_mass,uav_speed,uav_max_speed,min_turn,max_incline_angle,heading_an
 camera = Camera(sensor_x,sensor_y,focal_length,cam_resolution,aspect_ratio)
 config = Configuration(uav,camera,side_overlap,wind,scale,altitude,ground_sample_distance,min_pass_length,max_pass_length)
 
+# Define all edges for the polygon
 polygon_edges = []
-for i in range(0,len(polygon)):
+for i in range(0,len(polygon)):     # Cycle through each polygon vertex
+    # Create a new edge and add to the list of polygon edges
     polygon_edges.append(Edge(polygon[i-1][0],polygon[i-1][1],
                     polygon[i][0],polygon[i][1]))
 
+# Define all edges for the NFZs
 NFZ_edges = []
-for NFZ in NFZs:
-    for i in range(0,len(NFZ)):
+for NFZ in NFZs:                    # Cycle through each NFZ
+    for i in range(0,len(NFZ)):     # Cycle through the vertices of the NFZ
+        # Create a new edge and add to the list of NFZ edges
         NFZ_edges.append(Edge(NFZ[i-1][0],NFZ[i-1][1],
                         NFZ[i][0],NFZ[i][1]))
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 """
-Dubins curves written in python
+3D Dubins curves written in python
 Taken and readjusted from Andrew Walker's Dubins Curves in C
-Written by Thomas Pound for the project Autopilot for Aerial Photography
+https://github.com/AndrewWalker/Dubins-Curves
+
+Adapted by Thomas Pound into python for the project Autopilot for Aerial Photography
 Created 3/2/21
-Last updated 3/2/21
+Last updated 25/5/21
 """
 
 import math
@@ -20,9 +22,6 @@ class DubinsPath:
         params:     Length of each section
         rho:        Minimum turning radius
         path_type:  The type of path found in the "dubins_path_type" dictionary
-
-    Function
-        length:     Returns the entire length of the path including all segments
     """
     def __init__(self):
         self.qi = (-1,-1,-1,-1)
@@ -32,12 +31,14 @@ class DubinsPath:
         self.altitude = 0
 
     def get_length(self):
+        # Calculates 2D length of the 3D Dubins curve
         length = 0
         length = self.params[0] + self.params[1] + self.params[2]
         length = length*self.rho
         return length
 
     def get_length_3d(self):
+        # Calculates 3D length of the 3D Dubins curve
         length_2d = self.params[0] + self.params[1] + self.params[2]
         length = math.sqrt(length_2d*length_2d + self.altitude*self.altitude)
         length = length*self.rho
@@ -60,6 +61,7 @@ class DubinsIntermediateResults:
         self.c_ab = 0       # Cos alpha-beta
         self.d_sq = 0       # Distance squared
 
+# Create dictionaries to represent each curve
 dubins_path_type = {"LSL":0,
                     "LSR":1,
                     "RSL":2,
@@ -68,12 +70,12 @@ dubins_path_type = {"LSL":0,
                     "LRL":5}
 
 seg_type = {"L_SEG":0,"S_SEG":1,"R_SEG":2}
-path_segments = [[seg_type["L_SEG"],seg_type["S_SEG"],seg_type["L_SEG"]],
-                [seg_type["L_SEG"],seg_type["S_SEG"],seg_type["R_SEG"]],
-                [seg_type["R_SEG"],seg_type["S_SEG"],seg_type["L_SEG"]],
-                [seg_type["R_SEG"],seg_type["S_SEG"],seg_type["R_SEG"]],
-                [seg_type["R_SEG"],seg_type["L_SEG"],seg_type["R_SEG"]],
-                [seg_type["L_SEG"],seg_type["R_SEG"],seg_type["L_SEG"]]]
+path_segments = [[seg_type["L_SEG"],seg_type["S_SEG"],seg_type["L_SEG"]],   # LSL
+                [seg_type["L_SEG"],seg_type["S_SEG"],seg_type["R_SEG"]],    # LSR
+                [seg_type["R_SEG"],seg_type["S_SEG"],seg_type["L_SEG"]],    # RSL
+                [seg_type["R_SEG"],seg_type["S_SEG"],seg_type["R_SEG"]],    # RSR
+                [seg_type["R_SEG"],seg_type["L_SEG"],seg_type["R_SEG"]],    # RLR
+                [seg_type["L_SEG"],seg_type["R_SEG"],seg_type["L_SEG"]]]    # LRL
 
 
 
@@ -86,15 +88,12 @@ def mod2pi(theta):
     """
     return fmodr(theta,2*math.pi)
 
+points = [] # Initialise the samples points array
 
-points = []
 def print_path(q,x):
     global points
-    """
-    Prints the path by adding the points to an array
-    """
+    # Prints the path by adding the points to an array
     points.append((round(q[0],6),round(q[1],6),round(q[2],6),round(q[3],6)))
-    #print(round(q[0],6),round(q[1],6),round(q[2],6),round(q[3],6))
     return 0
 
 def dubins_segment(t,qi,segment,alt):
@@ -135,8 +134,6 @@ def dubins_path_sample(path,stepSize,q,alt):
     """
     tprime = stepSize/path.rho      # Normalise the time
 
-    #alt = 50/292#path.altitude
-    #print(tprime)
     if stepSize<0 or stepSize> path.get_length():
         return 2
     qi = (0.0,0.0,0.0,path.qi[3])
@@ -147,42 +144,56 @@ def dubins_path_sample(path,stepSize,q,alt):
     q1 = dubins_segment(p1,qi,segments[0],alt)
     q2 = dubins_segment(p2,q1,segments[1],alt)
 
-    if tprime < p1:         # If time is within the distance of the first section
+    if tprime < p1:         # If time is within the distance of the first segment
         q = dubins_segment(tprime,qi,segments[0],alt)
-    elif tprime < (p1+p2):  # If time is within the distance of the second section
+    elif tprime < (p1+p2):  # If time is within the distance of the second segment
         q = dubins_segment(tprime-p1,q1,segments[1],alt)
-    else:                   # Third section is left
+    else:                   # Third segment is left
         q = dubins_segment(tprime-p1-p2,q2,segments[2],alt)
 
     q = (q[0]*path.rho+path.qi[0],
         q[1]*path.rho + path.qi[1],
-        q[2]*path.rho + path.qi[2],     # Might remove the rho
-        mod2pi(q[3]))                   # Cap theta to within 0 and 2pi
+        q[2]*path.rho + path.qi[2],
+        mod2pi(q[3]))   # Cap theta to within 0 and 2pi
 
     return q
 
 
 def dubins_path_sample_many(path, stepSize):
+    """
+    Sample the Dubins paths at a selected step size
+    Parameters:
+        stepSize - size of steps to sample at in metres
+    Returns:
+        points - Array of sampled points
+    """
     global points
     points = []
-    x = 0
+    x = 0           # Current distance along the Dubins path
     length = path.get_length()
-    #altitude_steps = stepSize*length/stepSize
     try:
         alt = path.altitude/length
     except RuntimeError:
         alt = 0
-    #print(path.altitude,length,altitude_steps,alt)
-    q = (-1,-1,-1,-1)       # x y z angle
+    q = (-1,-1,-1,-1)        # Intialise the sample point
     while x < length:
-        q = dubins_path_sample(path,x,q,alt)
-        retcode = print_path(q,x)
+        q = dubins_path_sample(path,x,q,alt)    # Sample a point
+        retcode = print_path(q,x)               # Add the point to the list of points
         if retcode != 0:
             return retcode
-        x += stepSize
+        x += stepSize       # Add another step onto the length travelled on the Dubins path
     return points
 
 def dubins_shortest_path(q0,q1,rho):
+    """
+    Finds the shortest Dubins path between 2 points
+    Parameters:
+        q0 - Starting coordinate
+        q1 - Destination coordinate
+        rho - Turning radius in metres
+    Returns:
+        path - Shortest Dubins path
+    """
     best_cost = math.inf
     best_word = -1
     dub_ir = DubinsIntermediateResults()
@@ -194,17 +205,14 @@ def dubins_shortest_path(q0,q1,rho):
     path.qi = q0
     path.rho = rho
 
-    params = (-1,-1,-1) # Init params
+    params = (-1,-1,-1) # Initialise params
 
-    for i in range(0,6):
+    for i in range(0,6):    # Try all possible Dubins path types
         params = dubins_word(dub_ir,i,params)
         if params != -1:
-            #cost = (math.sqrt(params[0]*params[0] + dub_ir.altitude*dub_ir.altitude) + math.sqrt(params[1]*params[1] + dub_ir.altitude*dub_ir.altitude) + math.sqrt(params[2]*params[2] + dub_ir.altitude*dub_ir.altitude))
-            #cost = math.sqrt(ground_length*ground_length + dub_ir.altitude*dub_ir.altitude)
-            
-            # Altitude would only scale the cost
             cost = params[0]+params[1]+params[2]
             if cost < best_cost:
+                # Store the Dubins path
                 best_word = i
                 best_cost = cost
                 path.params = params
@@ -224,7 +232,7 @@ def dubins_intermediate_results(dub_ir,q0,q1,rho):
     D = math.sqrt(dx*dx + dy*dy)    # Total ground distance
     d = D/rho
 
-    altitude = dz#/rho       # Why is it normalised?
+    altitude = dz
 
     theta = 0
     phi = 0    # Angle of incline
@@ -249,8 +257,7 @@ def dubins_intermediate_results(dub_ir,q0,q1,rho):
 
     return 0
 
-# ADJUST FOR ALTITUDE CLIMB
-
+# Create LSL path
 def dubins_LSL(dub_ir, out):
     temp = dub_ir.d + dub_ir.sa - dub_ir.sb
     p_sq = 2+dub_ir.d_sq - (2*dub_ir.c_ab) + (2*dub_ir.d * (dub_ir.sa - dub_ir.sb))
@@ -263,6 +270,7 @@ def dubins_LSL(dub_ir, out):
         return out
     return -1
 
+# Create RSR path
 def dubins_RSR(dub_ir,out):
     temp = dub_ir.d - dub_ir.sa + dub_ir.sb
     p_sq = 2 + dub_ir.d_sq - (2*dub_ir.c_ab) + (2*dub_ir.d * (dub_ir.sb-dub_ir.sa))
@@ -275,6 +283,7 @@ def dubins_RSR(dub_ir,out):
         return out
     return -1
 
+# Create LSR path
 def dubins_LSR(dub_ir,out):
     p_sq = -2 + (dub_ir.d_sq) + (2 * dub_ir.c_ab) + (2 * dub_ir.d * (dub_ir.sa + dub_ir.sb))
 
@@ -287,6 +296,7 @@ def dubins_LSR(dub_ir,out):
         return out
     return -1
 
+# Create RSL path
 def dubins_RSL(dub_ir,out):
     p_sq = -2 + dub_ir.d_sq + (2 * dub_ir.c_ab) - (2 * dub_ir.d * (dub_ir.sa + dub_ir.sb))
 
@@ -299,6 +309,7 @@ def dubins_RSL(dub_ir,out):
         return out
     return -1
 
+# Create RLR path
 def dubins_RLR(dub_ir,out):
     tmp0 = (6. - dub_ir.d_sq + 2*dub_ir.c_ab + 2*dub_ir.d*(dub_ir.sa - dub_ir.sb)) / 8.
     phi  = math.atan2( dub_ir.ca - dub_ir.cb, dub_ir.d - dub_ir.sa + dub_ir.sb )
@@ -312,6 +323,7 @@ def dubins_RLR(dub_ir,out):
         return out
     return -1
 
+# Create LRL path
 def dubins_LRL(dub_ir,out):
     tmp0 = (6. - dub_ir.d_sq + 2*dub_ir.c_ab + 2*dub_ir.d*(dub_ir.sb - dub_ir.sa)) / 8.
     phi = math.atan2( dub_ir.ca - dub_ir.cb, dub_ir.d + dub_ir.sa - dub_ir.sb )
@@ -325,7 +337,7 @@ def dubins_LRL(dub_ir,out):
         return out
     return -1
 
-
+# Choose Dubins path
 def dubins_word(dub_ir,path_type,out):
     result = -1
     if path_type == dubins_path_type["LSL"]:
@@ -343,29 +355,3 @@ def dubins_word(dub_ir,path_type,out):
     else:
         result = -1
     return result
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    q0 = (0,0,0,math.pi)
-    q1 = (200,100,-500,-math.pi/2)
-    min_turn = 200
-    dubins_path = dubins_shortest_path(q0,q1,min_turn)
-
-    points = dubins_path_sample_many(dubins_path,0.1)
-
-    x = np.array([])
-    y = np.array([])
-    z = np.array([])
-    for point in points:
-        x = np.append(x,point[0])
-        y = np.append(y,point[1])
-        z = np.append(z,point[2])
-
-    fig = plt.figure(num=1,clear=True,figsize=(12,8))
-    ax = fig.add_subplot(1,1,1,projection='3d')
-    plt.plot(x,y,z)
-    plt.plot(q0[0],q0[1],q0[2],'ro',markersize=2)
-    plt.show()
